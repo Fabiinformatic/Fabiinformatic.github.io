@@ -1,22 +1,33 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const contactForm = document.getElementById("contact-form");
-  const statusMsg = document.getElementById("form-status");
+// script.js
 
-  contactForm.addEventListener("submit", (e) => {
+// Navegación suave al hacer clic en el menú
+document.querySelectorAll('nav a').forEach(enlace => {
+  enlace.addEventListener('click', e => {
     e.preventDefault();
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const message = document.getElementById("message").value.trim();
-
-    if (!name || !email || !message) {
-      statusMsg.style.color = "red";
-      statusMsg.textContent = "Por favor completa todos los campos.";
-      return;
+    const destino = document.querySelector(enlace.getAttribute('href'));
+    if (destino) {
+      window.scrollTo({
+        top: destino.offsetTop - 80, // para evitar tapar con el header fijo
+        behavior: 'smooth'
+      });
     }
+  });
+});
 
-    // Aquí luego agregamos Firebase
-    statusMsg.style.color = "green";
-    statusMsg.textContent = "✅ Mensaje enviado (simulado)";
-    contactForm.reset();
+// Mensaje emergente al hacer clic en productos
+document.querySelectorAll('.producto').forEach(producto => {
+  producto.addEventListener('click', () => {
+    const nombre = producto.querySelector('h3').textContent;
+    alert(`Has seleccionado: ${nombre}.\nPróximamente podrás comprarlo en Lixby.`);
+  });
+});
+
+// Ejemplo de cambio de color en hover usando JS (opcional)
+document.querySelectorAll('.producto').forEach(prod => {
+  prod.addEventListener('mouseenter', () => {
+    prod.style.boxShadow = '0 12px 30px rgba(0, 113, 227, 0.2)';
+  });
+  prod.addEventListener('mouseleave', () => {
+    prod.style.boxShadow = '0 8px 20px rgba(0,0,0,0.05)';
   });
 });
