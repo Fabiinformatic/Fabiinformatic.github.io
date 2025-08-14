@@ -3,36 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autenticación Firebase</title>
+    <title>Mi Página Web</title>
     <link rel="stylesheet" href="style.css">
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-    <div class="container" id="auth-container">
-        <h1>Bienvenido</h1>
-        <div id="first-time">
-            <button id="guest-btn">Entrar como invitado</button>
-            <button id="login-btn">Iniciar sesión / Registrarse</button>
-        </div>
+    <!-- CONTENIDO PRINCIPAL DE TU PÁGINA -->
+    <header>
+        <h1>Mi Página Web</h1>
+        <button id="login-btn-header">Iniciar sesión / Registrarse</button>
+    </header>
 
-        <div id="login-form" style="display:none;">
+    <main>
+        <p>Bienvenido a mi página. Aquí puedes ver tus productos, servicios y contenido.</p>
+        <!-- Agrega más contenido aquí -->
+    </main>
+
+    <!-- MODAL LOGIN / REGISTRO -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Iniciar sesión o registrarse</h2>
+
             <input type="email" id="email" placeholder="Correo electrónico">
             <input type="password" id="password" placeholder="Contraseña">
             <button id="email-signup">Crear cuenta</button>
             <button id="email-login">Iniciar sesión</button>
+
             <hr>
             <button id="google-login">Entrar con Google</button>
             <button id="github-login">Entrar con GitHub</button>
-        </div>
-
-        <div id="user-info" style="display:none;">
-            <h2>Bienvenido, <span id="user-name"></span></h2>
-            <button id="logout-btn">Cerrar sesión</button>
+            <button id="guest-btn">Entrar como invitado</button>
         </div>
     </div>
-    
+
+    <!-- USUARIO LOGUEADO -->
+    <div id="user-info" class="user-info" style="display:none;">
+        <h2>Bienvenido, <span id="user-name"></span></h2>
+        <button id="logout-btn">Cerrar sesión</button>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
