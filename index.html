@@ -3,39 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lixby</title>
+  <title>Lixby - Ofertas y Tecnología</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Overlay de bienvenida -->
-  <div id="welcome-overlay" class="overlay">
-    <div class="glass-box">
-      <h1>Bienvenido</h1>
-      <p>Inicia sesión o entra como invitado</p>
-      <button id="guest-btn">Entrar como invitado</button>
-      <button id="google-btn">Google</button>
-      <button id="github-btn">GitHub</button>
+  <!-- Cabecera -->
+  <header class="glass-header">
+    <div class="logo">Lixby</div>
+    <nav>
+      <a href="#ofertas">Ofertas</a>
+      <a href="#productos">Productos</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Bienvenido a Lixby</h1>
+    <p>La mejor tecnología, al mejor precio</p>
+    <button>Ver ofertas</button>
+  </section>
+
+  <!-- Ofertas -->
+  <section id="ofertas" class="ofertas">
+    <h2>Ofertas Destacadas</h2>
+    <div class="productos-grid">
+      <div class="producto glass-box">
+        <img src="https://via.placeholder.com/250x200" alt="Producto 1">
+        <h3>iPhone 15 Pro</h3>
+        <p>Desde 1099€</p>
+        <button>Comprar</button>
+      </div>
+      <div class="producto glass-box">
+        <img src="https://via.placeholder.com/250x200" alt="Producto 2">
+        <h3>MacBook Air M3</h3>
+        <p>Desde 1299€</p>
+        <button>Comprar</button>
+      </div>
+      <div class="producto glass-box">
+        <img src="https://via.placeholder.com/250x200" alt="Producto 3">
+        <h3>Apple Watch Ultra 2</h3>
+        <p>Desde 899€</p>
+        <button>Comprar</button>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Contenido principal -->
-  <div id="main-content" class="hidden">
-    <header class="glass-header">
-      <h2>Lixby</h2>
-    </header>
+  <!-- Contacto -->
+  <section id="contacto">
+    <h2>Contáctanos</h2>
+    <form id="contact-form">
+      <input type="text" id="name" placeholder="Tu nombre">
+      <input type="email" id="email" placeholder="Tu correo">
+      <textarea id="message" placeholder="Tu mensaje"></textarea>
+      <button type="submit">Enviar</button>
+    </form>
+    <p id="form-status"></p>
+  </section>
 
-    <section>
-      <h3>Contacto</h3>
-      <form id="contact-form">
-        <input type="text" id="name" placeholder="Tu nombre">
-        <input type="email" id="email" placeholder="Tu correo">
-        <textarea id="message" placeholder="Tu mensaje"></textarea>
-        <button type="submit">Enviar</button>
-      </form>
-      <p id="form-status"></p>
-    </section>
-  </div>
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 Lixby - Todos los derechos reservados</p>
+  </footer>
 
   <script type="module" src="script.js"></script>
 </body>
