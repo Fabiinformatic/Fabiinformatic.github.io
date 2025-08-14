@@ -1,36 +1,37 @@
-/* ===== TIPOGRAFÍA GLOBAL ===== */
-body {
+/* RESET */
+* {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f5f5f7;
-  color: #111;
-  scroll-behavior: smooth;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Helvetica Neue', sans-serif;
 }
 
-/* ===== HEADER LIQUID GLASS ===== */
+body {
+  background: #f5f5f7;
+  color: #111;
+}
+
+/* HEADER LIQUID GLASS */
 header {
   position: fixed;
-  top: 0;
-  left: 0;
   width: 100%;
-  padding: 15px 50px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(134, 206, 243, 0.3);
+  padding: 20px 40px;
+  background: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
-  border-radius: 0 0 20px 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.4);
   z-index: 1000;
 }
 
 header .logo {
-  font-weight: bold;
   font-size: 24px;
+  font-weight: bold;
 }
 
 header nav a {
-  margin-left: 30px;
+  margin-left: 25px;
   text-decoration: none;
   color: #111;
   font-weight: 500;
@@ -38,10 +39,10 @@ header nav a {
 }
 
 header nav a:hover {
-  color: #007aff;
+  color: #86cef3;
 }
 
-/* ===== HERO ===== */
+/* HERO */
 .hero {
   height: 100vh;
   display: flex;
@@ -49,61 +50,53 @@ header nav a:hover {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 0 20px;
+  padding-top: 80px;
 }
 
 .hero h1 {
   font-size: 3rem;
-  margin: 0;
+  margin-bottom: 10px;
 }
 
 .hero p {
   font-size: 1.2rem;
-  margin: 15px 0 30px 0;
-  max-width: 600px;
+  margin-bottom: 20px;
 }
 
 .hero button {
   padding: 12px 30px;
-  font-size: 1rem;
-  border: none;
   border-radius: 25px;
-  background: rgba(134, 206, 243, 0.7);
-  backdrop-filter: blur(8px);
+  border: none;
+  background: #86cef3;
+  color: #fff;
+  font-size: 1rem;
   cursor: pointer;
   transition: 0.3s;
 }
 
 .hero button:hover {
-  background: rgba(134, 206, 243, 1);
+  background: #5bb0d9;
 }
 
-/* ===== SECCIONES ===== */
+/* SECTIONS */
 section {
-  padding: 80px 50px;
-}
-
-h2 {
+  padding: 80px 20px;
   text-align: center;
-  margin-bottom: 40px;
-  font-size: 2rem;
 }
 
-/* ===== TARJETAS ===== */
 .service-cards {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 25px;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 30px;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
+  background: #fff;
+  padding: 20px;
   border-radius: 20px;
-  padding: 30px 20px;
   width: 250px;
-  text-align: center;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   transition: 0.3s;
 }
@@ -112,80 +105,60 @@ h2 {
   transform: translateY(-5px);
 }
 
-/* ===== CONTACTO ===== */
-.contact {
-  text-align: center;
-}
-
+/* CONTACTO */
 .contact form {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 15px;
   max-width: 400px;
-  margin: 0 auto;
-  background: rgba(255,255,255,0.3);
-  backdrop-filter: blur(10px);
-  padding: 30px;
-  border-radius: 25px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  margin: 20px auto 0 auto;
 }
 
-.contact input, .contact textarea {
-  width: 100%;
+.contact input,
+.contact textarea {
   padding: 12px 15px;
-  border: none;
-  border-radius: 20px;
+  border-radius: 15px;
+  border: 1px solid #ccc;
   outline: none;
   font-size: 1rem;
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(6px);
   resize: none;
 }
 
 .contact button {
-  padding: 12px 30px;
-  font-size: 1rem;
-  border: none;
+  padding: 12px 25px;
   border-radius: 25px;
-  background: rgba(134, 206, 243, 0.7);
-  backdrop-filter: blur(8px);
+  border: none;
+  background: #86cef3;
+  color: #fff;
+  font-size: 1rem;
   cursor: pointer;
   transition: 0.3s;
 }
 
 .contact button:hover {
-  background: rgba(134, 206, 243, 1);
+  background: #5bb0d9;
 }
 
 #successMessage {
   display: none;
-  margin-top: 20px;
-  font-weight: bold;
-  color: #007aff;
+  margin-top: 15px;
+  background: #86cef3;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  animation: fadeOut 5s forwards;
 }
 
-/* ===== FOOTER ===== */
+@keyframes fadeOut {
+  0% {opacity: 1;}
+  80% {opacity: 1;}
+  100% {opacity: 0; display: none;}
+}
+
+/* FOOTER */
 footer {
+  padding: 20px;
+  background: #111;
+  color: #fff;
   text-align: center;
-  padding: 20px 50px;
-  color: #555;
-  font-size: 0.9rem;
-  background: rgba(255,255,255,0.3);
-  backdrop-filter: blur(10px);
-  border-radius: 20px 20px 0 0;
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  header {
-    padding: 15px 20px;
-  }
-  .service-cards {
-    flex-direction: column;
-    align-items: center;
-  }
-  .hero h1 {
-    font-size: 2.2rem;
-  }
 }
