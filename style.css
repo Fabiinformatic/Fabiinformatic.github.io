@@ -1,128 +1,113 @@
-/* --- Reset y estilo general --- */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* Reset y tipografía */
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
     font-family: "Helvetica Neue", Arial, sans-serif;
-    background: #f9f9f9;
+    background: #f2f2f7;
     color: #111;
 }
 
-header {
-    text-align: center;
-    padding: 20px;
-    font-size: 24px;
-    font-weight: 500;
-}
+header { text-align:center; padding:20px; font-size:28px; font-weight:500; }
 
-/* --- Contenedor principal --- */
-main {
-    padding: 40px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* --- Botones minimalistas --- */
-button {
-    cursor: pointer;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    background-color: #007aff;
-    color: white;
-    font-size: 16px;
-    transition: 0.3s;
-}
-
-button:hover {
-    background-color: #005bb5;
-}
-
-/* --- Modal de bienvenida --- */
+/* Modal de bienvenida neumorfismo */
 .modal-overlay {
     display: none;
-    position: fixed;
-    inset: 0; /* top:0; right:0; bottom:0; left:0 */
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(6px);
-    justify-content: center;
-    align-items: center;
+    position: fixed; inset:0;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);
+    justify-content: center; align-items: center;
     z-index: 1000;
 }
 
 .modal {
-    background: white;
+    background: #f2f2f7;
     padding: 40px;
-    border-radius: 16px;
+    border-radius: 20px;
     max-width: 400px;
     width: 90%;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    animation: modalShow 0.3s ease forwards;
+    box-shadow: 10px 10px 30px #d1d1d9, -10px -10px 30px #ffffff;
+    animation: fadeIn 0.4s ease forwards;
 }
 
-.modal h2 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
-
-.modal p {
-    margin-bottom: 25px;
-    font-size: 16px;
-    color: #555;
-}
+.modal h2 { font-size: 26px; margin-bottom: 15px; }
+.modal p { margin-bottom: 25px; color: #555; }
 
 .modal button {
-    margin: 5px;
-    width: 120px;
+    padding: 12px 25px;
+    border-radius: 12px;
+    border: none;
+    background: #e0e0e0;
+    box-shadow: 5px 5px 10px #d1d1d9, -5px -5px 10px #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.modal button:hover {
+    background: #d9d9d9;
 }
 
-/* Animación del modal */
-@keyframes modalShow {
+@keyframes fadeIn {
     from {opacity: 0; transform: translateY(-20px);}
-    to {opacity: 1; transform: translateY(0);}
+    to {opacity:1; transform: translateY(0);}
 }
 
-/* --- Formulario de contacto minimalista --- */
+/* Main */
+main { padding:40px 20px; display:flex; flex-direction:column; align-items:center; gap:40px; }
+
+/* Productos minimalistas */
+.store h2 { margin-bottom:20px; font-weight:500; }
+.products {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap:20px;
+    width:100%;
+    max-width:900px;
+}
+
+.product {
+    background:#f2f2f7;
+    border-radius:18px;
+    padding:20px;
+    text-align:center;
+    box-shadow: 5px 5px 15px #d1d1d9, -5px -5px 15px #ffffff;
+    transition:0.3s;
+}
+.product:hover { transform: translateY(-5px); }
+
+/* Formulario minimalista */
 .contact-form {
-    background: white;
+    background: #f2f2f7;
     padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-radius: 20px;
+    box-shadow: 5px 5px 15px #d1d1d9, -5px -5px 15px #ffffff;
     width: 100%;
     max-width: 450px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display:flex; flex-direction:column; gap:12px;
 }
 
 .contact-form input, 
 .contact-form textarea {
     padding: 12px;
     font-size: 15px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    outline: none;
-    transition: 0.2s;
+    border-radius: 12px;
+    border: none;
+    background: #e0e0e0;
+    box-shadow: inset 3px 3px 6px #d1d1d9, inset -3px -3px 6px #ffffff;
+    outline:none;
 }
 
 .contact-form input:focus, 
 .contact-form textarea:focus {
-    border-color: #007aff;
+    box-shadow: inset 2px 2px 5px #bfc0c9, inset -2px -2px 5px #ffffff;
 }
 
 .contact-form button {
-    margin-top: 10px;
-    font-weight: 500;
+    margin-top:10px;
+    font-weight:500;
+    background:#007aff;
+    color:white;
+    box-shadow:none;
 }
+.contact-form button:hover { background:#005bb5; }
 
-.success-msg {
-    color: green;
-    font-size: 14px;
-    margin-top: 5px;
-}
+.success-msg { color: green; font-size: 14px; margin-top:5px; }
