@@ -1,4 +1,4 @@
-// --- Configuración de Firebase ---
+// Firebase
 const firebaseConfig = {
     apiKey: "TU_API_KEY",
     authDomain: "TU_AUTH_DOMAIN",
@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// --- Modal de bienvenida ---
+// Modal
 window.addEventListener('load', () => {
     const modal = document.getElementById('welcomeModal');
     if(!localStorage.getItem('visited')) {
@@ -19,13 +19,11 @@ window.addEventListener('load', () => {
         localStorage.setItem('visited', 'true');
     }
 });
-
-// --- Función para cerrar modal si quieres añadir un botón de cerrar ---
 function closeModal() {
     document.getElementById('welcomeModal').style.display = 'none';
 }
 
-// --- Enviar formulario ---
+// Formulario
 document.getElementById('sendBtn').addEventListener('click', () => {
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -37,19 +35,13 @@ document.getElementById('sendBtn').addEventListener('click', () => {
         return;
     }
 
-    // Guardar en Firebase
     const newContact = database.ref('contactos').push();
-    newContact.set({
-        name: name,
-        email: email,
-        message: message,
-        timestamp: Date.now()
-    }).then(() => {
-        successMsg.textContent = '¡Gracias por tu mensaje!';
-        document.getElementById('name').value = '';
-        document.getElementById('email').value = '';
-        document.getElementById('message').value = '';
-    }).catch((err) => {
-        alert('Error al enviar: ' + err.message);
-    });
+    newContact.set({ name, email, message, timestamp: Date.now() })
+        .then(() => {
+            successMsg.textContent = '¡Gracias por tu mensaje!';
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('message').value = '';
+        })
+        .catch(err => alert('Error al enviar: ' + err.message));
 });
