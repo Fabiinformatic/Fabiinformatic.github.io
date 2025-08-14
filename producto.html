@@ -5,6 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LIXBY — Detalle de producto</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Ajustes específicos para uniformizar imágenes */
+    .product-detail { display:flex; gap:36px; align-items:flex-start; max-width:1100px; margin:120px auto 80px; padding:28px; border-radius:14px; }
+    .image-wrap {
+      width:420px;
+      aspect-ratio: 1/1;
+      border-radius:12px;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.04);
+      flex:0 0 420px;
+      padding: 18px; /* espacio para que producto pequeño no se vea "pequeño" */
+    }
+    .product-image {
+      width:100%;
+      height:100%;
+      object-fit: contain; /* importante: mantiene imagen completa sin recortes */
+      max-width: 85%;
+      max-height: 85%;
+      display:block;
+    }
+    .product-info { flex:1; display:flex; flex-direction:column; gap:14px; }
+    .product-info h1 { font-size:1.6rem; margin:0; }
+    .product-info p { color:var(--muted); margin:0; }
+    .product-info .price { font-size:1.4rem; color:var(--accent); font-weight:700; }
+    .btn-buy { margin-top:12px; padding:12px 18px; border-radius:10px; background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); border:none; color:#00121a; font-weight:700; cursor:pointer; }
+    @media(max-width:900px){
+      .product-detail{ flex-direction:column; margin:90px 16px; }
+      .image-wrap{ width:100%; aspect-ratio: auto; padding:14px; }
+      .product-image{ max-width: 60%; max-height:60%; }
+    }
+  </style>
 </head>
 <body>
   <header class="nav glass">
@@ -33,7 +68,7 @@
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Productos y las imágenes que me pasaste
+    // Productos con las imágenes que me pasaste
     const products = {
       "lixby-one": {
         name: "Lixby One",
@@ -55,7 +90,15 @@
       }
     };
 
-    // leer id
+    // proxy helper: usa images.weserv.nl para evitar hotlink blocks
+    function proxiedUrl(originalUrl) {
+      // images.weserv.nl expects the remote URL without protocol
+      const stripped = originalUrl.replace(/^https?:\/\//,'');
+      // limit width to 1200 for speed
+      return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=1200`;
+    }
+
+    // Obtener id desde la URL
     const params = new URLSearchParams(window.location.search);
     const raw = params.get('id');
     const id = raw ? decodeURIComponent(raw) : null;
@@ -63,16 +106,47 @@
 
     if (id && products[id]) {
       const p = products[id];
-      const img = p.image || `https://via.placeholder.com/600x600?text=${encodeURIComponent(p.name)}`;
-      container.innerHTML = `
-        <img class="product-image" src="${img}" alt="${p.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/600x600?text=Sin+imagen'">
-        <div class="product-info">
-          <h1>${p.name}</h1>
-          <p>${p.description}</p>
-          <div class="price">${p.price}</div>
-          <button class="btn-buy" onclick="alert('Añadido al carrito: ${p.name}')">Comprar ahora</button>
-        </div>
+      // build DOM nodes (so podemos manejar mejor errores de imagen)
+      const wrap = document.createElement('div');
+      wrap.className = 'image-wrap';
+
+      const img = document.createElement('img');
+      img.className = 'product-image';
+      img.alt = p.name;
+      img.src = p.image;
+
+      // fallback logic: si la carga falla, intenta proxied URL, y si falla usa placeholder
+      let attemptedProxy = false;
+      img.onerror = function() {
+        if (!attemptedProxy) {
+          attemptedProxy = true;
+          img.src = proxiedUrl(p.image);
+        } else {
+          img.onerror = null;
+          img.src = 'https://via.placeholder.com/600x600?text=Sin+imagen';
+        }
+      };
+
+      wrap.appendChild(img);
+
+      const info = document.createElement('div');
+      info.className = 'product-info';
+      info.innerHTML = `
+        <h1>${p.name}</h1>
+        <p>${p.description}</p>
+        <div class="price">${p.price}</div>
+        <button class="btn-buy" id="buyBtn">Comprar ahora</button>
       `;
+
+      container.innerHTML = ''; // limpiar
+      container.appendChild(wrap);
+      container.appendChild(info);
+
+      // botón comprar (ejemplo)
+      document.getElementById('buyBtn').addEventListener('click', () => {
+        alert('Añadido al carrito: ' + p.name);
+      });
+
     } else {
       container.innerHTML = '<div style="padding:20px;"><h2>Producto no encontrado</h2><p>Vuelve a la <a href="index.html">tienda</a>.</p></div>';
     }
