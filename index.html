@@ -1,191 +1,72 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lispy - Tienda de Tecnología</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
-
-    <style>
-        /* Estilo general minimalista */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f5f5f5;
-        }
-
-        header {
-            background: #111;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 24px;
-        }
-
-        main {
-            padding: 40px;
-            text-align: center;
-        }
-
-        button {
-            cursor: pointer;
-            padding: 10px 20px;
-            border: none;
-            background-color: #007aff;
-            color: white;
-            font-size: 16px;
-            border-radius: 6px;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background-color: #005bb5;
-        }
-
-        /* Modal de bienvenida */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            font-size: 28px;
-        }
-
-        .modal button {
-            margin: 10px 5px 0 5px;
-        }
-
-        /* Formulario de contacto */
-        .contact-form {
-            max-width: 500px;
-            margin: 40px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .contact-form input, .contact-form textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-        }
-
-        .contact-form button {
-            width: 100%;
-        }
-
-        .success-msg {
-            color: green;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lixby - Ofertas y Tecnología</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>Lispy - Tienda de Tecnología</header>
+  <!-- Cabecera -->
+  <header class="glass-header">
+    <div class="logo">Lixby</div>
+    <nav>
+      <a href="#ofertas">Ofertas</a>
+      <a href="#productos">Productos</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </header>
 
-<main>
-    <h1>¡Bienvenido a Lispy!</h1>
-    <p>Explora nuestros productos y servicios.</p>
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Bienvenido a Lixby</h1>
+    <p>La mejor tecnología, al mejor precio</p>
+    <button>Ver ofertas</button>
+  </section>
 
-    <!-- Formulario de contacto -->
-    <div class="contact-form">
-        <h2>Contacta con nosotros</h2>
-        <input type="text" id="name" placeholder="Nombre y Apellido">
-        <input type="email" id="email" placeholder="Correo electrónico">
-        <textarea id="message" placeholder="Mensaje (error o sugerencia)"></textarea>
-        <button id="sendBtn">Enviar</button>
-        <p class="success-msg" id="successMsg"></p>
+  <!-- Ofertas -->
+  <section id="ofertas" class="ofertas">
+    <h2>Ofertas Destacadas</h2>
+    <div class="productos-grid">
+      <div class="producto glass-box">
+        <img src="https://via.placeholder.com/250x200" alt="Producto 1">
+        <h3>iPhone 15 Pro</h3>
+        <p>Desde 1099€</p>
+        <button>Comprar</button>
+      </div>
+      <div class="producto glass-box">
+        <img src="https://via.placeholder.com/250x200" alt="Producto 2">
+        <h3>MacBook Air M3</h3>
+        <p>Desde 1299€</p>
+        <button>Comprar</button>
+      </div>
+      <div class="producto glass-box">
+        <img src="https://via.placeholder.com/250x200" alt="Producto 3">
+        <h3>Apple Watch Ultra 2</h3>
+        <p>Desde 899€</p>
+        <button>Comprar</button>
+      </div>
     </div>
-</main>
+  </section>
 
-<!-- Modal de bienvenida -->
-<div class="modal-overlay" id="welcomeModal">
-    <div class="modal">
-        <h2>Bienvenido a Lispy</h2>
-        <p>Regístrate o inicia sesión para disfrutar de todos nuestros servicios.</p>
-        <button onclick="window.location.href='registro.html'">Registrarse</button>
-        <button onclick="window.location.href='login.html'">Iniciar sesión</button>
-    </div>
-</div>
+  <!-- Contacto -->
+  <section id="contacto">
+    <h2>Contáctanos</h2>
+    <form id="contact-form">
+      <input type="text" id="name" placeholder="Tu nombre">
+      <input type="email" id="email" placeholder="Tu correo">
+      <textarea id="message" placeholder="Tu mensaje"></textarea>
+      <button type="submit">Enviar</button>
+    </form>
+    <p id="form-status"></p>
+  </section>
 
-<script>
-    // Configuración de Firebase
-    const firebaseConfig = {
-        apiKey: "TU_API_KEY",
-        authDomain: "TU_AUTH_DOMAIN",
-        databaseURL: "https://controlando-los-cielos-b-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "TU_PROJECT_ID",
-        storageBucket: "TU_STORAGE_BUCKET",
-        messagingSenderId: "TU_SENDER_ID",
-        appId: "TU_APP_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 Lixby - Todos los derechos reservados</p>
+  </footer>
 
-    // Mostrar modal solo la primera vez
-    window.addEventListener('load', () => {
-        if(!localStorage.getItem('visited')) {
-            document.getElementById('welcomeModal').style.display = 'flex';
-            localStorage.setItem('visited', 'true');
-        }
-    });
-
-    // Enviar formulario
-    document.getElementById('sendBtn').addEventListener('click', () => {
-        const name = document.getElementById('name').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const message = document.getElementById('message').value.trim();
-        const successMsg = document.getElementById('successMsg');
-
-        if(name === '' || email === '' || message === '') {
-            alert('Todos los campos son obligatorios');
-            return;
-        }
-
-        // Guardar en Firebase
-        const newContact = database.ref('contactos').push();
-        newContact.set({
-            name: name,
-            email: email,
-            message: message,
-            timestamp: Date.now()
-        }).then(() => {
-            successMsg.textContent = '¡Gracias por tu mensaje!';
-            document.getElementById('name').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('message').value = '';
-        }).catch((err) => {
-            alert('Error al enviar: ' + err.message);
-        });
-    });
-</script>
-
+  <script type="module" src="script.js"></script>
 </body>
 </html>
