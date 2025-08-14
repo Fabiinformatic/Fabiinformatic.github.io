@@ -4,274 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lixby - Empresa de Tecnología</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* RESET Y TIPOGRAFÍA */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: #f9f9f9;
-            color: #111;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        /* BANNER SUPERIOR */
-        header {
-            background-color: #86cef3;
-            padding: 15px 50px;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            left: 0;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        header .logo {
-            font-weight: 700;
-            font-size: 24px;
-            color: #fff;
-        }
-
-        nav a {
-            margin-left: 25px;
-            font-weight: 600;
-            color: #fff;
-            transition: opacity 0.3s;
-        }
-
-        nav a:hover {
-            opacity: 0.8;
-        }
-
-        /* SECCIONES */
-        section {
-            padding: 120px 50px 80px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* PORTADA */
-        .portada {
-            text-align: center;
-        }
-
-        .portada h1 {
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
-
-        .portada p {
-            font-size: 22px;
-            color: #555;
-        }
-
-        /* SERVICIOS */
-        .servicios {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .servicio {
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 15px;
-            width: 250px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            transition: transform 0.3s;
-        }
-
-        .servicio:hover {
-            transform: translateY(-5px);
-        }
-
-        .servicio h3 {
-            margin-bottom: 10px;
-        }
-
-        /* CONTACTO */
-        .contacto {
-            text-align: center;
-        }
-
-        #btn-contacto {
-            background-color: #86cef3;
-            color: #fff;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #btn-contacto:hover {
-            background-color: #5bb0e0;
-        }
-
-        /* FORMULARIO CONTACTO */
-        .formulario-oculto {
-            display: none;
-            margin-top: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            text-align: left;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease, transform 0.5s ease;
-        }
-
-        .formulario-oculto.show {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .formulario-oculto h3 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .formulario-oculto p {
-            margin-bottom: 20px;
-            color: #555;
-        }
-
-        .formulario-oculto .campo {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
-        }
-
-        .formulario-oculto input,
-        .formulario-oculto textarea {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            width: 100%;
-        }
-
-        .formulario-oculto button {
-            background-color: #86cef3;
-            color: #fff;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .formulario-oculto button:hover {
-            background-color: #5bb0e0;
-        }
-
-        /* FOOTER */
-        footer {
-            background-color: #111;
-            color: #fff;
-            text-align: center;
-            padding: 40px 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- BANNER -->
-    <header>
-        <div class="logo">Lixby</div>
-        <nav>
-            <a href="#inicio">Inicio</a>
-            <a href="#tienda">Tienda</a>
-            <a href="#servicios">Nuestros Servicios</a>
-            <a href="#contacto">Contacto</a>
-        </nav>
-    </header>
+<header>
+    <div class="logo">Lixby</div>
+    <nav>
+        <ul>
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#">Tienda</a></li>
+            <li><a href="#">Nuestros Servicios</a></li>
+        </ul>
+    </nav>
+</header>
 
-    <!-- PORTADA -->
-    <section class="portada" id="inicio">
-        <h1>Bienvenido a Lixby</h1>
-        <p>Soluciones tecnológicas para tu empresa</p>
-    </section>
+<section class="hero">
+    <h1>Bienvenido a Lixby</h1>
+    <p>Innovación tecnológica para tu empresa</p>
+</section>
 
-    <!-- SERVICIOS -->
-    <section class="servicios" id="servicios">
-        <div class="servicio">
+<section class="services">
+    <h2>Nuestros Servicios</h2>
+    <div class="service-cards">
+        <div class="card">
             <h3>Desarrollo Web</h3>
-            <p>Páginas modernas, rápidas y seguras.</p>
+            <p>Diseñamos páginas modernas y funcionales.</p>
         </div>
-        <div class="servicio">
+        <div class="card">
             <h3>Aplicaciones Móviles</h3>
-            <p>Apps para iOS y Android de alto rendimiento.</p>
+            <p>Apps para iOS y Android a medida.</p>
         </div>
-        <div class="servicio">
-            <h3>Cloud & Hosting</h3>
-            <p>Servicios de nube confiables y escalables.</p>
+        <div class="card">
+            <h3>Consultoría IT</h3>
+            <p>Optimización y soporte para tu empresa.</p>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- CONTACTO -->
-    <section class="contacto" id="contacto">
-        <button id="btn-contacto">Contáctanos</button>
+<section class="contact">
+    <h2>¿Tienes un proyecto o consulta? ¡Hablemos!</h2>
+    <p>Escríbenos:</p>
+    <form>
+        <input type="text" placeholder="Nombre y Apellido" required>
+        <input type="email" placeholder="Correo" required>
+        <textarea placeholder="Descripción" required></textarea>
+        <button type="submit">Enviar</button>
+    </form>
+</section>
 
-        <!-- FORMULARIO OCULTO -->
-        <div id="formulario-contacto" class="formulario-oculto">
-            <h3>¿Tienes un proyecto o consulta? ¡Hablemos!</h3>
-            <p>Escríbenos:</p>
-            <form>
-                <div class="campo">
-                    <input type="text" placeholder="Nombre" required>
-                    <input type="text" placeholder="Apellido" required>
-                </div>
-                <div class="campo">
-                    <input type="email" placeholder="Correo electrónico" required>
-                </div>
-                <div class="campo">
-                    <textarea placeholder="Descripción" rows="5" required></textarea>
-                </div>
-                <button type="submit">Enviar</button>
-            </form>
-        </div>
-    </section>
+<footer>
+    <p>&copy; 2025 Lixby. Todos los derechos reservados.</p>
+</footer>
 
-    <!-- FOOTER -->
-    <footer>
-        &copy; 2025 Lixby. Todos los derechos reservados.
-    </footer>
-
-    <!-- SCRIPT -->
-    <script>
-        const btn = document.getElementById('btn-contacto');
-        const formulario = document.getElementById('formulario-contacto');
-
-        btn.addEventListener('click', () => {
-            formulario.classList.toggle('show');
-            formulario.scrollIntoView({behavior: "smooth"});
-        });
-    </script>
-    
 </body>
 </html>
