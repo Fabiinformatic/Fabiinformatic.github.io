@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle del producto - LIXBY</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav glass">
+    <div class="brand" onclick="window.location.href='index.html'">LIXBY</div>
+  </header>
+
+  <section class="section" id="producto-detalle">
+    <div id="producto-contenido" class="glass" style="padding:20px;">
+      Cargando producto...
+    </div>
+  </section>
+
+  <script>
+    const productos = {
+      "lixby-one": {
+        nombre: "Lixby One",
+        descripcion: "Ultraligero, potente y con diseño minimalista. Ideal para el día a día.",
+        precio: "349€",
+        imagen: "https://via.placeholder.com/500x300?text=Lixby+One"
+      },
+      "lixby-one-plus": {
+        nombre: "Lixby One Plus",
+        descripcion: "Teléfono de última generación con cámara avanzada y batería de larga duración.",
+        precio: "659€",
+        imagen: "https://via.placeholder.com/500x300?text=Lixby+One+Plus"
+      },
+      "lixby-one-pro": {
+        nombre: "Lixby One Pro",
+        descripcion: "Audio de alta fidelidad con cancelación de ruido y diseño premium.",
+        precio: "1099€",
+        imagen: "https://via.placeholder.com/500x300?text=Lixby+One+Pro"
+      }
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    if (productos[id]) {
+      const p = productos[id];
+      document.getElementById("producto-contenido").innerHTML = `
+        <img src="${p.imagen}" alt="${p.nombre}" style="max-width:100%;border-radius:12px;">
+        <h1>${p.nombre}</h1>
+        <p>${p.descripcion}</p>
+        <h2 style="color:var(--accent);">${p.precio}</h2>
+        <button class="btn primary" onclick="alert('Producto añadido al carrito')">Comprar</button>
+      `;
+    } else {
+      document.getElementById("producto-contenido").innerHTML = "<p>Producto no encontrado.</p>";
+    }
+  </script>
+</body>
+</html>
