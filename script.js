@@ -1,16 +1,28 @@
-emailjs.init("TU_USER_ID"); 
+// Inicializar EmailJS
+(function(){
+    emailjs.init("TU_PUBLIC_KEY_AQUI"); // Reemplaza con tu Public Key
+})();
 
-const contactForm = document.getElementById("contactForm");
-const successMessage = document.getElementById("successMessage");
+const form = document.getElementById('contactForm');
+const successMessage = document.getElementById('successMessage');
 
-contactForm.addEventListener("submit", function(e) {
-  e.preventDefault();
+form.addEventListener('submit', function(event) {
+    event.preventDefault();
 
-  emailjs.sendForm('service_tagcpgm', 'template_tagcpgm', this)
-    .then(() => {
-      contactForm.style.display = "none";
-      successMessage.style.display = "block";
-    }, (error) => {
-      alert("Hubo un error al enviar el formulario: " + error.text);
-    });
+    emailjs.sendForm('TU_SERVICE_ID', 'TU_TEMPLATE_ID', this)
+        .then(function() {
+            // Mostrar mensaje animado
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+            form.reset();
+        }, function(error) {
+            alert('Ocurrió un error al enviar el mensaje. Intenta de nuevo.');
+            console.error('EmailJS Error:', error);
+        });
 });
+
+function scrollToContact() {
+    document.getElementById('contacto').scrollIntoView({ behavior: 'smooth' });
+}
