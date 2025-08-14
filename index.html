@@ -9,7 +9,7 @@
 <body>
   <!-- NAV -->
   <header class="nav glass">
-    <div class="brand">LIXBY</div>
+    <div class="brand" role="button" aria-label="Ir al inicio">LIXBY</div>
     <nav id="navLinks">
       <a href="#inicio">Inicio</a>
       <a href="#productos">Productos</a>
@@ -20,7 +20,7 @@
   </header>
 
   <!-- HERO -->
-  <section id="inicio" class="hero">
+  <section id="inicio" class="hero reveal">
     <div class="hero-content">
       <h1>La tecnología que te entiende</h1>
       <p>Innovación minimalista para tu día a día</p>
@@ -29,20 +29,22 @@
   </section>
 
   <!-- PRODUCTOS -->
-  <section id="productos" class="section">
+  <section id="productos" class="section reveal">
     <h2>Productos</h2>
     <div class="grid">
-      <article class="card glass" data-product="lixby-one">
+      <article class="card glass" data-product="lixby-one" role="button" tabindex="0" aria-label="Ver Lixby One">
         <h3>Lixby One</h3>
         <p>Ultraligero y potente.</p>
         <span class="price">349€</span>
       </article>
-      <article class="card glass" data-product="lixby-one-plus">
+
+      <article class="card glass" data-product="lixby-one-plus" role="button" tabindex="0" aria-label="Ver Lixby One Plus">
         <h3>Lixby One Plus</h3>
         <p>Teléfono de última generación.</p>
         <span class="price">659€</span>
       </article>
-      <article class="card glass" data-product="lixby-one-pro">
+
+      <article class="card glass" data-product="lixby-one-pro" role="button" tabindex="0" aria-label="Ver Lixby One Pro">
         <h3>Lixby One Pro</h3>
         <p>Audio de alta fidelidad.</p>
         <span class="price">1099€</span>
@@ -51,7 +53,7 @@
   </section>
 
   <!-- CONTACTO -->
-  <section id="contacto" class="section glass">
+  <section id="contacto" class="section glass reveal">
     <h2>Contáctanos</h2>
     <p>Déjanos tu mensaje y te responderemos hoy mismo.</p>
     <form class="contact-form" onsubmit="return false;">
@@ -63,7 +65,7 @@
   </section>
 
   <!-- CONÓCENOS -->
-  <section id="conocenos" class="section">
+  <section id="conocenos" class="section reveal">
     <h2>Conócenos</h2>
     <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
   </section>
@@ -73,6 +75,7 @@
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <script src="script.js"></script>
+  <!-- CARGA EL SCRIPT CON DEFER para mayor seguridad -->
+  <script src="script.js" defer></script>
 </body>
 </html>
