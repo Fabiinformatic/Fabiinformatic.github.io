@@ -1,33 +1,32 @@
-// script.js
+// Año automático en footer
+document.getElementById("year").textContent = new Date().getFullYear();
 
-// Navegación suave al hacer clic en el menú
-document.querySelectorAll('nav a').forEach(enlace => {
-  enlace.addEventListener('click', e => {
+// Scroll suave
+document.querySelectorAll("[data-scroll-to]").forEach(link => {
+  link.addEventListener("click", e => {
     e.preventDefault();
-    const destino = document.querySelector(enlace.getAttribute('href'));
-    if (destino) {
-      window.scrollTo({
-        top: destino.offsetTop - 80, // para evitar tapar con el header fijo
-        behavior: 'smooth'
-      });
-    }
+    const target = document.querySelector(link.getAttribute("data-scroll-to"));
+    if (target) target.scrollIntoView({ behavior: "smooth" });
   });
 });
 
-// Mensaje emergente al hacer clic en productos
-document.querySelectorAll('.producto').forEach(producto => {
-  producto.addEventListener('click', () => {
-    const nombre = producto.querySelector('h3').textContent;
-    alert(`Has seleccionado: ${nombre}.\nPróximamente podrás comprarlo en Lixby.`);
-  });
+// Tema claro/oscuro
+const themeToggle = document.getElementById("themeToggle");
+themeToggle.addEventListener("click", () => {
+  document.documentElement.classList.toggle("light");
 });
 
-// Ejemplo de cambio de color en hover usando JS (opcional)
-document.querySelectorAll('.producto').forEach(prod => {
-  prod.addEventListener('mouseenter', () => {
-    prod.style.boxShadow = '0 12px 30px rgba(0, 113, 227, 0.2)';
-  });
-  prod.addEventListener('mouseleave', () => {
-    prod.style.boxShadow = '0 8px 20px rgba(0,0,0,0.05)';
+// Toast de productos
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2000);
+}
+
+document.querySelectorAll(".add").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const name = btn.getAttribute("data-name");
+    showToast(`Añadido: ${name}`);
   });
 });
