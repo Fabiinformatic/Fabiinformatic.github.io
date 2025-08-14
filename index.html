@@ -3,82 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Página Minimalista</title>
+  <title>Lixby - Tecnología Minimalista</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Ventana de bienvenida flotante -->
-<div id="welcomeOverlay" class="overlay">
-  <div class="welcomeBox">
-    <h1>Bienvenido</h1>
-    <p>Selecciona cómo quieres entrar</p>
-    <div class="welcomeButtons">
+  <!-- Ventana de Bienvenida -->
+  <div id="welcomeOverlay" class="overlay">
+    <div class="welcomeBox">
+      <h1>Bienvenido</h1>
       <button id="guestBtn">Entrar como invitado</button>
       <button id="loginBtn">Iniciar sesión / Registrarse</button>
     </div>
   </div>
-</div>
 
-<!-- Ventana de login/registro -->
-<div id="loginModal" class="overlay hidden">
-  <div class="loginBox">
-    <h2>Crear o iniciar sesión</h2>
-    <button class="loginProvider" id="googleLogin">Continuar con Google</button>
-    <button class="loginProvider" id="githubLogin">Continuar con GitHub</button>
-    <button class="loginProvider" id="emailLogin">Continuar con correo</button>
-    <button id="closeLogin">Cerrar</button>
+  <!-- Modal de Login / Registro -->
+  <div id="loginModal" class="modal hidden">
+    <div class="modalContent">
+      <span id="closeLogin" class="close">&times;</span>
+      <h2>Iniciar Sesión / Registrarse</h2>
+      <button id="googleLogin">Continuar con Google</button>
+      <button id="githubLogin">Continuar con GitHub</button>
+      <button id="emailLogin">Continuar con Correo</button>
+    </div>
   </div>
-</div>
-
 
   <!-- Contenido principal -->
   <div id="mainContent">
     <header>
-      <div class="logo">Mi Página</div>
+      <div class="logo">Lixby</div>
       <nav>
-        <a href="#services">Servicios</a>
-        <a href="#account">Cuenta</a>
-        <a href="#contact">Contacto</a>
+        <a href="#inicio">Inicio</a>
+        <a href="#tienda">Tienda</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#contacto">Contacto</a>
       </nav>
     </header>
 
-    <section class="hero">
-      <h1>Hola, bienvenido a tu web minimalista</h1>
-      <p>Explora tus servicios y cuenta desde aquí</p>
-      <button>Comenzar</button>
+    <section class="hero" id="inicio">
+      <h1>Innovación Minimalista</h1>
+      <p>Soluciones tecnológicas con estilo limpio y elegante.</p>
+      <button onclick="scrollToContact()">Contáctanos</button>
     </section>
 
-    <section id="services">
-      <h2>Servicios</h2>
+    <section class="services" id="servicios">
+      <h2>Nuestros Servicios</h2>
       <div class="service-cards">
-        <div class="card">Servicio 1</div>
-        <div class="card">Servicio 2</div>
-        <div class="card">Servicio 3</div>
+        <div class="card">
+          <h3>Desarrollo Web</h3>
+          <p>Webs rápidas, modernas y responsivas.</p>
+        </div>
+        <div class="card">
+          <h3>Software a Medida</h3>
+          <p>Soluciones personalizadas para tu negocio.</p>
+        </div>
+        <div class="card">
+          <h3>Consultoría IT</h3>
+          <p>Asesoramiento profesional en tecnología.</p>
+        </div>
       </div>
     </section>
 
-    <section id="account">
-      <h2>Mi Cuenta</h2>
-      <div class="accountCards">
-        <div class="card">Tarjeta de crédito</div>
-        <div class="card">Pedidos</div>
-        <div class="card">Compras</div>
+    <section class="store" id="tienda">
+      <h2>Nuestra Tienda</h2>
+      <div class="service-cards">
+        <div class="card">
+          <h3>Producto 1</h3>
+          <p>Descripción breve y minimalista.</p>
+        </div>
+        <div class="card">
+          <h3>Producto 2</h3>
+          <p>Descripción breve y minimalista.</p>
+        </div>
+        <div class="card">
+          <h3>Producto 3</h3>
+          <p>Descripción breve y minimalista.</p>
+        </div>
       </div>
     </section>
 
-    <section id="contact">
-      <h2>Contacto</h2>
+    <section class="contact" id="contacto">
+      <h2>Contáctanos</h2>
       <form id="contactForm">
-        <input type="text" placeholder="Nombre" required>
-        <input type="email" placeholder="Correo" required>
-        <textarea placeholder="Mensaje" rows="4" required></textarea>
+        <input type="text" name="name" placeholder="Nombre y Apellido" required>
+        <input type="email" name="email" placeholder="Correo electrónico" required>
+        <textarea name="message" placeholder="Descripción" required></textarea>
         <button type="submit">Enviar</button>
-        <p id="successMessage">¡Mensaje enviado con éxito!</p>
       </form>
+      <div id="successMessage">¡Le responderemos lo antes posible, gracias!</div>
     </section>
 
     <footer>
-      &copy; 2025 Mi Página Minimalista
+      <p>© 2025 Lixby - Todos los derechos reservados</p>
     </footer>
   </div>
 
