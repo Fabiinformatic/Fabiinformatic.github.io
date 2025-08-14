@@ -1,56 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Cuenta</title>
-<link rel="stylesheet" href="style.css">
-<script type="module" src="app.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticación Firebase</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
+    <div class="container" id="auth-container">
+        <h1>Bienvenido</h1>
+        <div id="first-time">
+            <button id="guest-btn">Entrar como invitado</button>
+            <button id="login-btn">Iniciar sesión / Registrarse</button>
+        </div>
 
-<!-- MODAL DE LOGIN / REGISTRO -->
-<div id="authModal" class="modal">
-  <div class="modal-content">
-    <h2>Bienvenido</h2>
-    <p>Inicia sesión o crea una cuenta</p>
-    <button id="googleLogin">Iniciar con Google</button>
-    <button id="githubLogin">Iniciar con GitHub</button>
-    <hr>
-    <input type="email" id="emailInput" placeholder="Correo electrónico">
-    <input type="password" id="passwordInput" placeholder="Contraseña">
-    <button id="emailLogin">Iniciar / Registrar</button>
-    <hr>
-    <button id="guestLogin">Entrar como Invitado</button>
-  </div>
-</div>
+        <div id="login-form" style="display:none;">
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <input type="password" id="password" placeholder="Contraseña">
+            <button id="email-signup">Crear cuenta</button>
+            <button id="email-login">Iniciar sesión</button>
+            <hr>
+            <button id="google-login">Entrar con Google</button>
+            <button id="github-login">Entrar con GitHub</button>
+        </div>
 
-<!-- CUENTA -->
-<section class="account" id="miCuenta" style="display:none">
-  <h2>Mi Cuenta</h2>
-  <div class="account-container">
-    <div class="account-info card">
-      <h3>Información Personal</h3>
-      <p><strong>Nombre:</strong> <span id="userName"></span></p>
-      <p><strong>Email:</strong> <span id="userEmail"></span></p>
-      <button class="edit-btn">Editar</button>
+        <div id="user-info" style="display:none;">
+            <h2>Bienvenido, <span id="user-name"></span></h2>
+            <button id="logout-btn">Cerrar sesión</button>
+        </div>
     </div>
-    <div class="account-card card">
-      <h3>Tarjeta de Crédito</h3>
-      <div class="credit-card">
-        <p class="card-number">**** **** **** 1234</p>
-        <p class="card-holder" id="cardHolder"></p>
-        <p class="card-expiry">12/26</p>
-      </div>
-      <button class="edit-btn">Editar</button>
-    </div>
-    <div class="account-orders card">
-      <h3>Pedidos Recientes</h3>
-      <ul id="ordersList"></ul>
-    </div>
-    <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
-  </div>
-</section>
-
+    
+    <script src="script.js"></script>
 </body>
 </html>
