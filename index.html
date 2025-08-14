@@ -1,51 +1,115 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Página Web</title>
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lixby - Tecnología Minimalista</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- CONTENIDO PRINCIPAL DE TU PÁGINA -->
+
+  <!-- VENTANA DE BIENVENIDA -->
+  <div id="welcomeOverlay">
+    <div class="welcomeBox">
+      <h1>Bienvenido a Lixby</h1>
+      <p>Tu tecnología minimalista y elegante.</p>
+      <div class="welcomeButtons">
+        <button id="guestBtn">Entrar como invitado</button>
+        <button id="loginBtn">Iniciar sesión / Registrarse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div id="mainContent" class="hidden">
+    
+    <!-- HEADER LIQUID GLASS -->
     <header>
-        <h1>Mi Página Web</h1>
-        <button id="login-btn-header">Iniciar sesión / Registrarse</button>
+      <div class="logo">Lixby</div>
+      <nav>
+        <a href="#inicio">Inicio</a>
+        <a href="#tienda">Tienda</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#contacto">Contacto</a>
+        <a href="#cuenta">Cuenta</a>
+      </nav>
     </header>
 
-    <main>
-        <p>Bienvenido a mi página. Aquí puedes ver tus productos, servicios y contenido.</p>
-        <!-- Agrega más contenido aquí -->
-    </main>
+    <!-- HERO -->
+    <section class="hero" id="inicio">
+      <h1>Innovación Minimalista</h1>
+      <p>Soluciones tecnológicas con estilo limpio y elegante.</p>
+      <button onclick="scrollToContact()">Contáctanos</button>
+    </section>
 
-    <!-- MODAL LOGIN / REGISTRO -->
-    <div id="auth-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Iniciar sesión o registrarse</h2>
-
-            <input type="email" id="email" placeholder="Correo electrónico">
-            <input type="password" id="password" placeholder="Contraseña">
-            <button id="email-signup">Crear cuenta</button>
-            <button id="email-login">Iniciar sesión</button>
-
-            <hr>
-            <button id="google-login">Entrar con Google</button>
-            <button id="github-login">Entrar con GitHub</button>
-            <button id="guest-btn">Entrar como invitado</button>
+    <!-- SERVICIOS -->
+    <section class="services" id="servicios">
+      <h2>Nuestros Servicios</h2>
+      <div class="service-cards">
+        <div class="card">
+          <h3>Desarrollo Web</h3>
+          <p>Webs rápidas, modernas y responsivas.</p>
         </div>
-    </div>
+        <div class="card">
+          <h3>Software a Medida</h3>
+          <p>Soluciones personalizadas para tu negocio.</p>
+        </div>
+        <div class="card">
+          <h3>Consultoría IT</h3>
+          <p>Asesoramiento profesional en tecnología.</p>
+        </div>
+      </div>
+    </section>
 
-    <!-- USUARIO LOGUEADO -->
-    <div id="user-info" class="user-info" style="display:none;">
-        <h2>Bienvenido, <span id="user-name"></span></h2>
-        <button id="logout-btn">Cerrar sesión</button>
-    </div>
+    <!-- TIENDA -->
+    <section class="store" id="tienda">
+      <h2>Nuestra Tienda</h2>
+      <div class="service-cards">
+        <div class="card">
+          <h3>Producto 1</h3>
+          <p>Descripción breve y minimalista.</p>
+        </div>
+        <div class="card">
+          <h3>Producto 2</h3>
+          <p>Descripción breve y minimalista.</p>
+        </div>
+        <div class="card">
+          <h3>Producto 3</h3>
+          <p>Descripción breve y minimalista.</p>
+        </div>
+      </div>
+    </section>
 
-    <script src="script.js"></script>
+    <!-- CONTACTO -->
+    <section class="contact" id="contacto">
+      <h2>Contáctanos</h2>
+      <p>¿Tienes un proyecto o consulta? ¡Hablemos!</p>
+      <form id="contactForm">
+        <input type="text" name="name" placeholder="Nombre y Apellido" required>
+        <input type="email" name="email" placeholder="Correo electrónico" required>
+        <textarea name="message" placeholder="Descripción" required></textarea>
+        <button type="submit">Enviar</button>
+      </form>
+      <div id="successMessage">¡Le responderemos lo antes posible, gracias!</div>
+    </section>
+
+    <!-- CUENTA -->
+    <section class="account" id="cuenta">
+      <h2>Mi Cuenta</h2>
+      <p>Aquí podrás ver tus pedidos, tarjetas y datos de usuario.</p>
+      <div class="accountCards">
+        <div class="card">Pedidos</div>
+        <div class="card">Tarjeta de crédito</div>
+        <div class="card">Configuración</div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>© 2025 Lixby - Todos los derechos reservados</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
