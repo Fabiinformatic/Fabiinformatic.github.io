@@ -1,88 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lixby - Tecnología Minimalista</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Cuenta</title>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js" defer></script>
 </head>
 <body>
 
-  <!-- HEADER LIQUID GLASS -->
-  <header>
-    <div class="logo">Lixby</div>
-    <nav>
-      <a href="#inicio">Inicio</a>
-      <a href="#tienda">Tienda</a>
-      <a href="#servicios">Servicios</a>
-      <a href="#contacto">Contacto</a>
-    </nav>
-  </header>
+<!-- MODAL DE LOGIN / REGISTRO -->
+<div id="authModal" class="modal">
+  <div class="modal-content">
+    <h2>Bienvenido</h2>
+    <p>Inicia sesión o crea una cuenta</p>
+    <button id="googleLogin">Iniciar con Google</button>
+    <button id="githubLogin">Iniciar con GitHub</button>
+    <hr>
+    <input type="email" id="emailInput" placeholder="Correo electrónico">
+    <input type="password" id="passwordInput" placeholder="Contraseña">
+    <button id="emailLogin">Iniciar / Registrar</button>
+    <hr>
+    <button id="guestLogin">Entrar como Invitado</button>
+  </div>
+</div>
 
-  <!-- HERO -->
-  <section class="hero" id="inicio">
-    <h1>Innovación Minimalista</h1>
-    <p>Soluciones tecnológicas con estilo limpio y elegante.</p>
-    <button onclick="scrollToContact()">Contáctanos</button>
-  </section>
-
-  <!-- SERVICIOS -->
-  <section class="services" id="servicios">
-    <h2>Nuestros Servicios</h2>
-    <div class="service-cards">
-      <div class="card">
-        <h3>Desarrollo Web</h3>
-        <p>Webs rápidas, modernas y responsivas.</p>
-      </div>
-      <div class="card">
-        <h3>Software a Medida</h3>
-        <p>Soluciones personalizadas para tu negocio.</p>
-      </div>
-      <div class="card">
-        <h3>Consultoría IT</h3>
-        <p>Asesoramiento profesional en tecnología.</p>
-      </div>
+<!-- CUENTA -->
+<section class="account" id="miCuenta" style="display:none">
+  <h2>Mi Cuenta</h2>
+  <div class="account-container">
+    <div class="account-info card">
+      <h3>Información Personal</h3>
+      <p><strong>Nombre:</strong> <span id="userName"></span></p>
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <button class="edit-btn">Editar</button>
     </div>
-  </section>
-
-  <!-- TIENDA -->
-  <section class="store" id="tienda">
-    <h2>Nuestra Tienda</h2>
-    <div class="service-cards">
-      <div class="card">
-        <h3>Producto 1</h3>
-        <p>Descripción breve y minimalista.</p>
+    <div class="account-card card">
+      <h3>Tarjeta de Crédito</h3>
+      <div class="credit-card">
+        <p class="card-number">**** **** **** 1234</p>
+        <p class="card-holder" id="cardHolder"></p>
+        <p class="card-expiry">12/26</p>
       </div>
-      <div class="card">
-        <h3>Producto 2</h3>
-        <p>Descripción breve y minimalista.</p>
-      </div>
-      <div class="card">
-        <h3>Producto 3</h3>
-        <p>Descripción breve y minimalista.</p>
-      </div>
+      <button class="edit-btn">Editar</button>
     </div>
-  </section>
+    <div class="account-orders card">
+      <h3>Pedidos Recientes</h3>
+      <ul id="ordersList"></ul>
+    </div>
+    <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
+  </div>
+</section>
 
-  <!-- CONTACTO -->
-  <section class="contact" id="contacto">
-    <h2>Contáctanos</h2>
-    <p>¿Tienes un proyecto o consulta? ¡Hablemos!</p>
-    <form id="contactForm">
-      <input type="text" name="name" placeholder="Nombre y Apellido" required>
-      <input type="email" name="email" placeholder="Correo electrónico" required>
-      <textarea name="message" placeholder="Descripción" required></textarea>
-      <button type="submit">Enviar</button>
-    </form>
-    <div id="successMessage">¡Le responderemos lo antes posible, gracias!</div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer>
-    <p>© 2025 Lixby - Todos los derechos reservados</p>
-  </footer>
-
-  <script src="script.js"></script>
 </body>
 </html>
