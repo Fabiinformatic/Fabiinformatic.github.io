@@ -3,32 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lixby - Página Oficial</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to bottom, #1e1e2f, #2e2e47);
-            color: white;
-            text-align: center;
-            padding: 50px;
-        }
-        h1 {
-            font-size: 3em;
-            margin-bottom: 0.2em;
-        }
-        p {
-            font-size: 1.2em;
-        }
-        footer {
-            margin-top: 50px;
-            font-size: 0.9em;
-            color: #ccc;
-        }
-    </style>
+    <title>Lixby - Tecnología inteligente</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Bienvenido a Lixby</h1>
-    <p>Innovación, tecnología y soluciones a tu alcance.</p>
-    <footer>© 2025 Lixby. Todos los derechos reservados.</footer>
+    <header>
+        <div class="logo">Lixby</div>
+        <nav>
+            <ul>
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#servicios">Servicios</a></li>
+                <li><a href="#productos">Productos</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="inicio" class="hero">
+        <div class="hero-text">
+            <h1>Innovación que transforma tu mundo digital</h1>
+            <p>Soluciones tecnológicas avanzadas para empresas y particulares.</p>
+            <a href="#contacto" class="btn">Contáctanos</a>
+        </div>
+    </section>
+
+    <section id="servicios" class="services">
+        <h2>Nuestros Servicios</h2>
+        <div class="cards">
+            <div class="card">
+                <img src="https://img.icons8.com/ios-filled/100/000000/cloud.png" alt="Cloud">
+                <h3>Cloud Computing</h3>
+                <p>Optimiza tu infraestructura con servicios en la nube seguros y escalables.</p>
+            </div>
+            <div class="card">
+                <img src="https://img.icons8.com/ios-filled/100/000000/coding.png" alt="Desarrollo">
+                <h3>Desarrollo de Software</h3>
+                <p>Aplicaciones personalizadas para cubrir tus necesidades digitales.</p>
+            </div>
+            <div class="card">
+                <img src="https://img.icons8.com/ios-filled/100/000000/security-checked.png" alt="Seguridad">
+                <h3>Seguridad Informática</h3>
+                <p>Protege tu información y garantiza la continuidad de tu negocio.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="productos" class="products">
+        <h2>Soluciones Lixby</h2>
+        <div class="product-grid">
+            <div class="product">
+                <img src="https://via.placeholder.com/300x200" alt="Producto 1">
+                <h3>Lixby Cloud Pro</h3>
+                <p>Almacenamiento seguro y flexible en la nube con alta velocidad.</p>
+            </div>
+            <div class="product">
+                <img src="https://via.placeholder.com/300x200" alt="Producto 2">
+                <h3>Lixby Secure</h3>
+                <p>Protección avanzada para tus sistemas y datos críticos.</p>
+            </div>
+            <div class="product">
+                <img src="https://via.placeholder.com/300x200" alt="Producto 3">
+                <h3>Lixby App Suite</h3>
+                <p>Software empresarial hecho a medida para mejorar tu productividad.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contacto" class="contact">
+        <h2>Contacto</h2>
+        <p>¿Tienes un proyecto o consulta? ¡Hablemos!</p>
+        <a href="mailto:info@lixby.com" class="btn">Escríbenos</a>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Lixby. Todos los derechos reservados.</p>
+    </footer>
 </body>
 </html>
+
