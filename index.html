@@ -213,4 +213,65 @@
 
     <!-- PORTADA -->
     <section class="portada" id="inicio">
-        <h1>Bienvenido a
+        <h1>Bienvenido a Lixby</h1>
+        <p>Soluciones tecnológicas para tu empresa</p>
+    </section>
+
+    <!-- SERVICIOS -->
+    <section class="servicios" id="servicios">
+        <div class="servicio">
+            <h3>Desarrollo Web</h3>
+            <p>Páginas modernas, rápidas y seguras.</p>
+        </div>
+        <div class="servicio">
+            <h3>Aplicaciones Móviles</h3>
+            <p>Apps para iOS y Android de alto rendimiento.</p>
+        </div>
+        <div class="servicio">
+            <h3>Cloud & Hosting</h3>
+            <p>Servicios de nube confiables y escalables.</p>
+        </div>
+    </section>
+
+    <!-- CONTACTO -->
+    <section class="contacto" id="contacto">
+        <button id="btn-contacto">Contáctanos</button>
+
+        <!-- FORMULARIO OCULTO -->
+        <div id="formulario-contacto" class="formulario-oculto">
+            <h3>¿Tienes un proyecto o consulta? ¡Hablemos!</h3>
+            <p>Escríbenos:</p>
+            <form>
+                <div class="campo">
+                    <input type="text" placeholder="Nombre" required>
+                    <input type="text" placeholder="Apellido" required>
+                </div>
+                <div class="campo">
+                    <input type="email" placeholder="Correo electrónico" required>
+                </div>
+                <div class="campo">
+                    <textarea placeholder="Descripción" rows="5" required></textarea>
+                </div>
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; 2025 Lixby. Todos los derechos reservados.
+    </footer>
+
+    <!-- SCRIPT -->
+    <script>
+        const btn = document.getElementById('btn-contacto');
+        const formulario = document.getElementById('formulario-contacto');
+
+        btn.addEventListener('click', () => {
+            formulario.classList.toggle('show');
+            formulario.scrollIntoView({behavior: "smooth"});
+        });
+    </script>
+    
+</body>
+</html>
