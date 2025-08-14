@@ -1,14 +1,11 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Elementos
-  const welcomeOverlay = document.getElementById("welcomeOverlay");
-  const guestBtn = document.getElementById("guestBtn");
-  const loginBtn = document.getElementById("loginBtn");
-  const loginModal = document.getElementById("loginModal");
-  const closeLogin = document.getElementById("closeLogin");
-  const mainContent = document.getElementById("mainContent");
+import { guardarMensaje } from "./firebase-config.js";
 
-  // Ocultar contenido principal al cargar
-  mainContent.classList.add("hidden");
+document.addEventListener("DOMContentLoaded", () => {
+  const welcomeOverlay = document.getElementById("welcome-overlay");
+  const guestBtn = document.getElementById("guest-btn");
+  const mainContent = document.getElementById("main-content");
+  const contactForm = document.getElementById("contact-form");
+  const statusMsg = document.getElementById("form-status");
 
   // Entrar como invitado
   guestBtn.addEventListener("click", () => {
@@ -16,37 +13,28 @@ document.addEventListener("DOMContentLoaded", () => {
     mainContent.classList.remove("hidden");
   });
 
-  // Abrir ventana de login/registro
-  loginBtn.addEventListener("click", () => {
-    loginModal.classList.remove("hidden");
-  });
+  // Formulario de contacto
+  contactForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const message = document.getElementById("message").value.trim();
 
-  // Cerrar ventana de login/registro
-  closeLogin.addEventListener("click", () => {
-    loginModal.classList.add("hidden");
-  });
+    if (!name || !email || !message) {
+      statusMsg.style.color = "red";
+      statusMsg.textContent = "Por favor completa todos los campos.";
+      return;
+    }
 
-  // Simulación de login con Google
-  document.getElementById("googleLogin").addEventListener("click", () => {
-    alert("Login con Google (simulado)");
-    loginModal.classList.add("hidden");
-    welcomeOverlay.style.display = "none";
-    mainContent.classList.remove("hidden");
-  });
-
-  // Simulación de login con GitHub
-  document.getElementById("githubLogin").addEventListener("click", () => {
-    alert("Login con GitHub (simulado)");
-    loginModal.classList.add("hidden");
-    welcomeOverlay.style.display = "none";
-    mainContent.classList.remove("hidden");
-  });
-
-  // Simulación de login con correo electrónico
-  document.getElementById("emailLogin").addEventListener("click", () => {
-    alert("Login con correo electrónico (simulado)");
-    loginModal.classList.add("hidden");
-    welcomeOverlay.style.display = "none";
-    mainContent.classList.remove("hidden");
+    try {
+      await guardarMensaje(name, email, message);
+      statusMsg.style.color = "green";
+      statusMsg.textContent = "✅ Mensaje enviado correctamente.";
+      contactForm.reset();
+    } catch (error) {
+      statusMsg.style.color = "red";
+      statusMsg.textContent = "❌ Error al enviar el mensaje.";
+      console.error(error);
+    }
   });
 });
