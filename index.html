@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lixby - Tecnología Minimalista</title>
+  <title>Mi Página Minimalista</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <!-- VENTANA DE BIENVENIDA -->
+  <!-- Ventana de bienvenida -->
   <div id="welcomeOverlay">
     <div class="welcomeBox">
-      <h1>Bienvenido a Lixby</h1>
-      <p>Tu tecnología minimalista y elegante.</p>
+      <h1>Bienvenido</h1>
+      <p>¡Selecciona cómo quieres entrar!</p>
       <div class="welcomeButtons">
         <button id="guestBtn">Entrar como invitado</button>
         <button id="loginBtn">Iniciar sesión / Registrarse</button>
@@ -20,93 +19,54 @@
     </div>
   </div>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <div id="mainContent" class="hidden">
-    
-    <!-- HEADER LIQUID GLASS -->
+  <!-- Contenido principal -->
+  <div id="mainContent">
     <header>
-      <div class="logo">Lixby</div>
+      <div class="logo">Mi Página</div>
       <nav>
-        <a href="#inicio">Inicio</a>
-        <a href="#tienda">Tienda</a>
-        <a href="#servicios">Servicios</a>
-        <a href="#contacto">Contacto</a>
-        <a href="#cuenta">Cuenta</a>
+        <a href="#services">Servicios</a>
+        <a href="#account">Cuenta</a>
+        <a href="#contact">Contacto</a>
       </nav>
     </header>
 
-    <!-- HERO -->
-    <section class="hero" id="inicio">
-      <h1>Innovación Minimalista</h1>
-      <p>Soluciones tecnológicas con estilo limpio y elegante.</p>
-      <button onclick="scrollToContact()">Contáctanos</button>
+    <section class="hero">
+      <h1>Hola, bienvenido a tu web minimalista</h1>
+      <p>Explora tus servicios y cuenta desde aquí</p>
+      <button>Comenzar</button>
     </section>
 
-    <!-- SERVICIOS -->
-    <section class="services" id="servicios">
-      <h2>Nuestros Servicios</h2>
+    <section id="services">
+      <h2>Servicios</h2>
       <div class="service-cards">
-        <div class="card">
-          <h3>Desarrollo Web</h3>
-          <p>Webs rápidas, modernas y responsivas.</p>
-        </div>
-        <div class="card">
-          <h3>Software a Medida</h3>
-          <p>Soluciones personalizadas para tu negocio.</p>
-        </div>
-        <div class="card">
-          <h3>Consultoría IT</h3>
-          <p>Asesoramiento profesional en tecnología.</p>
-        </div>
+        <div class="card">Servicio 1</div>
+        <div class="card">Servicio 2</div>
+        <div class="card">Servicio 3</div>
       </div>
     </section>
 
-    <!-- TIENDA -->
-    <section class="store" id="tienda">
-      <h2>Nuestra Tienda</h2>
-      <div class="service-cards">
-        <div class="card">
-          <h3>Producto 1</h3>
-          <p>Descripción breve y minimalista.</p>
-        </div>
-        <div class="card">
-          <h3>Producto 2</h3>
-          <p>Descripción breve y minimalista.</p>
-        </div>
-        <div class="card">
-          <h3>Producto 3</h3>
-          <p>Descripción breve y minimalista.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- CONTACTO -->
-    <section class="contact" id="contacto">
-      <h2>Contáctanos</h2>
-      <p>¿Tienes un proyecto o consulta? ¡Hablemos!</p>
-      <form id="contactForm">
-        <input type="text" name="name" placeholder="Nombre y Apellido" required>
-        <input type="email" name="email" placeholder="Correo electrónico" required>
-        <textarea name="message" placeholder="Descripción" required></textarea>
-        <button type="submit">Enviar</button>
-      </form>
-      <div id="successMessage">¡Le responderemos lo antes posible, gracias!</div>
-    </section>
-
-    <!-- CUENTA -->
-    <section class="account" id="cuenta">
+    <section id="account">
       <h2>Mi Cuenta</h2>
-      <p>Aquí podrás ver tus pedidos, tarjetas y datos de usuario.</p>
       <div class="accountCards">
-        <div class="card">Pedidos</div>
         <div class="card">Tarjeta de crédito</div>
-        <div class="card">Configuración</div>
+        <div class="card">Pedidos</div>
+        <div class="card">Compras</div>
       </div>
     </section>
 
-    <!-- FOOTER -->
+    <section id="contact">
+      <h2>Contacto</h2>
+      <form id="contactForm">
+        <input type="text" placeholder="Nombre" required>
+        <input type="email" placeholder="Correo" required>
+        <textarea placeholder="Mensaje" rows="4" required></textarea>
+        <button type="submit">Enviar</button>
+        <p id="successMessage">¡Mensaje enviado con éxito!</p>
+      </form>
+    </section>
+
     <footer>
-      <p>© 2025 Lixby - Todos los derechos reservados</p>
+      &copy; 2025 Mi Página Minimalista
     </footer>
   </div>
 
