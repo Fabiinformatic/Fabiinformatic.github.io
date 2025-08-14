@@ -7,23 +7,34 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Ventana de bienvenida -->
-  <div id="welcome-overlay">
-    <div id="welcome-box">
+
+  <!-- Overlay de bienvenida -->
+  <div id="welcome-overlay" class="overlay">
+    <div class="glass-box">
       <h1>Bienvenido</h1>
       <p>Inicia sesión o entra como invitado</p>
       <button id="guest-btn">Entrar como invitado</button>
-      <button id="google-btn">Iniciar sesión con Google</button>
-      <button id="github-btn">Iniciar sesión con GitHub</button>
+      <button id="google-btn">Google</button>
+      <button id="github-btn">GitHub</button>
     </div>
   </div>
 
   <!-- Contenido principal -->
   <div id="main-content" class="hidden">
-    <header>
-      <h2>Mi página web minimalista</h2>
-      <p>Contenido de la página aquí</p>
+    <header class="glass-header">
+      <h2>Lixby</h2>
     </header>
+
+    <section>
+      <h3>Contacto</h3>
+      <form id="contact-form">
+        <input type="text" id="name" placeholder="Tu nombre">
+        <input type="email" id="email" placeholder="Tu correo">
+        <textarea id="message" placeholder="Tu mensaje"></textarea>
+        <button type="submit">Enviar</button>
+      </form>
+      <p id="form-status"></p>
+    </section>
   </div>
 
   <script type="module" src="script.js"></script>
