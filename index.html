@@ -1,167 +1,92 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lixby - Tecnología y Ofertas</title>
-  <style>
-    /* Estilo base minimalista */
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(135deg, #f5f5f7, #e5e5ea);
-      color: #1d1d1f;
-    }
-
-    /* Header */
-    header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      backdrop-filter: blur(12px);
-      background: rgba(255, 255, 255, 0.65);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      z-index: 1000;
-    }
-
-    header h1 {
-      font-size: 1.5em;
-      margin: 0;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-    }
-
-    nav a {
-      margin-left: 20px;
-      text-decoration: none;
-      color: #1d1d1f;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-
-    nav a:hover {
-      color: #0071e3;
-    }
-
-    /* Hero */
-    .hero {
-      text-align: center;
-      padding: 120px 20px 60px;
-      background: radial-gradient(circle at top, rgba(255,255,255,0.6), transparent);
-    }
-
-    .hero h2 {
-      font-size: 2.8em;
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    .hero p {
-      font-size: 1.2em;
-      color: #6e6e73;
-      max-width: 500px;
-      margin: auto;
-    }
-
-    /* Productos */
-    .productos {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 30px;
-      padding: 20px 40px;
-    }
-
-    .producto {
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .producto img {
-      max-width: 100%;
-      border-radius: 12px;
-    }
-
-    .producto h3 {
-      margin: 15px 0 5px;
-      font-size: 1.2em;
-      font-weight: 600;
-    }
-
-    .producto p {
-      color: #6e6e73;
-      margin-bottom: 10px;
-    }
-
-    .producto span {
-      font-weight: bold;
-      color: #0071e3;
-      font-size: 1.1em;
-    }
-
-    .producto:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-    }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: rgba(245, 245, 247, 0.8);
-      color: #6e6e73;
-      font-size: 0.9em;
-      backdrop-filter: blur(12px);
-      margin-top: 40px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIXBY — Tecnología minimalista</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>Lixby</h1>
-    <nav>
+  <header class="nav glass">
+    <div class="brand">LIXBY</div>
+    <nav id="navLinks">
       <a href="#productos">Productos</a>
-      <a href="#ofertas">Ofertas</a>
+      <a href="#servicios">Servicios</a>
+      <a href="#sobre">Sobre</a>
       <a href="#contacto">Contacto</a>
     </nav>
+    <div class="nav-cta">
+      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+    </div>
   </header>
 
-  <section class="hero">
-    <h2>Innovación y Estilo en Tecnología</h2>
-    <p>Descubre lo último en productos y ofertas exclusivas en Lixby</p>
-  </section>
+  <main>
+    <section class="hero">
+      <div class="hero-card glass reveal">
+        <h1>Tecnología con diseño <span class="liquid">líquido</span></h1>
+        <p>Productos y servicios para una experiencia fluida y minimalista.</p>
+        <div class="actions">
+          <a class="btn primary" data-scroll-to="#productos">Ver productos</a>
+          <a class="btn" data-scroll-to="#servicios">Servicios</a>
+        </div>
+      </div>
+    </section>
 
-  <section id="productos" class="productos">
-    <div class="producto">
-      <img src="https://via.placeholder.com/300x200" alt="Producto 1">
-      <h3>Smartphone Pro</h3>
-      <p>Potencia y diseño premium</p>
-      <span>$899</span>
-    </div>
-    <div class="producto">
-      <img src="https://via.placeholder.com/300x200" alt="Producto 2">
-      <h3>Auriculares Max</h3>
-      <p>Sonido de alta fidelidad</p>
-      <span>$299</span>
-    </div>
-    <div class="producto">
-      <img src="https://via.placeholder.com/300x200" alt="Producto 3">
-      <h3>Portátil Ultra</h3>
-      <p>Rendimiento sin límites</p>
-      <span>$1,499</span>
-    </div>
-  </section>
+    <section id="productos" class="section">
+      <h2>Productos</h2>
+      <div class="grid">
+        <article class="card glass reveal">
+          <h3>LIXBY Air 13</h3>
+          <p>Ultraligero y potente.</p>
+          <div class="card-actions">
+            <span class="price">1.199€</span>
+            <button class="btn primary add" data-name="LIXBY Air 13">Añadir</button>
+          </div>
+        </article>
+        <article class="card glass reveal">
+          <h3>LIXBY One</h3>
+          <p>Teléfono de última generación.</p>
+          <div class="card-actions">
+            <span class="price">999€</span>
+            <button class="btn primary add" data-name="LIXBY One">Añadir</button>
+          </div>
+        </article>
+      </div>
+    </section>
 
-  <footer>
-    © 2025 Lixby - Todos los derechos reservados.
+    <section id="servicios" class="section">
+      <h2>Servicios</h2>
+      <div class="services">
+        <div class="service glass reveal">
+          <h3>Instalación Pro</h3>
+          <p>Configuración completa en tu espacio.</p>
+        </div>
+        <div class="service glass reveal">
+          <h3>Soporte 7/7</h3>
+          <p>Asistencia remota e in situ.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="sobre" class="section">
+      <h2>Sobre LIXBY</h2>
+      <p>Menos, pero mejor. Simplicidad y calidad.</p>
+    </section>
+
+    <section id="contacto" class="section">
+      <h2>Contacto</h2>
+      <form class="contact-form" onsubmit="return false;">
+        <input type="email" placeholder="tu@email.com" />
+        <button class="btn primary">Enviar</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer glass">
+    <span>© <span id="year"></span> LIXBY</span>
   </footer>
+
+  <div id="toast" class="toast"></div>
+  <script src="script.js"></script>
 </body>
 </html>
