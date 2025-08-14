@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalle del Producto - LIXBY</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav glass">
+    <div class="brand" onclick="window.location.href='index.html'">LIXBY</div>
+    <nav id="navLinks">
+      <a href="index.html#inicio">Inicio</a>
+      <a href="index.html#productos">Productos</a>
+      <a href="index.html#contacto">Contáctanos</a>
+      <a href="index.html#conocenos">Conócenos</a>
+    </nav>
+    <button id="themeToggle" class="btn ghost">◐</button>
+  </header>
+
+  <main class="section">
+    <div id="productDetail" class="product-detail glass">
+      <!-- Se rellena por JS -->
+    </div>
+  </main>
+
+  <footer class="footer glass">
+    <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    // Año automático
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Datos de productos
+    const products = {
+      "lixby-one": {
+        name: "Lixby One",
+        description: "Ultraligero, potente y diseñado para la vida moderna.",
+        price: "349€",
+        image: "img/lixby-one.jpg"
+      },
+      "lixby-one-plus": {
+        name: "Lixby One Plus",
+        description: "Teléfono de última generación con cámara profesional.",
+        price: "659€",
+        image: "img/lixby-one-plus.jpg"
+      },
+      "lixby-one-pro": {
+        name: "Lixby One Pro",
+        description: "Audio de alta fidelidad y rendimiento incomparable.",
+        price: "1099€",
+        image: "img/lixby-one-pro.jpg"
+      }
+    };
+
+    // Obtener ID del producto desde la URL
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get("id");
+
+    // Renderizar el producto
+    const container = document.getElementById("productDetail");
+    if (products[productId]) {
+      const p = products[productId];
+      container.innerHTML = `
+        <img src="${p.image}" alt="${p.name}" class="product-image">
+        <div class="product-info">
+          <h1>${p.name}</h1>
+          <p>${p.description}</p>
+          <span class="price">${p.price}</span>
+          <button class="btn primary">Comprar</button>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `<p>Producto no encontrado.</p>`;
+    }
+  </script>
+</body>
+</html>
