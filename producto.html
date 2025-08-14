@@ -1,20 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detalle del Producto - LIXBY</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    /* estilos locales mínimos para la ficha (puedes mantenerlos) */
-    .product-detail { max-width: 1000px; margin: 100px auto 50px; padding: 20px; display:flex; flex-wrap:wrap; gap:30px; align-items:flex-start; }
-    .product-image { max-width: 400px; border-radius:12px; flex:1 1 400px; object-fit:cover; }
-    .product-info { flex:1 1 300px; display:flex; flex-direction:column; gap:15px; }
-    .product-info h1 { margin:0; }
-    .product-info .price { font-size:1.5rem; font-weight:700; color:var(--accent); }
-    .btn-buy { padding:12px 20px; background:var(--accent); border:none; border-radius:8px; font-weight:700; cursor:pointer; color:#000; }
-    @media(max-width:700px){ .product-detail{ margin:80px 16px; flex-direction:column; } .product-image{ max-width:100%; } }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LIXBY — Detalle de producto</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="nav glass">
@@ -25,12 +15,12 @@
       <a href="index.html#contacto">Contáctanos</a>
       <a href="index.html#conocenos">Conócenos</a>
     </nav>
-    <button id="themeToggle" class="btn ghost">◐</button>
+    <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
   </header>
 
-  <main class="section">
+  <main>
     <div id="productDetail" class="product-detail glass" aria-live="polite">
-      <!-- Se rellenará por JS -->
+      <!-- JS rellenará aquí -->
     </div>
   </main>
 
@@ -39,43 +29,43 @@
   </footer>
 
   <script>
-    // Año automático
-    const yearEl = document.getElementById("year");
+    // año
+    const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Datos de productos (mantén/edita según necesites)
+    // Productos y las imágenes que me pasaste
     const products = {
       "lixby-one": {
         name: "Lixby One",
-        description: "Ultraligero, potente y diseñado para la vida moderna.",
+        description: "Ultraligero, potente y diseñado para la vida moderna. Perfecto para productividad y movilidad.",
         price: "349€",
-        image: "img/lixby-one.jpg"
+        image: "https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg"
       },
       "lixby-one-plus": {
         name: "Lixby One Plus",
-        description: "Teléfono de última generación con cámara profesional.",
+        description: "Teléfono de última generación con cámara de alta resolución y batería de larga duración.",
         price: "659€",
-        image: "img/lixby-one-plus.jpg"
+        image: "https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg"
       },
       "lixby-one-pro": {
         name: "Lixby One Pro",
-        description: "Audio de alta fidelidad y rendimiento incomparable.",
+        description: "Rendimiento y audio de alta fidelidad para creadores y audiófilos.",
         price: "1099€",
-        image: "img/lixby-one-pro.jpg"
+        image: "https://m.media-amazon.com/images/I/61rriyfRKwL.jpg"
       }
     };
 
-    // Obtener ID desde la URL (robusto)
+    // leer id
     const params = new URLSearchParams(window.location.search);
-    const rawId = params.get("id");
-    const productId = rawId ? decodeURIComponent(rawId) : null;
-    const container = document.getElementById("productDetail");
+    const raw = params.get('id');
+    const id = raw ? decodeURIComponent(raw) : null;
+    const container = document.getElementById('productDetail');
 
-    if (productId && products[productId]) {
-      const p = products[productId];
-      const imageSrc = p.image || `https://via.placeholder.com/400x400?text=${encodeURIComponent(p.name)}`;
+    if (id && products[id]) {
+      const p = products[id];
+      const img = p.image || `https://via.placeholder.com/600x600?text=${encodeURIComponent(p.name)}`;
       container.innerHTML = `
-        <img src="${imageSrc}" alt="${p.name}" class="product-image" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=Sin+imagen'">
+        <img class="product-image" src="${img}" alt="${p.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/600x600?text=Sin+imagen'">
         <div class="product-info">
           <h1>${p.name}</h1>
           <p>${p.description}</p>
@@ -84,7 +74,7 @@
         </div>
       `;
     } else {
-      container.innerHTML = `<div style="padding:24px;"><h2>Producto no encontrado</h2><p>Vuelve a la <a href="index.html">tienda</a> para ver todos los productos.</p></div>`;
+      container.innerHTML = '<div style="padding:20px;"><h2>Producto no encontrado</h2><p>Vuelve a la <a href="index.html">tienda</a>.</p></div>';
     }
   </script>
 </body>
