@@ -1,114 +1,29 @@
-/* GENERAL */
 body {
-  margin: 0;
-  font-family: 'Helvetica Neue', sans-serif;
-  background: #f0f0f5;
-  color: #333;
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-/* HEADER LIQUID GLASS */
-header {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  padding: 15px 50px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(134, 206, 243, 0.4); /* liquid glass */
-  backdrop-filter: blur(10px);
-  border-radius: 0 0 20px 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  z-index: 100;
-}
-header .logo {
-  font-weight: bold;
-  font-size: 24px;
-}
-header nav a {
-  margin-left: 25px;
-  text-decoration: none;
-  color: #fff;
-  font-weight: 500;
-  transition: color 0.3s;
-}
-header nav a:hover {
-  color: #333;
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    width: 300px;
 }
 
-/* HERO */
-.hero {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding-top: 100px;
-}
-.hero h1 { font-size: 48px; margin-bottom: 15px; }
-.hero p { font-size: 20px; margin-bottom: 25px; }
-.hero button {
-  padding: 15px 30px;
-  border: none;
-  border-radius: 50px;
-  background: #86cef3;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.hero button:hover { background: #6eb8d9; }
-
-/* SERVICES & STORE */
-section { padding: 100px 50px; text-align: center; }
-.service-cards { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-.card {
-  background: rgba(255,255,255,0.6);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 30px;
-  width: 250px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+input {
+    width: 90%;
+    padding: 10px;
+    margin: 10px 0;
 }
 
-/* CONTACT FORM MINIMALISTA */
-.contact form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  max-width: 500px;
-  margin: 0 auto;
-}
-.contact input, .contact textarea {
-  width: 100%;
-  padding: 15px;
-  border-radius: 15px;
-  border: 1px solid #ccc;
-  outline: none;
-  font-size: 16px;
-  transition: 0.3s;
-}
-.contact input:focus, .contact textarea:focus {
-  border-color: #86cef3;
-}
-.contact button {
-  padding: 15px 40px;
-  border: none;
-  border-radius: 50px;
-  background: #86cef3;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-}
-.contact button:hover { background: #6eb8d9; }
-#successMessage { display: none; margin-top: 20px; font-weight: bold; color: green; }
-
-/* FOOTER */
-footer {
-  text-align: center;
-  padding: 30px;
-  background: #86cef3;
-  color: #fff;
+button {
+    padding: 10px 20px;
+    margin: 5px 0;
+    cursor: pointer;
 }
