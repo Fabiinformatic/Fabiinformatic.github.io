@@ -6,8 +6,18 @@
   <title>LIXBY — Detalle de producto</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Ajustes específicos para uniformizar imágenes */
-    .product-detail { display:flex; gap:36px; align-items:flex-start; max-width:1100px; margin:120px auto 80px; padding:28px; border-radius:14px; }
+    /* Ajustes y estilos específicos para la ficha */
+    .product-detail {
+      display:flex;
+      gap:36px;
+      align-items:flex-start;
+      max-width:1100px;
+      margin:120px auto 80px;
+      padding:28px;
+      border-radius:14px;
+      box-sizing:border-box;
+    }
+
     .image-wrap {
       width:420px;
       aspect-ratio: 1/1;
@@ -19,25 +29,71 @@
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border: 1px solid rgba(255,255,255,0.04);
       flex:0 0 420px;
-      padding: 18px; /* espacio para que producto pequeño no se vea "pequeño" */
+      padding: 18px;
     }
+
     .product-image {
       width:100%;
       height:100%;
-      object-fit: contain; /* importante: mantiene imagen completa sin recortes */
+      object-fit: contain;
       max-width: 85%;
       max-height: 85%;
       display:block;
     }
-    .product-info { flex:1; display:flex; flex-direction:column; gap:14px; }
+
+    .product-info {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
     .product-info h1 { font-size:1.6rem; margin:0; }
     .product-info p { color:var(--muted); margin:0; }
     .product-info .price { font-size:1.4rem; color:var(--accent); font-weight:700; }
-    .btn-buy { margin-top:12px; padding:12px 18px; border-radius:10px; background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); border:none; color:#00121a; font-weight:700; cursor:pointer; }
+
+    .btn-buy {
+      margin-top:12px;
+      padding:12px 18px;
+      border-radius:10px;
+      background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%));
+      border:none;
+      color:#00121a;
+      font-weight:700;
+      cursor:pointer;
+      max-width:320px;
+      text-align:center;
+    }
+
+    /* Tabla BOM */
+    .bom {
+      margin-top:18px;
+      border-collapse:collapse;
+      width:100%;
+      max-width:760px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      border-radius:10px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.05);
+    }
+    .bom thead {
+      background: rgba(255,255,255,0.02);
+    }
+    .bom th, .bom td {
+      padding:12px 14px;
+      text-align:left;
+      font-size:0.95rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: var(--text);
+    }
+    .bom th { font-weight:700; color:var(--muted); }
+    .bom tr:last-child td { border-bottom: none; }
+
+    .mini-note { color:var(--muted); font-size:0.95rem; margin-top:8px; }
+
     @media(max-width:900px){
       .product-detail{ flex-direction:column; margin:90px 16px; }
-      .image-wrap{ width:100%; aspect-ratio: auto; padding:14px; }
-      .product-image{ max-width: 60%; max-height:60%; }
+      .image-wrap{ width:100%; aspect-ratio:auto; padding:14px; }
+      .product-image{ max-width:60%; max-height:60%; }
     }
   </style>
 </head>
@@ -68,33 +124,49 @@
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Productos con las imágenes que me pasaste
+    // Productos con las imágenes que me pasaste y mini-descripciones
     const products = {
       "lixby-one": {
         name: "Lixby One",
         description: "Ultraligero, potente y diseñado para la vida moderna. Perfecto para productividad y movilidad.",
+        mini: "Pantalla OLED 6.7\", 120 Hz • SoC 5G • Cámara triple 50 MP • Batería 5.000 mAh",
         price: "349€",
-        image: "https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg"
+        image: "https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg",
+        bom: [
+          ["SoC 5G (Snapdragon 7s Gen 2 / Dimensity 8300) + PMIC", "45 – 55"],
+          ["RAM 8 GB LPDDR5X", "18 – 22"],
+          ["Almacenamiento UFS 3.1 256 GB", "20 – 25"],
+          ["Pantalla OLED 6.7\" 120 Hz + táctil + vidrio", "32 – 38"],
+          ["Cámaras (50 MP OIS + 8 MP UGA + 16 MP frontal)", "20 – 25"],
+          ["Batería 5,000 mAh + BMS", "7 – 9"],
+          ["Antenas + RF front-end (PA, filtros, switches)", "10 – 15"],
+          ["Sensores (IMU, proximidad, luz, NFC)", "4 – 6"],
+          ["Audio (altavoces, micros, motor háptico)", "5 – 7"],
+          ["Chasis (aluminio) + trasera (policarbonato o vidrio)", "12 – 15"],
+          ["PCB, pasivos y conectores", "8 – 10"],
+          ["Ensamblaje y pruebas (EMS)", "6 – 8"],
+          ["Embalaje + cargador/cable", "4 – 6"]
+        ]
       },
       "lixby-one-plus": {
         name: "Lixby One Plus",
         description: "Teléfono de última generación con cámara de alta resolución y batería de larga duración.",
+        mini: "Cámara profesional • Rendimiento equilibrado • Batería duradera",
         price: "659€",
         image: "https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg"
       },
       "lixby-one-pro": {
         name: "Lixby One Pro",
         description: "Rendimiento y audio de alta fidelidad para creadores y audiófilos.",
+        mini: "Audio premium • CPU/GPU potentes • Diseño robusto",
         price: "1099€",
         image: "https://m.media-amazon.com/images/I/61rriyfRKwL.jpg"
       }
     };
 
-    // proxy helper: usa images.weserv.nl para evitar hotlink blocks
+    // helper: proxy to avoid hotlink issues
     function proxiedUrl(originalUrl) {
-      // images.weserv.nl expects the remote URL without protocol
       const stripped = originalUrl.replace(/^https?:\/\//,'');
-      // limit width to 1200 for speed
       return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=1200`;
     }
 
@@ -106,7 +178,8 @@
 
     if (id && products[id]) {
       const p = products[id];
-      // build DOM nodes (so podemos manejar mejor errores de imagen)
+
+      // build image area
       const wrap = document.createElement('div');
       wrap.className = 'image-wrap';
 
@@ -115,11 +188,11 @@
       img.alt = p.name;
       img.src = p.image;
 
-      // fallback logic: si la carga falla, intenta proxied URL, y si falla usa placeholder
-      let attemptedProxy = false;
+      // fallback logic: original -> proxied -> placeholder
+      let triedProxy = false;
       img.onerror = function() {
-        if (!attemptedProxy) {
-          attemptedProxy = true;
+        if (!triedProxy) {
+          triedProxy = true;
           img.src = proxiedUrl(p.image);
         } else {
           img.onerror = null;
@@ -129,23 +202,75 @@
 
       wrap.appendChild(img);
 
+      // build info area
       const info = document.createElement('div');
       info.className = 'product-info';
-      info.innerHTML = `
-        <h1>${p.name}</h1>
-        <p>${p.description}</p>
-        <div class="price">${p.price}</div>
-        <button class="btn-buy" id="buyBtn">Comprar ahora</button>
-      `;
 
-      container.innerHTML = ''; // limpiar
+      // main info
+      const title = document.createElement('h1');
+      title.textContent = p.name;
+
+      const desc = document.createElement('p');
+      desc.textContent = p.description;
+
+      const mini = document.createElement('div');
+      mini.className = 'mini-note';
+      mini.textContent = p.mini || '';
+
+      const price = document.createElement('div');
+      price.className = 'price';
+      price.textContent = p.price;
+
+      const buy = document.createElement('button');
+      buy.className = 'btn-buy';
+      buy.textContent = 'Comprar ahora';
+      buy.addEventListener('click', () => alert('Añadido al carrito: ' + p.name));
+
+      info.appendChild(title);
+      if (desc) info.appendChild(desc);
+      if (mini.textContent) info.appendChild(mini);
+      info.appendChild(price);
+      info.appendChild(buy);
+
+      // append to container
+      container.innerHTML = '';
       container.appendChild(wrap);
       container.appendChild(info);
 
-      // botón comprar (ejemplo)
-      document.getElementById('buyBtn').addEventListener('click', () => {
-        alert('Añadido al carrito: ' + p.name);
-      });
+      // If this product is lixby-one, add BOM table
+      if (id === 'lixby-one' && Array.isArray(p.bom)) {
+        const tableWrap = document.createElement('div');
+        tableWrap.style.marginTop = '18px';
+
+        const note = document.createElement('div');
+        note.textContent = 'Coste estimado de fabricación (BOM + ensamblaje)';
+        note.style.fontWeight = '700';
+        note.style.marginBottom = '8px';
+        note.style.color = 'var(--muted)';
+        tableWrap.appendChild(note);
+
+        const table = document.createElement('table');
+        table.className = 'bom';
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Componente / Parte</th><th>Precio aprox. (€)</th></tr>';
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+
+        p.bom.forEach(row => {
+          const tr = document.createElement('tr');
+          const td1 = document.createElement('td');
+          td1.textContent = row[0];
+          const td2 = document.createElement('td');
+          td2.textContent = row[1];
+          tr.appendChild(td1);
+          tr.appendChild(td2);
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        tableWrap.appendChild(table);
+        info.appendChild(tableWrap);
+      }
 
     } else {
       container.innerHTML = '<div style="padding:20px;"><h2>Producto no encontrado</h2><p>Vuelve a la <a href="index.html">tienda</a>.</p></div>';
