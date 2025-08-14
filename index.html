@@ -3,65 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lispy Store</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <title>LIXBY - Tienda de Tecnología</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #0d6efd;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #0b5ed7;
+        }
+        nav a {
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+        }
+        nav a:hover {
+            background-color: #0a58ca;
+        }
+        section {
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .productos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .producto {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            width: 200px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .producto img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        footer {
+            background-color: #0d6efd;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        footer a {
+            color: white;
+        }
+        button {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0b5ed7;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        input, textarea {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
-
-    <!-- Modal de bienvenida -->
-    <div class="modal-overlay" id="welcomeModal">
-        <div class="modal">
-            <h2>Bienvenido a Lispy</h2>
-            <p>Regístrate o inicia sesión para aprovechar al máximo nuestra tienda</p>
-            <div>
-                <button onclick="closeModal()">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
     <header>
-        <h1>Lispy Store</h1>
+        <h1>LIXBY - Tienda de Tecnología</h1>
+        <p>¡Bienvenido a LIXBY! Explora nuestros productos y servicios.</p>
     </header>
 
-    <main>
-        <!-- Sección de tienda -->
-        <section class="store">
-            <h2>Móviles Gama Media</h2>
-            <div class="products">
-                <div class="product">
-                    <h3>Samsung Galaxy A54</h3>
-                    <p>Precio: 450€</p>
-                </div>
-                <div class="product">
-                    <h3>Xiaomi Redmi Note 13</h3>
-                    <p>Precio: 300€</p>
-                </div>
-                <div class="product">
-                    <h3>Motorola Moto G73</h3>
-                    <p>Precio: 330€</p>
-                </div>
-                <div class="product">
-                    <h3>Realme 11</h3>
-                    <p>Precio: 280€</p>
-                </div>
+    <nav>
+        <a href="#productos">Móviles</a>
+        <a href="#contacto">Contacto</a>
+    </nav>
+
+    <section id="productos">
+        <h2>Móviles de gama media (menos de 500€)</h2>
+        <div class="productos">
+            <div class="producto">
+                <img src="https://via.placeholder.com/200x200.png?text=Samsung+Galaxy+A54" alt="Samsung Galaxy A54">
+                <h3>Samsung Galaxy A54</h3>
+                <p>Precio: 450€</p>
+                <button>Comprar</button>
             </div>
-        </section>
+            <div class="producto">
+                <img src="https://via.placeholder.com/200x200.png?text=Xiaomi+Redmi+Note+13" alt="Xiaomi Redmi Note 13">
+                <h3>Xiaomi Redmi Note 13</h3>
+                <p>Precio: 299€</p>
+                <button>Comprar</button>
+            </div>
+            <div class="producto">
+                <img src="https://via.placeholder.com/200x200.png?text=Realme+10" alt="Realme 10">
+                <h3>Realme 10</h3>
+                <p>Precio: 280€</p>
+                <button>Comprar</button>
+            </div>
+        </div>
+    </section>
 
-        <!-- Formulario de contacto -->
-        <section class="contact">
-            <h2>Contacto</h2>
-            <form class="contact-form">
-                <input type="text" id="name" placeholder="Nombre y Apellido">
-                <input type="email" id="email" placeholder="Correo electrónico">
-                <textarea id="message" rows="4" placeholder="Mensaje o sugerencia"></textarea>
-                <button type="button" id="sendBtn">Enviar</button>
-                <p class="success-msg" id="successMsg"></p>
-            </form>
-        </section>
-    </main>
+    <section id="contacto">
+        <h2>Contacto</h2>
+        <form>
+            <input type="text" placeholder="Nombre" required>
+            <input type="email" placeholder="Correo electrónico" required>
+            <textarea placeholder="Mensaje" rows="5" required></textarea>
+            <button type="submit">Enviar</button>
+        </form>
+        <p style="text-align:center; margin-top: 10px;">Fabián Casañas González - <a href="mailto:fabiancasanas777@gmail.com">fabiancasanas777@gmail.com</a></p>
+    </section>
 
-    <script src="script.js"></script>
+    <footer>
+        &copy; 2025 LIXBY. Todos los derechos reservados.
+    </footer>
 </body>
 </html>
