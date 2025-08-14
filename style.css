@@ -1,22 +1,21 @@
-/* RESET BÁSICO */
-* {
+/* General */
+body {
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f8;
+    color: #333;
 }
 
-/* HEADER / BANNER SUPERIOR */
+/* Header */
 header {
-    position: fixed;
-    top: 0;
-    width: 100%;
     background-color: #86cef3;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 15px 50px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: fixed;
+    width: 100%;
+    top: 0;
     z-index: 1000;
 }
 
@@ -29,129 +28,105 @@ header .logo {
 header nav ul {
     list-style: none;
     display: flex;
-}
-
-header nav ul li {
-    margin-left: 30px;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
 }
 
 header nav ul li a {
     text-decoration: none;
     color: #fff;
-    font-weight: 500;
-    transition: color 0.3s;
+    font-weight: bold;
 }
 
-header nav ul li a:hover {
-    color: #000;
-}
-
-/* ESPACIO PARA QUE EL HEADER FIJO NO TAPÉ EL CONTENIDO */
-body {
-    padding-top: 80px;
-}
-
-/* PORTADA */
-.portada {
-    height: 100vh;
-    background: url('https://images.unsplash.com/photo-1581091215368-7ae44891aaf2?auto=format&fit=crop&w=1950&q=80') no-repeat center center/cover;
+/* Hero Section */
+.hero {
+    height: 400px;
+    background: url('https://picsum.photos/1200/400') center/cover no-repeat;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     color: #fff;
+    margin-top: 70px;
 }
 
-.portada h1 {
-    font-size: 60px;
-    margin-bottom: 20px;
+.hero h1 {
+    font-size: 48px;
 }
 
-.portada p {
-    font-size: 24px;
+.hero p {
+    font-size: 20px;
 }
 
-/* SERVICIOS */
-.servicios {
-    padding: 80px 20px;
+/* Services */
+.services {
+    padding: 60px 50px;
     text-align: center;
-    background-color: #f7f7f7;
 }
 
-.servicios h2 {
-    font-size: 36px;
-    margin-bottom: 40px;
-}
-
-.cards {
+.service-cards {
     display: flex;
-    justify-content: center;
     gap: 30px;
+    justify-content: center;
     flex-wrap: wrap;
+    margin-top: 30px;
 }
 
 .card {
     background-color: #fff;
-    padding: 30px;
-    border-radius: 15px;
+    padding: 20px;
+    border-radius: 10px;
     width: 250px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-/* TIENDA */
-.tienda {
-    padding: 80px 20px;
+/* Contact */
+.contact {
+    padding: 60px 50px;
+    background-color: #e0f7ff;
     text-align: center;
 }
 
-.tienda h2 {
-    font-size: 36px;
-    margin-bottom: 40px;
-}
-
-.productos {
+.contact form {
     display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+    margin: 20px auto 0;
 }
 
-.producto {
-    background-color: #86cef3;
-    color: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    width: 200px;
-    font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+.contact input, .contact textarea {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
 }
 
-/* CONTACTO */
-.contacto {
-    padding: 80px 20px;
-    text-align: center;
-    background-color: #f7f7f7;
+.contact textarea {
+    resize: vertical;
+    height: 100px;
 }
 
-.contacto button {
+.contact button {
     background-color: #86cef3;
     color: #fff;
     border: none;
-    padding: 15px 30px;
-    border-radius: 10px;
+    padding: 15px;
+    border-radius: 5px;
     font-size: 18px;
     cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-.contacto button:hover {
-    background-color: #5bb0e0;
+.contact button:hover {
+    background-color: #5ab0e0;
 }
 
-/* FOOTER */
+/* Footer */
 footer {
-    background-color: #111;
+    background-color: #333;
     color: #fff;
     text-align: center;
-    padding: 20px 0;
+    padding: 20px 50px;
 }
