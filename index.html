@@ -7,17 +7,29 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Ventana de bienvenida -->
-  <div id="welcomeOverlay">
-    <div class="welcomeBox">
-      <h1>Bienvenido</h1>
-      <p>¡Selecciona cómo quieres entrar!</p>
-      <div class="welcomeButtons">
-        <button id="guestBtn">Entrar como invitado</button>
-        <button id="loginBtn">Iniciar sesión / Registrarse</button>
-      </div>
+  <!-- Ventana de bienvenida flotante -->
+<div id="welcomeOverlay" class="overlay">
+  <div class="welcomeBox">
+    <h1>Bienvenido</h1>
+    <p>Selecciona cómo quieres entrar</p>
+    <div class="welcomeButtons">
+      <button id="guestBtn">Entrar como invitado</button>
+      <button id="loginBtn">Iniciar sesión / Registrarse</button>
     </div>
   </div>
+</div>
+
+<!-- Ventana de login/registro -->
+<div id="loginModal" class="overlay hidden">
+  <div class="loginBox">
+    <h2>Crear o iniciar sesión</h2>
+    <button class="loginProvider" id="googleLogin">Continuar con Google</button>
+    <button class="loginProvider" id="githubLogin">Continuar con GitHub</button>
+    <button class="loginProvider" id="emailLogin">Continuar con correo</button>
+    <button id="closeLogin">Cerrar</button>
+  </div>
+</div>
+
 
   <!-- Contenido principal -->
   <div id="mainContent">
