@@ -23,10 +23,18 @@ body {
   color: var(--text);
 }
 
-a { text-decoration: none; color: inherit; }
-h1, h2, h3 { margin: 0; }
+a {
+  text-decoration: none;
+  color: inherit;
+}
 
+h1, h2, h3 {
+  margin: 0;
+}
+
+/* ===================== */
 /* NAV */
+/* ===================== */
 .nav {
   display: flex;
   justify-content: space-between;
@@ -50,7 +58,9 @@ h1, h2, h3 { margin: 0; }
   border-radius: 12px;
 }
 
+/* ===================== */
 /* HERO */
+/* ===================== */
 .hero {
   height: 100vh;
   background: url('https://images.unsplash.com/photo-1518770660439-4636190af475') center/cover no-repeat;
@@ -71,14 +81,18 @@ h1, h2, h3 { margin: 0; }
   margin-bottom: 10px;
 }
 
+/* ===================== */
 /* SECTION */
+/* ===================== */
 .section {
   padding: 80px 20px;
   max-width: 1200px;
   margin: auto;
 }
 
+/* ===================== */
 /* GRID PRODUCTOS */
+/* ===================== */
 .grid {
   display: grid;
   gap: 20px;
@@ -87,13 +101,41 @@ h1, h2, h3 { margin: 0; }
 
 .card {
   padding: 20px;
+  border-radius: 12px;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efecto Apple al pasar el ratón */
+.card::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.15) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+
+.card:hover::after {
+  opacity: 1;
 }
 
 .price {
   font-weight: bold;
 }
 
+/* ===================== */
 /* CONTACTO */
+/* ===================== */
 .contact-form {
   display: flex;
   flex-direction: column;
@@ -118,7 +160,9 @@ h1, h2, h3 { margin: 0; }
   cursor: pointer;
 }
 
+/* ===================== */
 /* FOOTER */
+/* ===================== */
 .footer {
   text-align: center;
   padding: 20px;
