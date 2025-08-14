@@ -3,100 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lixby - Tecnología Minimalista</title>
+  <title>Lixby</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Ventana de Bienvenida -->
-  <div id="welcomeOverlay" class="overlay">
-    <div class="welcomeBox">
+  <!-- Ventana de bienvenida -->
+  <div id="welcome-overlay">
+    <div id="welcome-box">
       <h1>Bienvenido</h1>
-      <button id="guestBtn">Entrar como invitado</button>
-      <button id="loginBtn">Iniciar sesión / Registrarse</button>
-    </div>
-  </div>
-
-  <!-- Modal de Login / Registro -->
-  <div id="loginModal" class="modal hidden">
-    <div class="modalContent">
-      <span id="closeLogin" class="close">&times;</span>
-      <h2>Iniciar Sesión / Registrarse</h2>
-      <button id="googleLogin">Continuar con Google</button>
-      <button id="githubLogin">Continuar con GitHub</button>
-      <button id="emailLogin">Continuar con Correo</button>
+      <p>Inicia sesión o entra como invitado</p>
+      <button id="guest-btn">Entrar como invitado</button>
+      <button id="google-btn">Iniciar sesión con Google</button>
+      <button id="github-btn">Iniciar sesión con GitHub</button>
     </div>
   </div>
 
   <!-- Contenido principal -->
-  <div id="mainContent">
+  <div id="main-content" class="hidden">
     <header>
-      <div class="logo">Lixby</div>
-      <nav>
-        <a href="#inicio">Inicio</a>
-        <a href="#tienda">Tienda</a>
-        <a href="#servicios">Servicios</a>
-        <a href="#contacto">Contacto</a>
-      </nav>
+      <h2>Mi página web minimalista</h2>
+      <p>Contenido de la página aquí</p>
     </header>
-
-    <section class="hero" id="inicio">
-      <h1>Innovación Minimalista</h1>
-      <p>Soluciones tecnológicas con estilo limpio y elegante.</p>
-      <button onclick="scrollToContact()">Contáctanos</button>
-    </section>
-
-    <section class="services" id="servicios">
-      <h2>Nuestros Servicios</h2>
-      <div class="service-cards">
-        <div class="card">
-          <h3>Desarrollo Web</h3>
-          <p>Webs rápidas, modernas y responsivas.</p>
-        </div>
-        <div class="card">
-          <h3>Software a Medida</h3>
-          <p>Soluciones personalizadas para tu negocio.</p>
-        </div>
-        <div class="card">
-          <h3>Consultoría IT</h3>
-          <p>Asesoramiento profesional en tecnología.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="store" id="tienda">
-      <h2>Nuestra Tienda</h2>
-      <div class="service-cards">
-        <div class="card">
-          <h3>Producto 1</h3>
-          <p>Descripción breve y minimalista.</p>
-        </div>
-        <div class="card">
-          <h3>Producto 2</h3>
-          <p>Descripción breve y minimalista.</p>
-        </div>
-        <div class="card">
-          <h3>Producto 3</h3>
-          <p>Descripción breve y minimalista.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="contact" id="contacto">
-      <h2>Contáctanos</h2>
-      <form id="contactForm">
-        <input type="text" name="name" placeholder="Nombre y Apellido" required>
-        <input type="email" name="email" placeholder="Correo electrónico" required>
-        <textarea name="message" placeholder="Descripción" required></textarea>
-        <button type="submit">Enviar</button>
-      </form>
-      <div id="successMessage">¡Le responderemos lo antes posible, gracias!</div>
-    </section>
-
-    <footer>
-      <p>© 2025 Lixby - Todos los derechos reservados</p>
-    </footer>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
