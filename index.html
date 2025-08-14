@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lixby - Empresa de Tecnología</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script>
+        (function(){
+            emailjs.init("TU_USER_ID_EMAILJS"); // Pon tu User ID de EmailJS
+        })();
+    </script>
 </head>
 <body>
 
@@ -45,17 +51,34 @@
 <section class="contact">
     <h2>¿Tienes un proyecto o consulta? ¡Hablemos!</h2>
     <p>Escríbenos:</p>
-    <form>
-        <input type="text" placeholder="Nombre y Apellido" required>
-        <input type="email" placeholder="Correo" required>
-        <textarea placeholder="Descripción" required></textarea>
+    <form id="contactForm">
+        <input type="text" name="name" placeholder="Nombre y Apellido" required>
+        <input type="email" name="email" placeholder="Correo" required>
+        <textarea name="message" placeholder="Descripción" required></textarea>
         <button type="submit">Enviar</button>
     </form>
+    <div id="successMessage" style="display:none;">
+        <h3>Le responderemos lo antes posible. ¡Gracias!</h3>
+    </div>
 </section>
 
 <footer>
     <p>&copy; 2025 Lixby. Todos los derechos reservados.</p>
 </footer>
+
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    emailjs.sendForm('TU_SERVICE_ID','TU_TEMPLATE_ID', this)
+    .then(function(){
+        document.getElementById('contactForm').style.display = 'none';
+        document.getElementById('successMessage').style.display = 'block';
+    }, function(error){
+        alert('Ha ocurrido un error, inténtalo más tarde.');
+        console.log(error);
+    });
+});
+</script>
 
 </body>
 </html>
