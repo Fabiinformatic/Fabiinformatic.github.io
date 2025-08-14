@@ -66,3 +66,26 @@ if (logo) {
     location.reload();
   });
 }
+
+// =====================
+// Efecto Apple — Tarjetas flotantes al mover el ratón
+// =====================
+const cards = document.querySelectorAll('.card');
+
+cards.forEach(card => {
+  card.style.transition = "transform 0.2s ease"; // transición suave
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const moveX = (x / rect.width - 0.5) * 10;
+    const moveY = (y / rect.height - 0.5) * 10;
+
+    card.style.transform = `translateY(-8px) rotateX(${moveY}deg) rotateY(${moveX}deg)`;
+  });
+
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'translateY(0) rotateX(0) rotateY(0)';
+  });
+});
