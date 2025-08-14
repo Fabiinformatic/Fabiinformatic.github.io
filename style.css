@@ -1,128 +1,143 @@
-/* --- Reset y estilo general --- */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
-    font-family: "Helvetica Neue", Arial, sans-serif;
-    background: #f9f9f9;
-    color: #111;
+  background: linear-gradient(135deg, #f2f2f2, #ffffff);
+  color: #111;
+  min-height: 100vh;
 }
 
-header {
-    text-align: center;
-    padding: 20px;
-    font-size: 24px;
-    font-weight: 500;
+/* Cabecera Glass */
+.glass-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-/* --- Contenedor principal --- */
-main {
-    padding: 40px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.glass-header .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
-/* --- Botones minimalistas --- */
-button {
-    cursor: pointer;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    background-color: #007aff;
-    color: white;
-    font-size: 16px;
-    transition: 0.3s;
+.glass-header nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #111;
+  font-weight: 500;
+}
+.glass-header nav a:hover {
+  color: #007aff;
 }
 
-button:hover {
-    background-color: #005bb5;
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+}
+.hero h1 {
+  font-size: 2.5rem;
+}
+.hero p {
+  margin: 15px 0;
+  color: #555;
+}
+.hero button {
+  padding: 12px 30px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.7);
+  cursor: pointer;
+  transition: 0.3s;
+}
+.hero button:hover {
+  background: rgba(255,255,255,0.9);
 }
 
-/* --- Modal de bienvenida --- */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0; /* top:0; right:0; bottom:0; left:0 */
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(6px);
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+/* Ofertas */
+.ofertas {
+  padding: 50px 20px;
+  text-align: center;
+}
+.productos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+.producto {
+  width: 250px;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+}
+.producto img {
+  width: 100%;
+  border-radius: 12px;
+}
+.producto button {
+  margin-top: 10px;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.7);
+  cursor: pointer;
+}
+.producto button:hover {
+  background: rgba(255,255,255,0.9);
 }
 
-.modal {
-    background: white;
-    padding: 40px;
-    border-radius: 16px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    animation: modalShow 0.3s ease forwards;
+/* Glass Box */
+.glass-box {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
 
-.modal h2 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    font-weight: 500;
+/* Contacto */
+form {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  margin: 30px auto;
+}
+form input, form textarea {
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: rgba(255,255,255,0.5);
+}
+form button {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.7);
+  cursor: pointer;
+}
+form button:hover {
+  background: rgba(255,255,255,0.9);
 }
 
-.modal p {
-    margin-bottom: 25px;
-    font-size: 16px;
-    color: #555;
+#form-status {
+  text-align: center;
+  margin-top: 10px;
 }
 
-.modal button {
-    margin: 5px;
-    width: 120px;
-}
-
-/* Animación del modal */
-@keyframes modalShow {
-    from {opacity: 0; transform: translateY(-20px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-/* --- Formulario de contacto minimalista --- */
-.contact-form {
-    background: white;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    width: 100%;
-    max-width: 450px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.contact-form input, 
-.contact-form textarea {
-    padding: 12px;
-    font-size: 15px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    outline: none;
-    transition: 0.2s;
-}
-
-.contact-form input:focus, 
-.contact-form textarea:focus {
-    border-color: #007aff;
-}
-
-.contact-form button {
-    margin-top: 10px;
-    font-weight: 500;
-}
-
-.success-msg {
-    color: green;
-    font-size: 14px;
-    margin-top: 5px;
+/* Footer */
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #555;
 }
