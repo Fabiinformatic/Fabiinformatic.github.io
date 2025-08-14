@@ -15,7 +15,7 @@ document.querySelectorAll('header nav a').forEach(link => {
     const target = document.querySelector(targetId);
     if (target) {
       window.scrollTo({
-        top: target.offsetTop - 60, // Ajusta según altura del header
+        top: target.offsetTop - 60,
         behavior: 'smooth'
       });
     }
@@ -41,7 +41,6 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.1 });
 
-// Observa todos los elementos con clase "reveal"
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
 // =====================
@@ -64,6 +63,6 @@ const logo = document.querySelector(".brand");
 if (logo) {
   logo.style.cursor = "pointer";
   logo.addEventListener("click", () => {
-    window.location.href = window.location.origin + window.location.pathname;
+    location.reload();
   });
 }
