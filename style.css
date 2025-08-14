@@ -1,4 +1,4 @@
-/* style.css — LIXBY (minimal + liquid glass) */
+/* style.css — LIXBY (minimal + liquid glass) — actualizado */
 
 /* Tipografía */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
@@ -72,12 +72,64 @@ p { color: var(--muted); margin:0; }
   font-weight:700;
   letter-spacing:0.06em;
   font-size:1.05rem;
+  cursor:pointer;
 }
 #navLinks { display:flex; gap:18px; align-items:center; }
 #navLinks a { font-weight:500; opacity:0.95; }
+
+/* Buttons */
 .btn { cursor:pointer; border:none; padding:8px 14px; border-radius:10px; font-weight:600; }
 .btn.primary { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 65%, white 35%)); color:#00121a; }
 .btn.ghost { background:transparent; color:var(--text); border:1px solid rgba(255,255,255,0.03); }
+
+/* Icon/button helpers */
+.icon-btn { background:transparent; border:none; padding:8px; border-radius:8px; display:inline-flex; align-items:center; gap:8px; color:var(--text); cursor:pointer; }
+.badge { background:var(--accent); color:#00121a; font-weight:700; border-radius:999px; padding:2px 8px; font-size:0.78rem; margin-left:6px; }
+
+/* mini-cart & language menu */
+.cart-wrapper { position:relative; }
+.mini-cart {
+  position:absolute;
+  right:0;
+  top:44px;
+  width:320px;
+  display:none;
+  flex-direction:column;
+  gap:8px;
+  padding:12px;
+  z-index:130;
+  min-height:80px;
+  box-shadow: var(--shadow-soft);
+  border-radius:12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.mini-cart[aria-hidden="false"] { display:flex; }
+.mini-cart-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+.mini-cart-items { max-height:220px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
+.mini-cart-item { display:flex; gap:10px; align-items:center; padding:8px; border-radius:8px; background: rgba(255,255,255,0.01); }
+.mini-cart-item img { width:56px; height:56px; object-fit:cover; border-radius:8px; }
+.mini-cart-item .meta { flex:1; }
+.mini-cart-item .remove { background:transparent; border:none; cursor:pointer; color:var(--muted); }
+
+/* language menu */
+.lang-wrapper { position:relative; }
+.lang-menu {
+  position:absolute;
+  right:0;
+  top:44px;
+  width:160px;
+  display:none;
+  flex-direction:column;
+  gap:6px;
+  padding:8px;
+  z-index:130;
+  border-radius:10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.04);
+}
+.lang-menu[aria-hidden="false"] { display:flex; }
+.lang-item { background:transparent; border:none; padding:8px; text-align:left; cursor:pointer; border-radius:8px; color:var(--text); }
 
 /* HERO full-bleed */
 .hero {
@@ -129,6 +181,25 @@ p { color: var(--muted); margin:0; }
   gap:12px;
 }
 
+/* Thumbnail inside card: fixed box so all cards look equal */
+.card .thumb {
+  width:100%;
+  height:220px;
+  display:block;
+  border-radius:10px;
+  overflow:hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.card .thumb img {
+  width:100%;
+  height:100%;
+  object-fit:contain; /* important: keep aspect ratio, avoid crop */
+  display:block;
+}
+
 /* Minimal hover: sube y sombra */
 .card:hover {
   transform: translateY(-10px);
@@ -172,15 +243,27 @@ p { color: var(--muted); margin:0; }
   margin:120px auto 80px;
   padding:28px;
   border-radius:14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+  border:1px solid rgba(255,255,255,0.03);
 }
-.product-image {
+.image-wrap {
   width:420px;
   height:420px;
-  object-fit:cover;
   border-radius:12px;
-  flex:0 0 420px;
-  box-shadow: 0 18px 50px rgba(0,0,0,0.6);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid rgba(255,255,255,0.04);
+  flex:0 0 420px;
+  box-sizing:border-box;
+}
+.product-image {
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain; /* important: keep same sizing and avoid crop */
+  display:block;
 }
 .product-info {
   flex:1;
@@ -196,8 +279,8 @@ p { color: var(--muted); margin:0; }
   font-weight:700;
 }
 
-/* Comprar button */
-.btn-buy {
+/* Comprar/Añadir button */
+.btn-buy, .btn-add {
   margin-top:12px;
   padding:12px 18px;
   border-radius:10px;
@@ -206,7 +289,34 @@ p { color: var(--muted); margin:0; }
   color:#00121a;
   font-weight:700;
   cursor:pointer;
+  max-width:320px;
 }
+
+/* BOM table */
+.bom {
+  margin-top:18px;
+  border-collapse:collapse;
+  width:100%;
+  max-width:760px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.bom thead { background: rgba(255,255,255,0.02); }
+.bom th, .bom td {
+  padding:12px 14px;
+  text-align:left;
+  font-size:0.95rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--text);
+}
+.bom th { font-weight:700; color:var(--muted); }
+
+/* Ratings, reviews */
+.ratings { margin-top:18px; display:flex; flex-direction:column; gap:12px; }
+.stars { color:var(--accent); font-weight:700; }
+.review { background: rgba(255,255,255,0.01); padding:12px; border-radius:8px; color:var(--muted); }
 
 /* Footer small */
 .footer { text-align:center; padding:30px 16px; }
@@ -214,7 +324,10 @@ p { color: var(--muted); margin:0; }
 /* Responsive */
 @media (max-width:900px){
   .product-detail { flex-direction:column; align-items:center; margin:90px 16px; }
-  .product-image { width:100%; height:auto; flex:0 0 auto; }
+  .image-wrap { width:100%; height:auto; aspect-ratio:1/1; padding:18px; }
+  .product-image { width:80%; height:auto; }
   .nav { padding:10px 12px; left:10px; right:10px; top:10px; }
   .hero-content { padding:24px; }
+  /* adapta mini-cart/lang menu colocación en móvil */
+  .mini-cart, .lang-menu { right:8px; top:48px; width:92%; max-width:320px; }
 }
