@@ -56,3 +56,14 @@ if (hamburger) {
     hamburger.classList.toggle("active");
   });
 }
+
+// =====================
+// Click en el logo para reiniciar la página
+// =====================
+const logo = document.querySelector(".brand");
+if (logo) {
+  logo.style.cursor = "pointer";
+  logo.addEventListener("click", () => {
+    window.location.href = window.location.origin + window.location.pathname;
+  });
+}
