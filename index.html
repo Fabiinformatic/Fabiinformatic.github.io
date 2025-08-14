@@ -10,7 +10,7 @@
   <!-- NAV -->
   <header class="nav glass" role="banner">
     <div class="nav-left">
-      <div class="brand" role="button" aria-label="Lixby - inicio">LIXBY</div>
+      <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
     </div>
 
     <nav id="navLinks" role="navigation" aria-label="Principal">
@@ -24,15 +24,18 @@
       <!-- carrito -->
       <div class="cart-wrapper">
         <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
+
         <div id="miniCart" class="mini-cart glass" aria-hidden="true">
           <div class="mini-cart-header">
             <strong data-i18n="cart.title">Carrito</strong>
             <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
           </div>
+
           <div id="miniCartItems" class="mini-cart-items">
             <!-- items dinámicos -->
           </div>
-          <div class="mini-cart-footer">
+
+          <div class="mini-cart-footer" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
             <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
             <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button></div>
           </div>
@@ -120,11 +123,11 @@
   </section>
 
   <!-- FOOTER -->
-  <footer class="footer glass">
+  <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <!-- incluye script con defer -->
+  <!-- CARGA EL SCRIPT CON DEFER para mayor seguridad -->
   <script src="script.js" defer></script>
 </body>
 </html>
