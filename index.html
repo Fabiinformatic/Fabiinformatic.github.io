@@ -3,75 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lixby - Tecnología</title>
+  <title>Lixby - Tecnología Minimalista</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-  <script defer src="script.js"></script>
 </head>
 <body>
+
   <!-- HEADER LIQUID GLASS -->
   <header>
     <div class="logo">Lixby</div>
     <nav>
       <a href="#inicio">Inicio</a>
       <a href="#tienda">Tienda</a>
-      <a href="#servicios">Nuestros Servicios</a>
+      <a href="#servicios">Servicios</a>
       <a href="#contacto">Contacto</a>
     </nav>
   </header>
 
-  <!-- SECCIÓN PORTADA -->
-  <section id="inicio" class="hero">
-    <h1>Bienvenido a Lixby</h1>
-    <p>Soluciones tecnológicas modernas e innovadoras.</p>
-    <button onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'});">Contáctanos</button>
+  <!-- HERO -->
+  <section class="hero" id="inicio">
+    <h1>Innovación Minimalista</h1>
+    <p>Soluciones tecnológicas con estilo limpio y elegante.</p>
+    <button onclick="scrollToContact()">Contáctanos</button>
   </section>
 
-  <!-- SECCIÓN SERVICIOS -->
-  <section id="servicios" class="services">
+  <!-- SERVICIOS -->
+  <section class="services" id="servicios">
     <h2>Nuestros Servicios</h2>
     <div class="service-cards">
       <div class="card">
         <h3>Desarrollo Web</h3>
-        <p>Creación de páginas web modernas y funcionales.</p>
+        <p>Webs rápidas, modernas y responsivas.</p>
       </div>
       <div class="card">
-        <h3>Soporte IT</h3>
-        <p>Asistencia y mantenimiento de sistemas informáticos.</p>
+        <h3>Software a Medida</h3>
+        <p>Soluciones personalizadas para tu negocio.</p>
       </div>
       <div class="card">
-        <h3>Seguridad</h3>
-        <p>Protección de datos y redes con las últimas tecnologías.</p>
+        <h3>Consultoría IT</h3>
+        <p>Asesoramiento profesional en tecnología.</p>
       </div>
     </div>
   </section>
 
-  <!-- SECCIÓN TIENDA -->
-  <section id="tienda" class="store">
-    <h2>Tienda</h2>
-    <p>Próximamente productos tecnológicos disponibles.</p>
+  <!-- TIENDA -->
+  <section class="store" id="tienda">
+    <h2>Nuestra Tienda</h2>
+    <div class="service-cards">
+      <div class="card">
+        <h3>Producto 1</h3>
+        <p>Descripción breve y minimalista.</p>
+      </div>
+      <div class="card">
+        <h3>Producto 2</h3>
+        <p>Descripción breve y minimalista.</p>
+      </div>
+      <div class="card">
+        <h3>Producto 3</h3>
+        <p>Descripción breve y minimalista.</p>
+      </div>
+    </div>
   </section>
 
-  <!-- SECCIÓN CONTACTO -->
-  <section id="contacto" class="contact">
-    <h2>¿Tienes un proyecto o consulta? ¡Hablemos!</h2>
-    <p>Escríbenos:</p>
-
+  <!-- CONTACTO -->
+  <section class="contact" id="contacto">
+    <h2>Contáctanos</h2>
+    <p>¿Tienes un proyecto o consulta? ¡Hablemos!</p>
     <form id="contactForm">
-      <input type="text" name="user_name" placeholder="Nombre y Apellido" required>
-      <input type="email" name="user_email" placeholder="Correo electrónico" required>
-      <textarea name="message" placeholder="Descripción de tu consulta" required></textarea>
+      <input type="text" name="name" placeholder="Nombre y Apellido" required>
+      <input type="email" name="email" placeholder="Correo electrónico" required>
+      <textarea name="message" placeholder="Descripción" required></textarea>
       <button type="submit">Enviar</button>
     </form>
-
-    <div id="successMessage">
-      <p>Le responderemos lo antes posible, ¡gracias!</p>
-    </div>
+    <div id="successMessage">¡Le responderemos lo antes posible, gracias!</div>
   </section>
 
   <!-- FOOTER -->
   <footer>
-    <p>&copy; 2025 Lixby. Todos los derechos reservados.</p>
+    <p>© 2025 Lixby - Todos los derechos reservados</p>
   </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
