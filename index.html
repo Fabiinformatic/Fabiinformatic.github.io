@@ -106,6 +106,23 @@
       font-weight: bold;
       color: #0071e3;
       font-size: 1.1em;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .producto button {
+      background-color: #0071e3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+
+    .producto button:hover {
+      background-color: #005bb5;
     }
 
     .producto:hover {
@@ -142,22 +159,27 @@
 
   <section id="productos" class="productos">
     <div class="producto">
-      <img src="https://via.placeholder.com/300x200" alt="Producto 1">
-      <h3>Smartphone Pro</h3>
-      <p>Potencia y diseño premium</p>
-      <span>$899</span>
+      <img src="https://m.media-amazon.com/images/I/613MutpiXcL.jpg" alt="Xiaomi Redmi Note 13 Pro">
+      <h3>Xiaomi Redmi Note 13 Pro</h3>
+      <p>Rendimiento equilibrado y cámara de alta resolución</p>
+      <span>Desde 349€</span>
+      <button>Comprar</button>
     </div>
+    
     <div class="producto">
-      <img src="https://via.placeholder.com/300x200" alt="Producto 2">
-      <h3>Auriculares Max</h3>
-      <p>Sonido de alta fidelidad</p>
-      <span>$299</span>
+      <img src="https://m.media-amazon.com/images/I/51TwMrTOQkL.jpg" alt="Samsung Galaxy A54">
+      <h3>Samsung Galaxy A54</h3>
+      <p>Pantalla AMOLED y batería de larga duración</p>
+      <span>Desde 399€</span>
+      <button>Comprar</button>
     </div>
+    
     <div class="producto">
-      <img src="https://via.placeholder.com/300x200" alt="Producto 3">
-      <h3>Portátil Ultra</h3>
-      <p>Rendimiento sin límites</p>
-      <span>$1,499</span>
+      <img src="https://m.media-amazon.com/images/I/61r6DtofLDL.jpg" alt="Realme 12 Pro+">
+      <h3>Realme 12 Pro+</h3>
+      <p>Diseño premium y carga ultrarrápida</p>
+      <span>Desde 429€</span>
+      <button>Comprar</button>
     </div>
   </section>
 
@@ -181,9 +203,10 @@
     });
 
     // Mensaje al seleccionar producto
-    document.querySelectorAll('.producto').forEach(producto => {
-      producto.addEventListener('click', () => {
-        const nombre = producto.querySelector('h3').textContent;
+    document.querySelectorAll('.producto button').forEach(boton => {
+      boton.addEventListener('click', e => {
+        e.stopPropagation(); // evita que se active el evento del div
+        const nombre = boton.parentElement.querySelector('h3').textContent;
         alert(`Has seleccionado: ${nombre}.\nPróximamente podrás comprarlo en Lixby.`);
       });
     });
