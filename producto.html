@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Detalle del Producto - LIXBY</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* estilos locales mínimos para la ficha (puedes mantenerlos) */
+    .product-detail { max-width: 1000px; margin: 100px auto 50px; padding: 20px; display:flex; flex-wrap:wrap; gap:30px; align-items:flex-start; }
+    .product-image { max-width: 400px; border-radius:12px; flex:1 1 400px; object-fit:cover; }
+    .product-info { flex:1 1 300px; display:flex; flex-direction:column; gap:15px; }
+    .product-info h1 { margin:0; }
+    .product-info .price { font-size:1.5rem; font-weight:700; color:var(--accent); }
+    .btn-buy { padding:12px 20px; background:var(--accent); border:none; border-radius:8px; font-weight:700; cursor:pointer; color:#000; }
+    @media(max-width:700px){ .product-detail{ margin:80px 16px; flex-direction:column; } .product-image{ max-width:100%; } }
+  </style>
 </head>
 <body>
   <header class="nav glass">
@@ -19,8 +29,8 @@
   </header>
 
   <main class="section">
-    <div id="productDetail" class="product-detail glass">
-      <!-- Se rellena por JS -->
+    <div id="productDetail" class="product-detail glass" aria-live="polite">
+      <!-- Se rellenará por JS -->
     </div>
   </main>
 
@@ -30,9 +40,10 @@
 
   <script>
     // Año automático
-    document.getElementById("year").textContent = new Date().getFullYear();
+    const yearEl = document.getElementById("year");
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Datos de productos
+    // Datos de productos (mantén/edita según necesites)
     const products = {
       "lixby-one": {
         name: "Lixby One",
@@ -54,25 +65,26 @@
       }
     };
 
-    // Obtener ID del producto desde la URL
+    // Obtener ID desde la URL (robusto)
     const params = new URLSearchParams(window.location.search);
-    const productId = params.get("id");
-
-    // Renderizar el producto
+    const rawId = params.get("id");
+    const productId = rawId ? decodeURIComponent(rawId) : null;
     const container = document.getElementById("productDetail");
-    if (products[productId]) {
+
+    if (productId && products[productId]) {
       const p = products[productId];
+      const imageSrc = p.image || `https://via.placeholder.com/400x400?text=${encodeURIComponent(p.name)}`;
       container.innerHTML = `
-        <img src="${p.image}" alt="${p.name}" class="product-image">
+        <img src="${imageSrc}" alt="${p.name}" class="product-image" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=Sin+imagen'">
         <div class="product-info">
           <h1>${p.name}</h1>
           <p>${p.description}</p>
-          <span class="price">${p.price}</span>
-          <button class="btn primary">Comprar</button>
+          <div class="price">${p.price}</div>
+          <button class="btn-buy" onclick="alert('Añadido al carrito: ${p.name}')">Comprar ahora</button>
         </div>
       `;
     } else {
-      container.innerHTML = `<p>Producto no encontrado.</p>`;
+      container.innerHTML = `<div style="padding:24px;"><h2>Producto no encontrado</h2><p>Vuelve a la <a href="index.html">tienda</a> para ver todos los productos.</p></div>`;
     }
   </script>
 </body>
