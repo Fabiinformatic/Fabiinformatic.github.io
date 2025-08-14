@@ -1,58 +1,105 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detalle del producto - LIXBY</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIXBY — Detalle de producto</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .product-detail {
+      max-width: 1000px;
+      margin: 100px auto 50px;
+      padding: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+    .product-detail img {
+      max-width: 400px;
+      border-radius: 12px;
+      flex: 1 1 400px;
+    }
+    .product-info {
+      flex: 1 1 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .product-info h1 {
+      margin-bottom: 0;
+    }
+    .product-info .price {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .btn-buy {
+      padding: 12px 20px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+  <!-- NAV -->
   <header class="nav glass">
     <div class="brand" onclick="window.location.href='index.html'">LIXBY</div>
   </header>
 
-  <section class="section" id="producto-detalle">
-    <div id="producto-contenido" class="glass" style="padding:20px;">
-      Cargando producto...
+  <div class="product-detail">
+    <img id="productImage" src="" alt="Producto">
+    <div class="product-info">
+      <h1 id="productName"></h1>
+      <p id="productDescription"></p>
+      <div class="price" id="productPrice"></div>
+      <button class="btn-buy">Comprar ahora</button>
     </div>
-  </section>
+  </div>
+
+  <footer class="footer glass">
+    <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
+  </footer>
 
   <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Datos de productos
     const productos = {
       "lixby-one": {
         nombre: "Lixby One",
-        descripcion: "Ultraligero, potente y con diseño minimalista. Ideal para el día a día.",
+        descripcion: "Ultraligero, potente y diseñado para acompañarte todo el día.",
         precio: "349€",
-        imagen: "https://via.placeholder.com/500x300?text=Lixby+One"
+        imagen: "https://via.placeholder.com/400x400?text=Lixby+One"
       },
       "lixby-one-plus": {
         nombre: "Lixby One Plus",
-        descripcion: "Teléfono de última generación con cámara avanzada y batería de larga duración.",
+        descripcion: "Teléfono de última generación con cámara de alta resolución.",
         precio: "659€",
-        imagen: "https://via.placeholder.com/500x300?text=Lixby+One+Plus"
+        imagen: "https://via.placeholder.com/400x400?text=Lixby+One+Plus"
       },
       "lixby-one-pro": {
         nombre: "Lixby One Pro",
-        descripcion: "Audio de alta fidelidad con cancelación de ruido y diseño premium.",
+        descripcion: "Audio de alta fidelidad para los amantes de la música.",
         precio: "1099€",
-        imagen: "https://via.placeholder.com/500x300?text=Lixby+One+Pro"
+        imagen: "https://via.placeholder.com/400x400?text=Lixby+One+Pro"
       }
     };
 
+    // Obtener ID de producto desde la URL
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
 
-    if (productos[id]) {
+    if (id && productos[id]) {
       const p = productos[id];
-      document.getElementById("producto-contenido").innerHTML = `
-        <img src="${p.imagen}" alt="${p.nombre}" style="max-width:100%;border-radius:12px;">
-        <h1>${p.nombre}</h1>
-        <p>${p.descripcion}</p>
-        <h2 style="color:var(--accent);">${p.precio}</h2>
-        <button class="btn primary" onclick="alert('Producto añadido al carrito')">Comprar</button>
-      `;
+      document.getElementById("productName").textContent = p.nombre;
+      document.getElementById("productDescription").textContent = p.descripcion;
+      document.getElementById("productPrice").textContent = p.precio;
+      document.getElementById("productImage").src = p.imagen;
     } else {
-      document.getElementById("producto-contenido").innerHTML = "<p>Producto no encontrado.</p>";
+      document.querySelector(".product-detail").innerHTML = "<p>Producto no encontrado</p>";
     }
   </script>
 </body>
