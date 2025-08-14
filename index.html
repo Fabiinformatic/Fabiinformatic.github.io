@@ -9,14 +9,55 @@
 <body>
   <!-- NAV -->
   <header class="nav glass">
-    <div class="brand" role="button" aria-label="Ir al inicio">LIXBY</div>
+    <div class="nav-left">
+      <div class="brand" role="button" aria-label="Ir al inicio">LIXBY</div>
+    </div>
+
     <nav id="navLinks">
-      <a href="#inicio">Inicio</a>
-      <a href="#productos">Productos</a>
-      <a href="#contacto">Contáctanos</a>
-      <a href="#conocenos">Conócenos</a>
+      <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
+      <a href="#productos" data-i18n="nav.productos">Productos</a>
+      <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
+      <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
     </nav>
-    <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+
+    <div class="nav-right">
+      <!-- carrito -->
+      <div class="cart-wrapper">
+        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">
+          🛒 <span id="cartCount" class="badge">0</span>
+        </button>
+        <div id="miniCart" class="mini-cart glass" aria-hidden="true">
+          <div class="mini-cart-header">
+            <strong data-i18n="cart.title">Carrito</strong>
+            <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
+          </div>
+          <div id="miniCartItems" class="mini-cart-items">
+            <!-- items dinámicos -->
+          </div>
+          <div class="mini-cart-footer">
+            <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
+            <div>
+              <button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- selector idioma -->
+      <div class="lang-wrapper">
+        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false">
+          🇪🇸 <span id="langLabel">Español</span> ▾
+        </button>
+        <div id="langMenu" class="lang-menu glass" aria-hidden="true">
+          <button class="lang-item" data-lang="es">🇪🇸 Español</button>
+          <button class="lang-item" data-lang="en">🇬🇧 English</button>
+          <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
+        </div>
+      </div>
+
+      <!-- toggle tema -->
+      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+    </div>
   </header>
 
   <!-- HERO -->
@@ -24,7 +65,7 @@
     <div class="hero-content">
       <h1>La tecnología que te entiende</h1>
       <p>Innovación minimalista para tu día a día</p>
-      <a href="#productos" class="btn primary">Explorar</a>
+      <a href="#productos" class="btn primary" data-i18n="btn.explorar">Explorar</a>
     </div>
   </section>
 
@@ -60,7 +101,7 @@
       <input type="text" placeholder="Nombre" required>
       <input type="email" placeholder="Correo" required>
       <textarea placeholder="Tu mensaje" required></textarea>
-      <button class="btn primary">Enviar</button>
+      <button class="btn primary" data-i18n="btn.enviar">Enviar</button>
     </form>
   </section>
 
@@ -75,7 +116,6 @@
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <!-- CARGA EL SCRIPT CON DEFER para mayor seguridad -->
   <script src="script.js" defer></script>
 </body>
 </html>
