@@ -1,84 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lixby - Empresa de Tecnología</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
-    <script>
-        (function(){
-            emailjs.init("TU_USER_ID_EMAILJS"); // Pon tu User ID de EmailJS
-        })();
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lixby - Tecnología</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
 <body>
-
-<header>
+  <!-- HEADER LIQUID GLASS -->
+  <header>
     <div class="logo">Lixby</div>
     <nav>
-        <ul>
-            <li><a href="#">Inicio</a></li>
-            <li><a href="#">Tienda</a></li>
-            <li><a href="#">Nuestros Servicios</a></li>
-        </ul>
+      <a href="#inicio">Inicio</a>
+      <a href="#tienda">Tienda</a>
+      <a href="#servicios">Nuestros Servicios</a>
+      <a href="#contacto">Contacto</a>
     </nav>
-</header>
+  </header>
 
-<section class="hero">
+  <!-- SECCIÓN PORTADA -->
+  <section id="inicio" class="hero">
     <h1>Bienvenido a Lixby</h1>
-    <p>Innovación tecnológica para tu empresa</p>
-</section>
+    <p>Soluciones tecnológicas modernas e innovadoras.</p>
+    <button onclick="document.getElementById('contacto').scrollIntoView({behavior:'smooth'});">Contáctanos</button>
+  </section>
 
-<section class="services">
+  <!-- SECCIÓN SERVICIOS -->
+  <section id="servicios" class="services">
     <h2>Nuestros Servicios</h2>
     <div class="service-cards">
-        <div class="card">
-            <h3>Desarrollo Web</h3>
-            <p>Diseñamos páginas modernas y funcionales.</p>
-        </div>
-        <div class="card">
-            <h3>Aplicaciones Móviles</h3>
-            <p>Apps para iOS y Android a medida.</p>
-        </div>
-        <div class="card">
-            <h3>Consultoría IT</h3>
-            <p>Optimización y soporte para tu empresa.</p>
-        </div>
+      <div class="card">
+        <h3>Desarrollo Web</h3>
+        <p>Creación de páginas web modernas y funcionales.</p>
+      </div>
+      <div class="card">
+        <h3>Soporte IT</h3>
+        <p>Asistencia y mantenimiento de sistemas informáticos.</p>
+      </div>
+      <div class="card">
+        <h3>Seguridad</h3>
+        <p>Protección de datos y redes con las últimas tecnologías.</p>
+      </div>
     </div>
-</section>
+  </section>
 
-<section class="contact">
+  <!-- SECCIÓN TIENDA -->
+  <section id="tienda" class="store">
+    <h2>Tienda</h2>
+    <p>Próximamente productos tecnológicos disponibles.</p>
+  </section>
+
+  <!-- SECCIÓN CONTACTO -->
+  <section id="contacto" class="contact">
     <h2>¿Tienes un proyecto o consulta? ¡Hablemos!</h2>
     <p>Escríbenos:</p>
+
     <form id="contactForm">
-        <input type="text" name="name" placeholder="Nombre y Apellido" required>
-        <input type="email" name="email" placeholder="Correo" required>
-        <textarea name="message" placeholder="Descripción" required></textarea>
-        <button type="submit">Enviar</button>
+      <input type="text" name="user_name" placeholder="Nombre y Apellido" required>
+      <input type="email" name="user_email" placeholder="Correo electrónico" required>
+      <textarea name="message" placeholder="Descripción de tu consulta" required></textarea>
+      <button type="submit">Enviar</button>
     </form>
-    <div id="successMessage" style="display:none;">
-        <h3>Le responderemos lo antes posible. ¡Gracias!</h3>
+
+    <div id="successMessage">
+      <p>Le responderemos lo antes posible, ¡gracias!</p>
     </div>
-</section>
+  </section>
 
-<footer>
+  <!-- FOOTER -->
+  <footer>
     <p>&copy; 2025 Lixby. Todos los derechos reservados.</p>
-</footer>
-
-<script>
-document.getElementById('contactForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    emailjs.sendForm('TU_SERVICE_ID','TU_TEMPLATE_ID', this)
-    .then(function(){
-        document.getElementById('contactForm').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-    }, function(error){
-        alert('Ha ocurrido un error, inténtalo más tarde.');
-        console.log(error);
-    });
-});
-</script>
-
+  </footer>
 </body>
 </html>
