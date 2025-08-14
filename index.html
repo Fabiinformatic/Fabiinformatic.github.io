@@ -7,86 +7,72 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- NAV -->
   <header class="nav glass">
     <div class="brand">LIXBY</div>
     <nav id="navLinks">
+      <a href="#inicio">Inicio</a>
       <a href="#productos">Productos</a>
-      <a href="#servicios">Servicios</a>
-      <a href="#sobre">Sobre</a>
-      <a href="#contacto">Contacto</a>
+      <a href="#contacto">Contáctanos</a>
+      <a href="#conocenos">Conócenos</a>
     </nav>
-    <div class="nav-cta">
-      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
-    </div>
+    <button id="themeToggle" class="btn ghost">◐</button>
   </header>
 
-  <main>
-    <section class="hero">
-      <div class="hero-card glass reveal">
-        <h1>Tecnología con diseño <span class="liquid">líquido</span></h1>
-        <p>Productos y servicios para una experiencia fluida y minimalista.</p>
-        <div class="actions">
-          <a class="btn primary" data-scroll-to="#productos">Ver productos</a>
-          <a class="btn" data-scroll-to="#servicios">Servicios</a>
-        </div>
-      </div>
-    </section>
+  <!-- HERO -->
+  <section id="inicio" class="hero">
+    <div class="hero-content">
+      <h1>La tecnología que te entiende</h1>
+      <p>Innovación minimalista para tu día a día</p>
+      <a href="#productos" class="btn primary">Explorar</a>
+    </div>
+  </section>
 
-    <section id="productos" class="section">
-      <h2>Productos</h2>
-      <div class="grid">
-        <article class="card glass reveal">
-          <h3>LIXBY Air 13</h3>
-          <p>Ultraligero y potente.</p>
-          <div class="card-actions">
-            <span class="price">1.199€</span>
-            <button class="btn primary add" data-name="LIXBY Air 13">Añadir</button>
-          </div>
-        </article>
-        <article class="card glass reveal">
-          <h3>LIXBY One</h3>
-          <p>Teléfono de última generación.</p>
-          <div class="card-actions">
-            <span class="price">999€</span>
-            <button class="btn primary add" data-name="LIXBY One">Añadir</button>
-          </div>
-        </article>
-      </div>
-    </section>
+  <!-- PRODUCTOS -->
+  <section id="productos" class="section">
+    <h2>Productos</h2>
+    <div class="grid">
+      <article class="card glass">
+        <h3>LIXBY Air 13</h3>
+        <p>Ultraligero y potente.</p>
+        <span class="price">1.199€</span>
+      </article>
+      <article class="card glass">
+        <h3>LIXBY One</h3>
+        <p>Teléfono de última generación.</p>
+        <span class="price">999€</span>
+      </article>
+      <article class="card glass">
+        <h3>LIXBY Flow</h3>
+        <p>Audio de alta fidelidad.</p>
+        <span class="price">249€</span>
+      </article>
+    </div>
+  </section>
 
-    <section id="servicios" class="section">
-      <h2>Servicios</h2>
-      <div class="services">
-        <div class="service glass reveal">
-          <h3>Instalación Pro</h3>
-          <p>Configuración completa en tu espacio.</p>
-        </div>
-        <div class="service glass reveal">
-          <h3>Soporte 7/7</h3>
-          <p>Asistencia remota e in situ.</p>
-        </div>
-      </div>
-    </section>
+  <!-- CONTACTO -->
+  <section id="contacto" class="section glass">
+    <h2>Contáctanos</h2>
+    <p>Déjanos tu mensaje y te responderemos hoy mismo.</p>
+    <form class="contact-form" onsubmit="return false;">
+      <input type="text" placeholder="Nombre" required>
+      <input type="email" placeholder="Correo" required>
+      <textarea placeholder="Tu mensaje" required></textarea>
+      <button class="btn primary">Enviar</button>
+    </form>
+  </section>
 
-    <section id="sobre" class="section">
-      <h2>Sobre LIXBY</h2>
-      <p>Menos, pero mejor. Simplicidad y calidad.</p>
-    </section>
+  <!-- CONÓCENOS -->
+  <section id="conocenos" class="section">
+    <h2>Conócenos</h2>
+    <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
+  </section>
 
-    <section id="contacto" class="section">
-      <h2>Contacto</h2>
-      <form class="contact-form" onsubmit="return false;">
-        <input type="email" placeholder="tu@email.com" />
-        <button class="btn primary">Enviar</button>
-      </form>
-    </section>
-  </main>
-
+  <!-- FOOTER -->
   <footer class="footer glass">
-    <span>© <span id="year"></span> LIXBY</span>
+    <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <div id="toast" class="toast"></div>
   <script src="script.js"></script>
 </body>
 </html>
