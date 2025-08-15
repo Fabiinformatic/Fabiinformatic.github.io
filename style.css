@@ -16,6 +16,12 @@
 
   /* fallback header height (JS recalcula al cargar y al redimensionar) */
   --header-height: 72px;
+
+  /* transition tokens (usados por las mejoras añadidas) */
+  --t-fast: 160ms;
+  --t-medium: 220ms;
+  --ease-bouncy: cubic-bezier(.2,.9,.3,1);
+  --focus-ring: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent 82%);
 }
 
 :root.light {
@@ -29,6 +35,7 @@
   --shadow-soft: 0 12px 30px rgba(7,10,20,0.06);
 }
 
+/* Basic reset */
 * { box-sizing: border-box; }
 html,body { height:100%; }
 body{
@@ -378,3 +385,132 @@ p { color: var(--muted); margin:0; }
 @media (max-width:720px) { .cart-panel { width: 92%; } }
 
 /* End of style.css — LIXBY */
+
+/* ======================================================
+   ADDITIONAL IMPROVEMENTS (no borrar lo anterior — añadidos)
+   - Performance, accessibility, fallbacks and utilities
+   ====================================================== */
+
+/* 1) prefers-reduced-motion: reduce/disable animations */
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-medium: 0ms; }
+  * { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+}
+
+/* 2) focus-visible: accessible keyboard focus */
+:focus { outline: none; }
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 8px;
+}
+
+/* 3) disabled states for buttons */
+.btn[disabled], button[disabled], .auth-btn[disabled] {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 4) small touch-target boost for mobile controls */
+.icon-btn, .lang-item, .lang-menu button, .mini-cart .remove {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 5) avatar guest utility: use this class to show guest-icon as background */
+/* Usage: <div class="avatar avatar-guest"></div> or <div id="avatar" class="avatar avatar-guest"></div> */
+.avatar-guest {
+  background-image: url('https://static.vecteezy.com/system/resources/previews/025/667/911/non_2x/guest-icon-design-vector.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: transparent; /* hide initials when using bg */
+}
+
+/* 6) ensure avatar images fill container and are clipped nicely */
+.avatar img, #headerAvatar, .userbox img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:inherit;
+}
+
+/* 7) lazy-loading helper classes for images (progressive reveal) */
+/* Give <img class="lazy"> initially opacity 0; when loaded add .loaded */
+img.lazy {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity var(--t-fast) var(--ease-bouncy), transform var(--t-fast) var(--ease-bouncy);
+  will-change: opacity, transform;
+}
+img.lazy.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 8) lightweight loading spinner (CSS-only) */
+.loading-spinner {
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,0.07);
+  border-top-color: var(--accent);
+  animation: spin 900ms linear infinite;
+  display:inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 9) fallback for browsers without backdrop-filter: slightly stronger opaque background */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  /* auth modal: reduce blur expectations */
+  #authBackdrop { background: rgba(0,0,0,0.6); }
+}
+
+/* 10) small performance hint: avoid expensive shadow on many cards at once */
+.card, .mini-cart, .product-detail { will-change: transform; }
+
+/* 11) button micro-interaction: ripple-like focus (keyboard) */
+.btn:active, .btn:focus {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* 12) improve contrast for small text on white mini-cart */
+.mini-cart, .mini-cart * { color: #07101a; }
+
+/* 13) Utility: hide element visually but keep for screen-readers */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* 14) small helper class for clickable card areas (improves hit area on touch) */
+.clickable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 15) subtle staged entrance for hero & cards to avoid layout shifts */
+.hero-content, .card {
+  transition: opacity var(--t-medium) var(--ease-bouncy), transform var(--t-medium) var(--ease-bouncy);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 16) Improve typography responsiveness for long pages */
+@media(min-width:1400px) {
+  :root { --header-height: 80px; }
+  .nav-inner { max-width:1400px; }
+}
+
+/* End of additions */
