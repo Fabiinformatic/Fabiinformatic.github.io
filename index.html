@@ -121,10 +121,7 @@
       <div class="nav-right" aria-hidden="false">
         <!-- carrito (mini) -->
         <div class="cart-wrapper" style="position:relative;">
-          <a href="carrito.html" id="cartBtn" class="icon-btn" aria-label="Ver carrito" style="display:inline-flex;align-items:center;text-decoration:none;">
-  🛒 <span id="cartCount" class="badge">0</span>
-</a>
-
+          <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
 
           <div id="miniCart" class="mini-cart glass" aria-hidden="true">
             <div class="mini-cart-header">
@@ -303,5 +300,26 @@
 
   <!-- tu script principal (defer) -->
   <script src="script.js" defer></script>
+
+  <!-- === Añadido: FORZAR navegación al carrito (capturing listener que tiene prioridad) ===
+       Esto garantiza que, al hacer click en el icono, vas a carrito.html (estilo Apple).
+       Se usa capture + stopImmediatePropagation para evitar que otros listeners interfieran.
+  -->
+  <script>
+    (function(){
+      const btn = document.getElementById('cartBtn');
+      if (!btn) return;
+      btn.addEventListener('click', function(e){
+        try {
+          // evita cualquiera otra acción y fuerza navegación
+          e.preventDefault();
+          e.stopImmediatePropagation && e.stopImmediatePropagation();
+        } catch(err){}
+        // añade un pequeño delay para asegurar persistencia visual (opcional)
+        window.location.href = 'carrito.html';
+      }, true); // useCapture = true -> ejecuta antes que handlers en bubble
+    })();
+  </script>
+
 </body>
 </html>
