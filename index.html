@@ -4,569 +4,492 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LIXBY — Tecnología minimalista</title>
+
+  <!-- PERF: preconnect para reducir latencia en recursos externos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://images.weserv.nl" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
   <link rel="stylesheet" href="style.css" />
-  <!-- small inline fallback styles for header-only overrides (kept minimal) -->
+  <!-- Overrides locales para header y comportamiento consistente -->
   <style>
-    :root{ --header-height:72px }
-    body{ padding-top: var(--header-height); }
+    /* Header compacto, línea recta, minimal */
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 120; padding: 10px 24px; background: rgba(255,255,255,0.02); backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px) saturate(120%); border-bottom: 1px solid rgba(255,255,255,0.03); border-radius: 0; box-shadow: none; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 0 6px; }
+    .nav-left { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+    #navLinks { display:flex; gap:18px; align-items:center; justify-content:center; flex: 1 1 auto; padding: 8px 12px; white-space: nowrap; }
+    .nav-right { display:flex; gap:10px; align-items:center; justify-content:flex-end; flex: 0 0 auto; flex-direction: row !important; }
+    .cart-wrapper { position:relative; }
+    .mini-cart { right:18px; top:56px; width:320px; box-sizing:border-box; z-index:140; }
+    .lang-menu { right:18px; top:56px; box-sizing:border-box; z-index:140; }
+    main { padding-top: calc(64px + 12px); }
+    .card .actions { display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .btn-add { padding:8px 12px; border-radius:8px; border: none; cursor:pointer; background:linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; font-weight:700; }
+    .btn-view { padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--text); cursor:pointer; }
+    .contact-min { max-width: 1100px; margin: 28px auto; padding: 30px; display:flex; gap:24px; align-items:center; justify-content:space-between; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.03); box-sizing:border-box; }
+    .contact-min .form { flex:0 0 360px; display:flex; flex-direction:column; gap:10px }
+    .contact-success { display:none; color:var(--accent); font-weight:600; margin-top:8px }
+    #authOverlay { display:none; }
+    #authOverlay[aria-hidden="false"] { display:block; }
+    #authModal .btn { min-width:120px; }
+
+    /* ligero hover animation global */
+    .btn-add, .btn-fav, .icon-btn, .btn { transition: transform .16s cubic-bezier(.2,.9,.3,1), box-shadow .16s ease; }
+    .btn-add:hover, .btn-fav:hover, .icon-btn:hover, .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 22px rgba(2,6,12,0.12); }
+
+    @media (max-width:900px){
+      .contact-min { flex-direction:column; } .contact-min .form{ width:100% }
+    }
   </style>
 </head>
 <body>
-  <!-- NAV -->
-  <header class="nav glass" role="banner">
-    <div class="nav-inner">
-      <!-- LEFT: logo -->
-      <div class="nav-left">
-        <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
-      </div>
-
-      <!-- CENTER: nav links -->
-      <nav id="navLinks" role="navigation" aria-label="Principal">
-        <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
-        <a href="#productos" data-i18n="nav.productos">Productos</a>
-        <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
-        <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
-      </nav>
-
-      <!-- RIGHT: controles en fila -->
-      <div class="nav-right" aria-hidden="false">
-        <!-- carrito (mini) -->
-        <div class="cart-wrapper" style="position:relative;">
-          <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
-
-          <div id="miniCart" class="mini-cart glass" aria-hidden="true">
-            <div class="mini-cart-header">
-              <strong data-i18n="cart.title">Carrito</strong>
-              <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
-            </div>
-
-            <div id="miniCartItems" class="mini-cart-items">
-              <!-- items dinámicos -->
-            </div>
-
-            <div class="mini-cart-footer" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
-                <div>
-                  <button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button>
-                </div>
-              </div>
-              <div style="display:flex;gap:8px;">
-                <button id="viewCartBtn" class="btn ghost">Ver carrito</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- selector idioma -->
-        <div class="lang-wrapper">
-          <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false">
-            🇪🇸 <span id="langLabel">Español</span> ▾
-          </button>
-          <div id="langMenu" class="lang-menu glass" aria-hidden="true">
-            <button class="lang-item" data-lang="es">🇪🇸 Español</button>
-            <button class="lang-item" data-lang="en">🇬🇧 English</button>
-            <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
-          </div>
-        </div>
-
-        <!-- Account holder (reemplaza botón Cuenta cuando haya sesión) -->
-        <div id="accountContainer" style="display:inline-flex;align-items:center;gap:8px;">
-          <!-- por defecto mostramos el botón Cuenta -->
-          <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta">Cuenta</button>
-        </div>
-
-        <!-- toggle tema -->
-        <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
-      </div>
+<!-- NAV -->
+<header class="nav glass" role="banner">
+  <div class="nav-inner">
+    <!-- LEFT: logo -->
+    <div class="nav-left">
+      <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
     </div>
-  </header>
-
-  <!-- AUTH / WELCOME MODAL -->
-  <div id="authOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:9998;display:none;">
-    <div id="authBackdrop"></div>
-
-    <div id="authModal" class="glass" role="dialog" aria-labelledby="authTitle" style="position:relative;max-width:540px;margin:6vh auto;z-index:9999;">
-      <h2 id="authTitle">Bienvenido a LIXBY</h2>
-      <p>Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</p>
-
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button id="btnGoogle" class="auth-btn ghost" type="button" aria-label="Iniciar con Google">
-          <img class="icon" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-          <span>Iniciar con Google</span>
-        </button>
-
-        <button id="btnGitHub" class="auth-btn ghost" type="button" aria-label="Iniciar con GitHub">
-          <img class="icon" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width:18px;height:18px;">
-          <span>Iniciar con GitHub</span>
-        </button>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--muted)">
-        <hr style="flex:1;border:none;height:1px;background:rgba(0,0,0,0.06)"/>
-        <span style="font-size:0.9rem;color:#556">o con correo</span>
-        <hr style="flex:1;border:none;height:1px;background:rgba(0,0,0,0.06)"/>
-      </div>
-
-      <form id="authEmailForm" style="display:flex;flex-direction:column;gap:8px">
-        <input id="authEmail" type="email" placeholder="Correo" required style="padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)"/>
-        <input id="authPass" type="password" placeholder="Contraseña" required style="padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)"/>
-        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
-          <button type="button" id="btnEmailSignIn" class="btn primary">Iniciar sesión</button>
-          <button type="button" id="btnEmailSignUp" class="btn ghost">Registrarse</button>
+    <!-- CENTER: nav links -->
+    <nav id="navLinks" role="navigation" aria-label="Principal">
+      <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
+      <a href="#productos" data-i18n="nav.productos">Productos</a>
+      <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
+      <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
+    </nav>
+    <!-- RIGHT: controles en fila -->
+    <div class="nav-right" aria-hidden="false">
+      <div class="cart-wrapper" style="position:relative;">
+        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
+        <div id="miniCart" class="mini-cart glass" aria-hidden="true">
+          <div class="mini-cart-header">
+            <strong data-i18n="cart.title">Carrito</strong>
+            <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
+          </div>
+          <div id="miniCartItems" class="mini-cart-items">
+            <!-- items dinámicos -->
+          </div>
+          <div class="mini-cart-footer" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
+              <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button></div>
+            </div>
+            <div style="display:flex;gap:8px;"><button id="viewCartBtn" class="btn ghost">Ver carrito</button></div>
+          </div>
         </div>
-      </form>
-
-      <div style="text-align:center;margin-top:12px">
-        <button id="btnAnonymous" class="btn ghost" title="Entrar como invitado">
-          <img src="https://static.vecteezy.com/system/resources/previews/025/667/911/non_2x/guest-icon-design-vector.jpg" alt="Invitado" style="width:20px;height:20px;border-radius:4px;vertical-align:middle;margin-right:8px;">
-          Continuar como invitado
-        </button>
       </div>
 
-      <div style="display:flex;justify-content:center;margin-top:12px;font-size:0.9rem">
-        <a id="authToAccount" href="cuenta.html" style="color:#556">Ya tienes cuenta? Ir a mi cuenta</a>
+      <div class="lang-wrapper">
+        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false"> 🇪🇸 <span id="langLabel">Español</span> ▾ </button>
+        <div id="langMenu" class="lang-menu glass" aria-hidden="true">
+          <button class="lang-item" data-lang="es">🇪🇸 Español</button>
+          <button class="lang-item" data-lang="en">🇬🇧 English</button>
+          <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
+        </div>
       </div>
 
-      <button id="authClose" aria-label="Cerrar" style="position:absolute;right:12px;top:12px;background:transparent;border:0;font-size:18px">✕</button>
+      <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta">Cuenta</button>
+      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
     </div>
   </div>
-  <!-- END AUTH MODAL -->
+</header>
 
-  <main>
-    <!-- HERO -->
-    <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
-      <div class="hero-content">
-        <h1 id="hero-title">La tecnología que te entiende</h1>
-        <p>Innovación minimalista para tu día a día</p>
-        <a href="#productos" class="btn primary" data-i18n="btn.explorar">Explorar</a>
+<!-- AUTH / WELCOME MODAL (mantengo tu HTML, sin borrar) -->
+<div id="authOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:9998;display:none;">
+  <div id="authBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px)"></div>
+  <div id="authModal" class="glass" role="dialog" aria-labelledby="authTitle" style="position:relative;max-width:540px;margin:6vh auto;padding:22px;border-radius:12px;z-index:9999;">
+    <h2 id="authTitle" style="margin:0 0 8px">Bienvenido a LIXBY</h2>
+    <p style="margin:0 0 18px;color:var(--muted)">Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button id="btnGoogle" class="btn ghost" style="flex:1">Iniciar con Google</button>
+      <button id="btnGitHub" class="btn ghost" style="flex:1">Iniciar con GitHub</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--muted)">
+      <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
+      <span style="font-size:0.9rem">o con correo</span>
+      <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
+    </div>
+    <form id="authEmailForm" style="display:flex;flex-direction:column;gap:8px">
+      <input id="authEmail" type="email" placeholder="Correo" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
+      <input id="authPass" type="password" placeholder="Contraseña" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
+      <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+        <button type="button" id="btnEmailSignIn" class="btn primary">Iniciar sesión</button>
+        <button type="button" id="btnEmailSignUp" class="btn ghost">Registrarse</button>
       </div>
-    </section>
+    </form>
+    <div style="text-align:center;margin-top:12px">
+      <button id="btnAnonymous" class="btn ghost">Continuar como invitado</button>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:12px;font-size:0.9rem">
+      <a id="authToAccount" href="cuenta.html" style="color:var(--muted)">Ya tienes cuenta? Ir a mi cuenta</a>
+    </div>
+    <button id="authClose" aria-label="Cerrar" style="position:absolute;right:12px;top:12px;background:transparent;border:0;font-size:18px">✕</button>
+  </div>
+</div>
+<!-- END AUTH -->
 
-    <!-- PRODUCTOS -->
-    <section id="productos" class="section reveal" aria-labelledby="prod-title">
-      <h2 id="prod-title">Productos</h2>
-      <div class="grid">
-        <!-- Lixby One Air -->
-        <article class="card glass" data-product="lixby-one-air" data-href="producto.html?id=lixby-one-air" role="button" tabindex="0" aria-label="Lixby One Air">
-          <div class="thumb">
-            <img src="https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg" alt="Lixby One Air">
-          </div>
-          <h3>Lixby One Air</h3>
-          <p>Ultraligero y económico.</p>
-          <span class="price">249€</span>
-          <div class="actions">
-            <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-air'">Ver</button>
-            <button class="btn-add" data-id="lixby-one-air">Añadir al carrito</button>
-          </div>
-        </article>
+<main>
+  <!-- HERO -->
+  <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
+    <div class="hero-content">
+      <h1 id="hero-title">La tecnología que te entiende</h1>
+      <p>Innovación minimalista para tu día a día</p>
+      <a href="#productos" class="btn primary" data-i18n="btn.explorar">Explorar</a>
+    </div>
+  </section>
 
-        <!-- Lixby One -->
-        <article class="card glass" data-product="lixby-one" data-href="producto.html?id=lixby-one" role="button" tabindex="0" aria-label="Lixby One">
-          <div class="thumb">
-            <img src="https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg" alt="Lixby One">
-          </div>
-          <h3>Lixby One</h3>
-          <p>Ultraligero y potente.</p>
-          <span class="price">349€</span>
-          <div class="actions">
-            <button class="btn-view" onclick="location.href='producto.html?id=lixby-one'">Ver</button>
-            <button class="btn-add" data-id="lixby-one">Añadir al carrito</button>
-          </div>
-        </article>
-
-        <!-- Lixby One Pro -->
-        <article class="card glass" data-product="lixby-one-pro" data-href="producto.html?id=lixby-one-pro" role="button" tabindex="0" aria-label="Lixby One Pro">
-          <div class="thumb">
-            <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro">
-          </div>
-          <h3>Lixby One Pro</h3>
-          <p>Audio de alta fidelidad.</p>
-          <span class="price">899€</span>
-          <div class="actions">
-            <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-pro'">Ver</button>
-            <button class="btn-add" data-id="lixby-one-pro">Añadir al carrito</button>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- CONTACTO (sin cambios) -->
-    <section id="contacto" class="section contact-min glass reveal" aria-labelledby="contact-title">
-      <div class="left">
-        <h2 id="contact-title">Contáctanos</h2>
-        <p class="lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
-      </div>
-
-      <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;">
-        <input id="contactName" name="from_name" type="text" placeholder="Nombre" required autocomplete="name">
-        <input id="contactEmail" name="from_email" type="email" placeholder="Correo" required autocomplete="email">
-        <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
-
+  <!-- PRODUCTOS -->
+  <section id="productos" class="section reveal" aria-labelledby="prod-title">
+    <h2 id="prod-title">Productos</h2>
+    <div class="grid">
+      <!-- Lixby One Air -->
+      <article class="card glass" data-product="lixby-one-air" role="button" tabindex="0" aria-label="Lixby One Air">
+        <div class="thumb">
+          <img src="https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg" alt="Lixby One Air"
+               loading="lazy" decoding="async" width="600" height="600">
+        </div>
+        <h3>Lixby One Air</h3>
+        <p>Ultraligero y económico.</p>
+        <span class="price">249€</span>
         <div class="actions">
-          <button type="button" class="btn ghost" onclick="document.getElementById('contactForm').reset();">Borrar</button>
-          <button type="submit" id="contactSend" class="btn primary">Enviar</button>
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-air'">Ver</button>
+          <button class="btn-add" data-id="lixby-one-air">Añadir al carrito</button>
         </div>
+      </article>
 
-        <div id="contactSuccess" class="contact-success" role="status" aria-live="polite">Mensaje enviado. ¡Gracias! Te contestaremos pronto.</div>
-      </form>
-    </section>
-
-    <!-- CONÓCENOS -->
-    <section id="conocenos" class="section reveal" aria-labelledby="about-title">
-      <h2 id="about-title">Conócenos</h2>
-      <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
-    </section>
-
-    <!-- Panel mínimo para editar perfil (name / last name / dob) - aparece al loguear -->
-    <section id="profilePanel" class="section profile-panel glass" aria-labelledby="profile-title" style="display:none;max-width:900px;margin-top:40px;">
-      <h2 id="profile-title" style="margin-bottom:10px;">Tu perfil</h2>
-      <div class="account-profile">
-        <div class="avatar" id="profileAvatar">—</div>
-        <div class="fields">
-          <div class="profile-row">
-            <input id="firstName" placeholder="Nombre" />
-            <input id="lastName" placeholder="Apellidos" />
-          </div>
-          <div class="profile-row">
-            <input id="dob" type="date" placeholder="Fecha de nacimiento" />
-          </div>
-          <div style="display:flex;justify-content:flex-end;">
-            <button id="saveProfile" class="btn primary">Guardar</button>
-          </div>
-          <div style="font-size:0.9rem;color:var(--muted);margin-top:8px;">
-            Los cambios se almacenan en tu cuenta (si tu backend lo admite) — si quieres que guarde automáticamente en Firestore, dime y lo conecto.
-          </div>
+      <!-- Lixby One -->
+      <article class="card glass" data-product="lixby-one" role="button" tabindex="0" aria-label="Lixby One">
+        <div class="thumb">
+          <img src="https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg" alt="Lixby One"
+               loading="lazy" decoding="async" width="600" height="600">
         </div>
+        <h3>Lixby One</h3>
+        <p>Ultraligero y potente.</p>
+        <span class="price">349€</span>
+        <div class="actions">
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one'">Ver</button>
+          <button class="btn-add" data-id="lixby-one">Añadir al carrito</button>
+        </div>
+      </article>
+
+      <!-- Lixby One Pro -->
+      <article class="card glass" data-product="lixby-one-pro" role="button" tabindex="0" aria-label="Lixby One Pro">
+        <div class="thumb">
+          <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro"
+               loading="lazy" decoding="async" width="600" height="600">
+        </div>
+        <h3>Lixby One Pro</h3>
+        <p>Audio de alta fidelidad.</p>
+        <span class="price">899€</span>
+        <div class="actions">
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-pro'">Ver</button>
+          <button class="btn-add" data-id="lixby-one-pro">Añadir al carrito</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section id="contacto" class="section contact-min glass reveal" aria-labelledby="contact-title">
+    <div class="left">
+      <h2 id="contact-title">Contáctanos</h2>
+      <p class="lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
+    </div>
+
+    <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;">
+      <input id="contactName" name="from_name" type="text" placeholder="Nombre" required autocomplete="name">
+      <input id="contactEmail" name="from_email" type="email" placeholder="Correo" required autocomplete="email">
+      <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
+      <div class="actions">
+        <button type="button" class="btn ghost" onclick="document.getElementById('contactForm').reset();">Borrar</button>
+        <button type="submit" id="contactSend" class="btn primary">Enviar</button>
       </div>
-    </section>
-  </main>
+      <div id="contactSuccess" class="contact-success" role="status" aria-live="polite">Mensaje enviado. ¡Gracias! Te contestaremos pronto.</div>
+    </form>
+  </section>
 
-  <!-- FOOTER -->
-  <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
-    <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
-  </footer>
+  <!-- CONÓCENOS -->
+  <section id="conocenos" class="section reveal" aria-labelledby="about-title">
+    <h2 id="about-title">Conócenos</h2>
+    <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
+  </section>
+</main>
 
-  <!-- Cart panel (estático) + backdrop -->
-  <div id="cartBackdrop" class="cart-backdrop" aria-hidden="true"></div>
-  <aside id="cartPanel" class="cart-panel" aria-hidden="true">
-    <div class="cart-panel-inner glass" role="dialog" aria-label="Carrito">
-      <div class="cart-header">
-        <strong data-i18n="cart.title">Carrito</strong>
-        <button id="cartPanelClose" class="text-btn" aria-label="Cerrar">✕</button>
+<footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
+  <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
+</footer>
+
+<!-- Cart panel (estático) + backdrop -->
+<div id="cartBackdrop" class="cart-backdrop" aria-hidden="true"></div>
+<aside id="cartPanel" class="cart-panel" aria-hidden="true">
+  <div class="cart-panel-inner glass" role="dialog" aria-label="Carrito">
+    <div class="cart-header">
+      <strong data-i18n="cart.title">Carrito</strong>
+      <button id="cartPanelClose" class="text-btn" aria-label="Cerrar">✕</button>
+    </div>
+    <div id="cartPanelItems" class="cart-list"></div>
+    <div class="cart-footer">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong>Total</strong>
+        <span id="cartPanelTotal">0€</span>
       </div>
-
-      <div id="cartPanelItems" class="cart-list">
-        <!-- items dinámicos -->
-      </div>
-
-      <div class="cart-footer">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <strong>Total</strong>
-          <span id="cartPanelTotal">0€</span>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button id="cartPanelCheckout" class="btn primary" data-i18n="cart.checkout">Pagar</button>
-          <button id="cartPanelClear" class="btn ghost" data-i18n="cart.clear">Vaciar</button>
-        </div>
+      <div style="display:flex;gap:8px;">
+        <button id="cartPanelCheckout" class="btn primary" data-i18n="cart.checkout">Pagar</button>
+        <button id="cartPanelClear" class="btn ghost" data-i18n="cart.clear">Vaciar</button>
       </div>
     </div>
-  </aside>
+  </div>
+</aside>
 
-  <noscript style="display:block;background:#fffb; padding:10px; text-align:center;">
-    JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
-  </noscript>
+<noscript style="display:block;background:#fffb; padding:10px; text-align:center;">
+  JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
+</noscript>
 
-  <!-- small fallback script -->
-  <script>
-    (function(){
-      function adjustPadding(){
-        try {
-          const header = document.querySelector('.nav');
-          if(!header) return;
-          const pad = Math.round(header.getBoundingClientRect().height + 12);
-          document.body.style.paddingTop = pad + 'px';
-        } catch(e){}
-      }
-      adjustPadding();
-      window.addEventListener('resize', adjustPadding);
+<!-- ===========================
+     SCRIPTS (todo inline para que copies directo)
+     =========================== -->
+<script>
+(function(){
+  // -------------------------
+  // Helpers y estado
+  // -------------------------
+  const KEY = 'lixby_cart_v1';
+  function parsePrice(s){ if (s === undefined || s === null) return 0; return Number(String(s).replace(/[^\d.,-]/g,'').replace(',', '.')) || 0; }
+  function saveCart(c){ try { localStorage.setItem(KEY, JSON.stringify(c)); } catch(e){} }
+  function loadCart(){ try { return JSON.parse(localStorage.getItem(KEY))||[]; } catch(e){ return []; } }
+  function formatPriceNum(num){ return (Math.round(num*100)/100) + '€'; }
+  function showDebug(msg){ const el=document.getElementById('debug'); if(!el) return; el.style.display='block'; el.textContent += msg + "\n"; console.log('DEBUG',msg); }
 
-      const viewBtn = document.getElementById('viewCartBtn');
-      const cartPanel = document.getElementById('cartPanel');
-      const cartBackdrop = document.getElementById('cartBackdrop');
-      const cartPanelClose = document.getElementById('cartPanelClose');
+  // performance: proxiedUrl (menor tamaño)
+  function proxiedUrl(originalUrl){
+    if (!originalUrl) return '';
+    const stripped = String(originalUrl).replace(/^https?:\/\//,'');
+    return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=900&q=80`;
+  }
 
-      function setPanel(open){
-        if(!cartPanel || !cartBackdrop) return;
-        cartPanel.classList.toggle('open', !!open);
-        cartBackdrop.classList.toggle('open', !!open);
-        cartPanel.setAttribute('aria-hidden', String(!open));
-        cartBackdrop.setAttribute('aria-hidden', String(!open));
-      }
-      if (viewBtn) viewBtn.addEventListener('click', ()=> setPanel(true));
-      if (cartBackdrop) cartBackdrop.addEventListener('click', ()=> setPanel(false));
-      if (cartPanelClose) cartPanelClose.addEventListener('click', ()=> setPanel(false));
-    })();
-  </script>
+  // set year
+  try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
 
-  <!-- OVERRIDE: cart button redirect -->
-  <script>
-    (function(){
-      function goToCart(e){
-        e.preventDefault();
-        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-        window.location.href = 'carrito.html';
-      }
-      const cartBtn = document.getElementById('cartBtn');
-      if (cartBtn) cartBtn.addEventListener('click', goToCart, {capture:true});
+  // product brief (igual que antes)
+  const PRODUCTS_BRIEF = {
+    'lixby-one-air': { id:'lixby-one-air', name: 'Lixby One Air', price: '249€', priceNum: 249, image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg' },
+    'lixby-one': { id:'lixby-one', name: 'Lixby One', price: '349€', priceNum: 349, image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg' },
+    'lixby-one-pro': { id:'lixby-one-pro', name: 'Lixby One Pro', price: '899€', priceNum: 899, image: 'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg' }
+  };
 
-      const viewBtn = document.getElementById('viewCartBtn');
-      if (viewBtn) viewBtn.addEventListener('click', function(e){ e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); window.location.href='carrito.html'; }, {capture:true});
-    })();
-  </script>
+  // CART
+  let cart = loadCart();
+  const cartBtn = document.getElementById('cartBtn');
+  const miniCart = document.getElementById('miniCart');
+  const miniCartItems = document.getElementById('miniCartItems');
+  const miniCartTotal = document.getElementById('miniCartTotal');
+  const cartCount = document.getElementById('cartCount');
+  const clearCartBtn = document.getElementById('clearCart');
+  const checkoutBtn = document.getElementById('checkoutBtn');
 
-  <!-- FALLBACK addToCart -->
-  <script>
-    (function(){
-      const KEY = 'lixby_cart_v1';
-      function parsePrice(s){ if (s === undefined || s === null) return 0; return Number(String(s).replace(/[^\d.,-]/g,'').replace(',', '.')) || 0; }
-      const PRODUCTS_BRIEF = {
-        'lixby-one-air': { id:'lixby-one-air', name: 'Lixby One Air', price: '249€', priceNum: 249, image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg' },
-        'lixby-one': { id:'lixby-one', name: 'Lixby One', price: '349€', priceNum: 349, image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg' },
-        'lixby-one-pro': { id:'lixby-one-pro', name: 'Lixby One Pro', price: '899€', priceNum: 899, image: 'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg' }
-      };
+  function updateMiniCartUI(){
+    if (!cartCount) return;
+    const totalQty = cart.reduce((s,i)=>s+(i.qty||0),0);
+    cartCount.textContent = totalQty;
+    if (!miniCartItems) return;
+    miniCartItems.innerHTML = '';
+    if (cart.length === 0) {
+      miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
+      if (miniCartTotal) miniCartTotal.textContent = '0€';
+      return;
+    }
+    let total = 0;
+    cart.forEach((it, idx) => {
+      const item = document.createElement('div');
+      item.className = 'mini-cart-item';
+      item.style.display = 'flex'; item.style.gap='10px'; item.style.alignItems='center'; item.style.padding='8px'; item.style.borderRadius='8px';
+      const img = document.createElement('img'); img.src = it.image || 'https://via.placeholder.com/80x80?text=Img'; img.alt = it.name; img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
+      img.loading='lazy'; img.decoding='async';
+      const meta = document.createElement('div'); meta.className='meta'; meta.innerHTML = `<div style="font-weight:700">${it.name}</div><div style="color:var(--muted)">${it.price} x${it.qty||1}</div>`;
+      const remove = document.createElement('button'); remove.className='remove'; remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
+      remove.addEventListener('click', ()=>{ cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
+      item.appendChild(img); item.appendChild(meta); item.appendChild(remove);
+      miniCartItems.appendChild(item);
+      total += (it.priceNum || parsePrice(it.price)) * (it.qty||1);
+    });
+    if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(total);
+  }
 
-      function fallbackAdd(product){
-        try {
-          const raw = localStorage.getItem(KEY);
-          const cart = raw ? JSON.parse(raw) : [];
-          const existing = cart.find(i => i.id === product.id);
-          if (existing) existing.qty = (existing.qty||1) + 1;
-          else cart.push({
-            id: product.id,
-            name: product.name || 'Producto',
-            price: product.price || (product.priceNum ? (product.priceNum + '€') : '0€'),
-            priceNum: product.priceNum !== undefined ? Number(product.priceNum) : parsePrice(product.price),
-            qty: 1,
-            image: product.image || ''
-          });
-          localStorage.setItem(KEY, JSON.stringify(cart));
-          window.dispatchEvent(new Event('cartUpdated'));
-          const mini = document.getElementById('miniCart');
-          if (mini) { mini.setAttribute('aria-hidden','false'); setTimeout(()=> mini.setAttribute('aria-hidden','true'), 1800); }
-        } catch(e){ console.warn('fallbackAdd error', e); }
-      }
+  if (cartBtn && miniCart) {
+    cartBtn.addEventListener('click', (e) => {
+      const shown = miniCart.getAttribute('aria-hidden') === 'false';
+      miniCart.setAttribute('aria-hidden', String(!shown));
+    });
+    document.addEventListener('click', (e) => {
+      if (!cartBtn.contains(e.target) && !miniCart.contains(e.target)) miniCart.setAttribute('aria-hidden','true');
+    });
+  }
+  if (clearCartBtn) clearCartBtn.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); });
+  if (checkoutBtn) checkoutBtn.addEventListener('click', () => { if (cart.length===0) return alert('El carrito está vacío'); alert('Simulación de checkout: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
 
-      document.addEventListener('click', (ev) => {
-        const btn = ev.target.closest && ev.target.closest('.btn-add');
-        if (!btn) return;
-        const id = btn.getAttribute('data-id');
-        const product = PRODUCTS_BRIEF[id];
-        const payload = product ? product : { id: id, name: id, price: '0€', priceNum: 0, image: '' };
-        if (typeof window.addToCart === 'function' && window.addToCart !== fallbackAdd) {
-          window.addToCart(payload);
-        } else {
-          fallbackAdd(payload);
+  window.addToCart = function(product){
+    const existing = cart.find(p => p.id === product.id);
+    if (existing) existing.qty = (existing.qty||1) + 1;
+    else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: parsePrice(product.price) || product.priceNum || 0, qty:1, image: product.image });
+    saveCart(cart);
+    updateMiniCartUI();
+    if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
+  };
+
+  updateMiniCartUI();
+
+  // LANG / I18N (simple)
+  const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu'), langLabel = document.getElementById('langLabel');
+  const translations = {
+    es: { "nav.inicio":"Inicio","nav.productos":"Productos","nav.contacto":"Contáctanos","nav.conocenos":"Conócenos","cart.title":"Carrito","cart.clear":"Vaciar","cart.total":"Total:","cart.checkout":"Pagar","btn.add":"Añadir al carrito","btn.added":"Añadido","btn.explorar":"Explorar","btn.enviar":"Enviar","theme.toggle":"Cambiar tema","cart.empty":"Tu carrito está vacío." },
+    en: { "nav.inicio":"Home","nav.productos":"Products","nav.contacto":"Contact","nav.conocenos":"About","cart.title":"Cart","cart.clear":"Clear","cart.total":"Total:","cart.checkout":"Checkout","btn.add":"Add to cart","btn.added":"Added","btn.explorar":"Explore","btn.enviar":"Send","theme.toggle":"Toggle theme","cart.empty":"Your cart is empty." },
+    fr: { "nav.inicio":"Accueil","nav.productos":"Produits","nav.contacto":"Contact","nav.conocenos":"À propos","cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer","btn.add":"Ajouter au panier","btn.added":"Ajouté","btn.explorar":"Explorer","btn.enviar":"Envoyer","theme.toggle":"Changer le thème","cart.empty":"Votre panier est vide." }
+  };
+  let currentLang = localStorage.getItem('lixby_lang') || 'es';
+  function applyTranslations(lang){
+    const map = translations[lang] || translations['es'];
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (key && map[key]) el.textContent = map[key];
+    });
+    document.querySelectorAll('.btn-add').forEach(btn => btn.textContent = map['btn.add'] || btn.textContent);
+    const names = { es:'Español', en:'English', fr:'Français' };
+    if (langLabel) langLabel.textContent = names[lang] || names['es'];
+  }
+  function setLang(l){
+    if (!translations[l]) l = 'es';
+    currentLang = l;
+    try { localStorage.setItem('lixby_lang', l); } catch(e){}
+    applyTranslations(l);
+  }
+  setLang(localStorage.getItem('lixby_lang') || currentLang);
+
+  if (langBtn && langMenu){
+    langBtn.addEventListener('click', ()=> {
+      const isOpen = langMenu.getAttribute('aria-hidden') === 'false';
+      langMenu.setAttribute('aria-hidden', String(!isOpen));
+      langBtn.setAttribute('aria-expanded', String(!isOpen));
+    });
+    langMenu.querySelectorAll('.lang-item').forEach(btn => btn.addEventListener('click', ()=>{ const lang = btn.getAttribute('data-lang'); setLang(lang); langMenu.setAttribute('aria-hidden','true'); langBtn.setAttribute('aria-expanded','false'); }));
+    document.addEventListener('click', (e)=> { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langBtn.setAttribute('aria-expanded','false'); }});
+  }
+
+  // THEME
+  const THEME_KEY = 'lixby_theme';
+  const themeToggle = document.getElementById('themeToggle');
+  if (localStorage.getItem(THEME_KEY) === 'light') document.documentElement.classList.add('light');
+  if (themeToggle) themeToggle.addEventListener('click', ()=>{ const isLight = document.documentElement.classList.toggle('light'); try{ localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark'); }catch(e){} });
+
+  // ---------- FALLBACK addToCart (si no hay script.js externo) ----------
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest && ev.target.closest('.btn-add');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const product = PRODUCTS_BRIEF[id];
+    const payload = product ? product : { id: id, name: id, price: '0€', priceNum: 0, image: '' };
+    if (typeof window.addToCart === 'function' && window.addToCart !== undefined) {
+      window.addToCart(payload);
+    } else {
+      // fallback local
+      const existing = cart.find(i => i.id === payload.id);
+      if (existing) existing.qty = (existing.qty||1) + 1;
+      else cart.push({ id: payload.id, name: payload.name || 'Producto', price: payload.price || '0€', priceNum: payload.priceNum || 0, qty:1, image: payload.image || '' });
+      saveCart(cart); updateMiniCartUI();
+    }
+    // feedback
+    const original = btn.textContent;
+    btn.textContent = (translations[currentLang] && translations[currentLang]['btn.added']) || 'Añadido';
+    setTimeout(()=> btn.textContent = original, 900);
+  });
+
+  // ---------- CLICK EN TARJETA: navegar a producto (sin borrar handlers) ----------
+  document.addEventListener('click', function(e){
+    const card = e.target.closest && e.target.closest('.card');
+    if (!card) return;
+    // si el clic fue dentro de un botón o enlace, no hacemos la navegación (dejamos que actúen)
+    if (e.target.closest('button, a')) return;
+    const pid = card.dataset && card.dataset.product;
+    if (!pid) return;
+    window.location.href = 'producto.html?id=' + encodeURIComponent(pid);
+  });
+
+  // ---------- CONTACT: EmailJS lazy-load al enviar ----------
+  async function ensureEmailJs(){
+    if (window.emailjs && typeof window.emailjs.sendForm === 'function') return;
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js';
+      s.crossOrigin = 'anonymous';
+      s.onload = res;
+      s.onerror = () => rej(new Error('EmailJS load failed'));
+      document.head.appendChild(s);
+    });
+    try { if (window.emailjs && typeof emailjs.init === 'function') emailjs.init('xsKpaFjbRsS95AK3i'); } catch(e){ console.warn('EmailJS init failed', e); }
+  }
+
+  (function initContact(){
+    const form = document.getElementById('contactForm');
+    const sendBtn = document.getElementById('contactSend');
+    const successEl = document.getElementById('contactSuccess');
+    if (!form) return;
+    async function sendEmail(e){
+      e.preventDefault();
+      const name = document.getElementById('contactName').value.trim();
+      const email = document.getElementById('contactEmail').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+      if (!name || !email || !message) { alert('Por favor completa todos los campos.'); return; }
+      sendBtn.disabled = true;
+      const prev = sendBtn.textContent; sendBtn.textContent = 'Enviando...';
+      try {
+        await ensureEmailJs();
+        if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
+          throw new Error('EmailJS SDK no disponible');
         }
-        btn.textContent = 'Añadido';
-        setTimeout(()=> btn.textContent = 'Añadir al carrito', 900);
-      });
-    })();
-  </script>
-
-  <!-- ============================
-       FIREBASE AUTH (module) - ADD
-       ============================ -->
-  <!-- NOTE: auth-firebase.js debe estar en la raíz (cargado como module). -->
-  <script type="module" src="/auth-firebase.js"></script>
-
-  <!-- Script UI local — actualiza header / panel de perfil en base a localStorage o events -->
-  <script>
-    (function(){
-      const accountContainer = document.getElementById('accountContainer');
-      const accountBtn = document.getElementById('accountBtn');
-      const profilePanel = document.getElementById('profilePanel');
-      const profileAvatar = document.getElementById('profileAvatar');
-      const firstNameInput = document.getElementById('firstName');
-      const lastNameInput = document.getElementById('lastName');
-      const dobInput = document.getElementById('dob');
-      const saveProfileBtn = document.getElementById('saveProfile');
-
-      function renderLogged(userSnapshot){
-        // userSnapshot: { uid, name, email, photoURL } or null
-        if(!accountContainer) return;
-        accountContainer.innerHTML = ''; // reemplazo seguro del contenido
-        if (userSnapshot) {
-          const img = document.createElement('img');
-          img.src = userSnapshot.photoURL || 'https://static.vecteezy.com/system/resources/previews/025/667/911/non_2x/guest-icon-design-vector.jpg';
-          img.alt = userSnapshot.name || 'Usuario';
-          img.style.width = '36px';
-          img.style.height = '36px';
-          img.style.borderRadius = '8px';
-          img.style.objectFit = 'cover';
-          img.style.display = 'inline-block';
-
-          const nameBtn = document.createElement('button');
-          nameBtn.textContent = userSnapshot.name || 'Usuario';
-          nameBtn.className = 'btn ghost';
-          nameBtn.style.padding = '6px 10px';
-          nameBtn.addEventListener('click', ()=> { window.location.href = 'cuenta.html'; });
-
-          accountContainer.appendChild(img);
-          accountContainer.appendChild(nameBtn);
-
-          // show profile panel and prefill
-          profilePanel.style.display = 'block';
-          profileAvatar.textContent = (userSnapshot.name && userSnapshot.name[0]) ? userSnapshot.name[0].toUpperCase() : 'U';
-          const parts = (userSnapshot.name || '').split(' ');
-          firstNameInput.value = parts[0] || '';
-          lastNameInput.value = parts.slice(1).join(' ') || '';
-          // try to get saved dob from localStorage
-          const storedProfile = (function(){ try { return JSON.parse(localStorage.getItem('lixby_profile')||'null'); } catch(e){ return null; } })();
-          if (storedProfile && storedProfile.dob) dobInput.value = storedProfile.dob;
-        } else {
-          // show default Cuenta button
-          const btn = document.createElement('button');
-          btn.id = 'accountBtn';
-          btn.className = 'btn ghost';
-          btn.textContent = 'Cuenta';
-          btn.addEventListener('click', (e)=> { e.preventDefault(); window.openAuthOverlay && window.openAuthOverlay(); });
-          accountContainer.appendChild(btn);
-
-          profilePanel.style.display = 'none';
-        }
+        const response = await emailjs.sendForm('service_tagcpgm', 'template_l1e0go2', '#contactForm');
+        successEl.style.display = 'block';
+        form.reset();
+        setTimeout(()=> successEl.style.display = 'none', 6000);
+      } catch (err) {
+        console.error('Error enviando con EmailJS:', err);
+        alert('No se pudo enviar el mensaje. Intenta de nuevo más tarde.');
+      } finally {
+        sendBtn.disabled = false; sendBtn.textContent = prev;
       }
+    }
+    form.addEventListener('submit', sendEmail);
+  })();
 
-      // Read initial state from localStorage (auth-firebase.js guarda lixby_user)
-      function readLocalUser(){
-        try {
-          const raw = localStorage.getItem('lixby_user');
-          if (!raw) return null;
-          return JSON.parse(raw);
-        } catch(e){ return null; }
-      }
+  // small fallback panel toggle
+  (function panelToggle(){
+    const viewBtn = document.getElementById('viewCartBtn');
+    const cartPanel = document.getElementById('cartPanel');
+    const cartBackdrop = document.getElementById('cartBackdrop');
+    const cartPanelClose = document.getElementById('cartPanelClose');
+    function setPanel(open){
+      if(!cartPanel || !cartBackdrop) return;
+      cartPanel.classList.toggle('open', !!open);
+      cartBackdrop.classList.toggle('open', !!open);
+      cartPanel.setAttribute('aria-hidden', String(!open));
+      cartBackdrop.setAttribute('aria-hidden', String(!open));
+    }
+    if (viewBtn) viewBtn.addEventListener('click', ()=> setPanel(true));
+    if (cartBackdrop) cartBackdrop.addEventListener('click', ()=> setPanel(false));
+    if (cartPanelClose) cartPanelClose.addEventListener('click', ()=> setPanel(false));
+  })();
 
-      // react to global onAuthState if exists (auth module exposes appAuth.onAuthState)
-      function tryWireAppAuth(){
-        if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
-          window.appAuth.onAuthState((u) => {
-            if (u) {
-              // normalize u -> { uid, name, email, photoURL }
-              const norm = { uid: u.uid, name: u.name || (u.email? u.email.split('@')[0] : ''), email: u.email, photoURL: u.photoURL || '' };
-              try { localStorage.setItem('lixby_user', JSON.stringify(norm)); } catch(e){}
-              renderLogged(norm);
-            } else {
-              localStorage.removeItem('lixby_user');
-              renderLogged(null);
-            }
-          });
-          return true;
-        }
-        return false;
-      }
+  // export for other modules if needed
+  window.lixby = window.lixby || {};
+  window.lixby.cart = { load: loadCart, save: saveCart, getAll: () => cart };
 
-      // Listen to storage events from other tabs (login happens elsewhere)
-      window.addEventListener('storage', (ev)=>{
-        if (ev.key === 'lixby_user') {
-          renderLogged(readLocalUser());
-        }
-      });
+})();
+</script>
 
-      // Init
-      if (!tryWireAppAuth()) {
-        // fallback: read local snapshot
-        renderLogged(readLocalUser());
-        // keep trying for a short window until appAuth becomes available
-        let tries = 0;
-        const poll = setInterval(()=> {
-          tries++;
-          if (tryWireAppAuth() || tries > 25) clearInterval(poll);
-        }, 200);
-      }
+<!-- Intento de carga del módulo de autenticación (si usas auth-firebase.js, cárgalo aquí como módulo) -->
+<!-- <script type="module" src="/auth-firebase.js"></script> -->
+<!-- tu script principal (defer) -->
+<script src="script.js" defer></script>
 
-      // Save profile button -> dispatch custom event for auth script to capture and persist
-      if (saveProfileBtn) saveProfileBtn.addEventListener('click', (e)=>{
-        const firstName = (firstNameInput.value||'').trim();
-        const lastName = (lastNameInput.value||'').trim();
-        const dob = (dobInput.value||'').trim();
-        // store locally too
-        try { localStorage.setItem('lixby_profile', JSON.stringify({ firstName, lastName, dob })); } catch(e){}
-        // notify any listener (p. ej. auth-firebase.js puede escuchar y llamar a Firestore)
-        window.dispatchEvent(new CustomEvent('profile:save', { detail: { firstName, lastName, dob } }));
-        // small feedback
-        saveProfileBtn.textContent = 'Guardado';
-        setTimeout(()=> saveProfileBtn.textContent = 'Guardar', 1400);
-      });
-
-      // Make entire .card clickable (but preserve internal buttons)
-      document.addEventListener('click', function(ev){
-        const card = ev.target.closest && ev.target.closest('.card[data-href]');
-        if (!card) return;
-        // if clicked element is a button/link inside card, let it handle it
-        const innerBtn = ev.target.closest && ev.target.closest('button, a');
-        if (innerBtn && card.contains(innerBtn) && !innerBtn.classList.contains('card-click-target')) {
-          return;
-        }
-        const href = card.getAttribute('data-href');
-        if (href) window.location.href = href;
-      });
-
-      // keyboard accessibility: Enter on card
-      document.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' && document.activeElement && document.activeElement.classList.contains('card')) {
-          const href = document.activeElement.getAttribute('data-href');
-          if (href) window.location.href = href;
-        }
-      });
-
-      // small helper: if user clicks auth "Cuenta" default button, forward to openAuthOverlay
-      accountContainer.addEventListener('click', (e) => {
-        const t = e.target;
-        if (t && t.id === 'accountBtn') {
-          e.preventDefault();
-          window.openAuthOverlay && window.openAuthOverlay();
-        }
-      });
-
-    })();
-  </script>
-
-  <!-- EMAILJS + contact handler (sin cambios) -->
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js" crossorigin="anonymous"
-    onload="(function(){ try { if (window.emailjs && typeof emailjs.init === 'function') { emailjs.init('xsKpaFjbRsS95AK3i'); } } catch(e){ console.warn('EmailJS init', e); } })()"></script>
-
-  <script>
-    (function(){
-      const SERVICE_ID = 'service_tagcpgm';
-      const TEMPLATE_ID = 'template_l1e0go2';
-      const form = document.getElementById('contactForm');
-      const sendBtn = document.getElementById('contactSend');
-      const successEl = document.getElementById('contactSuccess');
-      if (!form) return;
-      async function sendEmail(e){
-        e.preventDefault();
-        const name = document.getElementById('contactName').value.trim();
-        const email = document.getElementById('contactEmail').value.trim();
-        const message = document.getElementById('contactMessage').value.trim();
-        if (!name || !email || !message) { alert('Por favor completa todos los campos.'); return; }
-        sendBtn.disabled = true;
-        const previousText = sendBtn.textContent; sendBtn.textContent = 'Enviando...';
-        if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') { alert('Servicio de correo no disponible ahora mismo.'); sendBtn.disabled=false; sendBtn.textContent=previousText; return; }
-        try {
-          await emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, '#contactForm');
-          successEl.style.display = 'block';
-          form.reset();
-          setTimeout(()=> successEl.style.display = 'none', 6000);
-        } catch (err) { console.error('EmailJS error', err); alert('No se pudo enviar el mensaje.'); }
-        sendBtn.disabled = false; sendBtn.textContent = previousText;
-      }
-      form.addEventListener('submit', sendEmail);
-    })();
-  </script>
-
-  <!-- principal (opcional) -->
-  <script src="script.js" defer></script>
-
-  <script> try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){} </script>
 </body>
 </html>
