@@ -3,146 +3,275 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Carrito — LIXBY</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Bolsa — LIXBY</title>
+
+  <!-- Tipografía similar -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    body { padding-top:80px; }
-    .container { max-width:1000px; margin:20px auto; padding:18px; }
-    .cart-row { display:flex; gap:16px; align-items:center; padding:12px 0; border-bottom:1px solid rgba(0,0,0,0.06); }
-    .cart-row img { width:120px; height:120px; object-fit:cover; border-radius:10px; flex:0 0 120px; }
-    .cart-row .info { flex:1; min-width:0; }
-    .cart-row .info h3 { margin:0 0 6px; font-size:1.05rem; }
-    .cart-row .info p { margin:0; color: #666; font-size:0.95rem; }
-    .cart-row .price { font-weight:700; white-space:nowrap; flex:0 0 auto; margin-left:12px; }
-    .totals { margin-top:20px; text-align:right; }
-    .totals .line { display:flex; justify-content:flex-end; gap:24px; margin:6px 0; }
-    .totals .line strong { min-width:120px; display:inline-block; text-align:left; }
-    .pay-btn { margin-top:14px; display:inline-block; padding:12px 18px; border-radius:10px; background:#7cc7ff; color:#00121a; font-weight:700; text-decoration:none; }
-    .empty { text-align:center; padding:40px; color:#666; }
+    :root{
+      --bg:#f6f7f9;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#0071e3;
+      --accent-2:#000;
+      --success:#07c160;
+      --shadow: 0 8px 24px rgba(2,6,23,0.06);
+      --radius:12px;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial; background:var(--bg); color:#0b1220;}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px;}
+    /* TOP summary (big) */
+    .top-summary{background:var(--card);border-radius:12px;padding:22px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+    .top-summary h2{margin:0;font-weight:700;font-size:1.25rem}
+    .top-summary .actions{display:flex;gap:12px;align-items:center}
+    .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn-apple{background:#000;color:#fff}
+    .btn-primary{background:var(--accent);color:#fff}
+    .small-muted{color:var(--muted);font-size:0.95rem}
+
+    /* items list */
+    .bag{margin-top:18px}
+    .item-card{background:var(--card);border-radius:12px;padding:18px;display:flex;gap:18px;align-items:flex-start;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid rgba(0,0,0,0.04)}
+    .item-thumb{flex:0 0 120px}
+    .item-thumb img{width:120px;height:120px;object-fit:cover;border-radius:10px}
+    .item-body{flex:1;min-width:0}
+    .item-title{font-weight:700;margin:0 0 6px}
+    .item-mini{color:var(--muted);margin:0 0 8px;font-size:0.95rem}
+    .item-meta{display:flex;align-items:center;gap:12px;margin-top:8px}
+    .qty-select{display:inline-flex;align-items:center;border:1px solid rgba(0,0,0,0.08);border-radius:8px;overflow:hidden}
+    .qty-select button{background:transparent;border:0;padding:6px 10px;cursor:pointer}
+    .qty-select span{padding:6px 10px;min-width:36px;text-align:center}
+    .remove-btn{background:transparent;border:0;color:#d00;cursor:pointer;font-size:0.95rem}
+
+    /* price column */
+    .item-price{flex:0 0 140px;text-align:right;font-weight:700;font-size:1.05rem}
+
+    /* subtotals area */
+    .summary-card{background:var(--card);border-radius:12px;padding:18px;box-shadow:var(--shadow);margin-top:18px;border:1px solid rgba(0,0,0,0.04)}
+    .summary-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;color:var(--muted)}
+    .summary-row.total{font-weight:700;font-size:1.1rem;color:#061025}
+
+    /* sticky checkout at bottom on mobile */
+    .sticky-checkout{position:sticky;bottom:12px;display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+    .small-note{font-size:0.92rem;color:var(--muted);margin-top:8px}
+
+    /* applecare box (small) */
+    .addon { display:flex; gap:10px; align-items:flex-start; margin-top:10px; border-left:3px solid rgba(0,0,0,0.04); padding-left:10px; color:var(--muted); font-size:0.95rem; }
+
     /* responsive */
-    @media (max-width:700px){
-      .cart-row { flex-direction:column; align-items:flex-start; }
-      .cart-row img { width:80%; height:auto; aspect-ratio:4/3; }
-      .cart-row .price { margin-left:0; margin-top:8px; }
-      body { padding-top:72px; }
+    @media(max-width:760px){
+      .top-summary{flex-direction:column;align-items:flex-start}
+      .item-card{flex-direction:column;align-items:flex-start}
+      .item-price{width:100%;text-align:left;margin-top:10px}
+      .item-thumb img{width:100%;height:auto;aspect-ratio:1/1}
+      .sticky-checkout{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;background:linear-gradient(180deg, transparent, rgba(0,0,0,0.02));box-shadow:0 -6px 20px rgba(2,6,23,0.06);justify-content:center}
+      body{padding-bottom:92px}
     }
   </style>
 </head>
 <body>
-  <header class="nav glass" style="position:fixed;top:0;left:0;right:0;z-index:120;">
-    <div class="nav-inner" style="max-width:1000px;margin:0 auto;">
-      <div class="nav-left"><div class="brand" role="button" onclick="location.href='index.html'">LIXBY</div></div>
-      <div style="flex:1"></div>
-      <div class="nav-right"><a href="index.html" class="btn ghost" style="text-decoration:none;">Seguir comprando</a></div>
-    </div>
-  </header>
 
-  <main class="container">
-    <h1>Tu carrito</h1>
-    <div id="cartList"></div>
+  <div class="wrap">
+    <!-- top summary -->
+    <div class="top-summary" role="region" aria-label="Resumen de la bolsa">
+      <div>
+        <h2 id="topTotalText">El total de tu bolsa es de 0,00 €.</h2>
+        <div class="small-muted">Revisa los artículos antes de continuar con el pago.</div>
+      </div>
 
-    <div class="totals" id="totalsArea" style="display:none;">
-      <div class="line"><strong>Subtotal</strong><div id="subtotalText">0,00 €</div></div>
-      <div class="line"><strong>Envío</strong><div id="shippingText">GRATIS</div></div>
-      <div class="line" style="font-size:1.15rem;font-weight:700;"><strong>Tu total:</strong><div id="totalText">0,00 €</div></div>
-      <div class="line" style="font-size:0.95rem;color:#666;"><strong>Incluye</strong><div id="vatText">0,00 € de IVA (21%)</div></div>
-      <a id="payBtn" class="pay-btn" href="#" role="button">Continuar con el pago</a>
+      <div class="actions">
+        <button id="applePayBtn" class="btn btn-apple">Pagar con Apple Pay</button>
+        <button id="continueBtn" class="btn btn-primary">Continuar con el pago</button>
+      </div>
     </div>
 
-    <div id="emptyMsg" class="empty" style="display:none;">
-      <p>Tu carrito está vacío.</p>
-      <p><a href="index.html">Volver a la tienda</a></p>
+    <!-- list -->
+    <div class="bag" id="bagList" aria-live="polite">
+      <!-- items dinámicos -->
     </div>
-  </main>
+
+    <!-- summary -->
+    <div class="summary-card" id="summaryCard" style="display:none;">
+      <div class="summary-row"><div>Subtotal</div><div id="subtotal">0,00 €</div></div>
+      <div class="summary-row"><div>Envío</div><div id="shipping">GRATIS</div></div>
+      <div class="summary-row total"><div>Tu total:</div><div id="grandTotal">0,00 €</div></div>
+      <div class="summary-row" style="font-size:0.95rem;color:var(--muted)"><div>Incluye</div><div id="vatText">0,00 € de IVA (21%)</div></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:10px">
+        <button id="payBottom" class="btn btn-apple">Pagar con Apple Pay</button>
+        <button id="continueBottom" class="btn btn-primary">Continuar con el pago</button>
+      </div>
+    </div>
+
+    <div id="emptyBag" style="display:none;margin-top:18px;background:var(--card);padding:24px;border-radius:12px;text-align:center;box-shadow:var(--shadow)">
+      <h3>Tu bolsa está vacía</h3>
+      <p class="small-muted">Añade productos desde la tienda.</p>
+      <p style="margin-top:12px"><a href="index.html" class="btn btn-primary" style="text-decoration:none">Volver a la tienda</a></p>
+    </div>
+
+  </div>
 
   <script>
     (function(){
-      const STORAGE_KEY = 'lixby_cart_v1'; // <-- coincide con script.js
-      // si tu script guarda en otra clave, cámbiala aquí
+      const STORAGE_KEY = 'lixby_cart_v1'; // coincide con tu script.js
+      const APPLECARE_PRICE = 169.00;
 
-      function parsePriceToNumber(v){
+      function parsePrice(v){
         if (v === undefined || v === null) return 0;
-        // if priceNum stored, prefer it
         if (typeof v === 'number') return v;
-        const s = String(v).replace(/[^\d.,-]/g,'').replace(',', '.');
+        const s = String(v).replace(/[^\d.,-]/g,'').replace(',','.');
         return parseFloat(s) || 0;
       }
       function fmt(n){
-        // formato europeo con coma y 2 decimales
+        // español: 2 decimales, coma decimal
         return n.toFixed(2).replace('.', ',') + ' €';
       }
 
-      const cart = (function(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e){ return []; } })();
-
-      const list = document.getElementById('cartList');
-      const totalsArea = document.getElementById('totalsArea');
-      const emptyMsg = document.getElementById('emptyMsg');
-      const subtotalText = document.getElementById('subtotalText');
-      const shippingText = document.getElementById('shippingText');
-      const totalText = document.getElementById('totalText');
+      // carga carrito
+      let cart = [];
+      try { cart = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e){ cart = []; }
+      const bagList = document.getElementById('bagList');
+      const topTotalText = document.getElementById('topTotalText');
+      const summaryCard = document.getElementById('summaryCard');
+      const subtotalEl = document.getElementById('subtotal');
+      const grandTotalEl = document.getElementById('grandTotal');
       const vatText = document.getElementById('vatText');
+      const shippingEl = document.getElementById('shipping');
 
-      if (!cart || cart.length === 0) {
-        emptyMsg.style.display = 'block';
-        totalsArea.style.display = 'none';
-        return;
+      function saveCart(){
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); } catch(e){}
       }
 
-      let subtotal = 0;
-      cart.forEach((it, idx) => {
-        // intenta sacar precio num: priceNum o price
-        const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parsePriceToNumber(it.price);
-        const qty = it.qty || it.quantity || 1;
-        const line = priceNum * qty;
-        subtotal += line;
+      function recalcAndRender(){
+        bagList.innerHTML = '';
+        if (!cart || cart.length === 0) {
+          document.getElementById('emptyBag').style.display = 'block';
+          summaryCard.style.display = 'none';
+          topTotalText.textContent = 'El total de tu bolsa es de 0,00 €.';
+          return;
+        } else {
+          document.getElementById('emptyBag').style.display = 'none';
+          summaryCard.style.display = 'block';
+        }
 
-        const row = document.createElement('div');
-        row.className = 'cart-row';
-        row.innerHTML = `
-          <img src="${it.image || 'https://via.placeholder.com/400x400?text=Sin+imagen'}" alt="${(it.name||'Producto').replace(/"/g,'')}">
-          <div class="info">
-            <h3>${it.name || 'Producto'}</h3>
-            <p>${it.description ? it.description : ''}</p>
-            <p style="margin-top:8px;"><button data-idx="${idx}" class="remove-btn" style="background:transparent;border:1px solid #ddd;padding:6px 8px;border-radius:8px;cursor:pointer;">Eliminar</button></p>
-          </div>
-          <div class="price">${fmt(line)}</div>
-        `;
-        list.appendChild(row);
+        let subtotal = 0;
+        cart.forEach((it, idx) => {
+          const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parsePrice(it.price);
+          const qty = Number(it.qty || 1);
+          const addOn = !!it.appleCare; // boolean
+          const addOnCost = addOn ? APPLECARE_PRICE : 0;
+          const line = (priceNum + addOnCost) * qty;
+          subtotal += line;
+
+          // item DOM
+          const row = document.createElement('div');
+          row.className = 'item-card';
+          row.innerHTML = `
+            <div class="item-thumb"><img src="${it.image || 'https://via.placeholder.com/400'}" alt="${(it.name||'Producto').replace(/"/g,'')}"></div>
+            <div class="item-body">
+              <h3 class="item-title">${it.name || 'Producto'}</h3>
+              <div class="item-mini">${it.description ? it.description : ''}</div>
+
+              <div class="addon">
+                <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
+                  <input type="checkbox" data-idx="${idx}" class="applecare-checkbox" ${addOn ? 'checked' : ''}>
+                  <div>
+                    <div style="font-weight:700">Añade AppleCare+ por ${fmt(APPLECARE_PRICE)}</div>
+                    <div style="color:var(--muted);font-size:0.92rem;margin-top:6px">Reparaciones ilimitadas por daños accidentales y prioridad de servicio.</div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="item-meta">
+                <div class="qty-select" data-idx="${idx}">
+                  <button data-action="dec" aria-label="Disminuir">−</button>
+                  <span class="qty-value">${qty}</span>
+                  <button data-action="inc" aria-label="Aumentar">+</button>
+                </div>
+                <button class="remove-btn" data-idx="${idx}">Eliminar</button>
+              </div>
+            </div>
+
+            <div class="item-price" aria-hidden="false">${fmt(line)}</div>
+          `;
+          bagList.appendChild(row);
+        });
+
+        const shipping = 0;
+        const total = subtotal + shipping;
+        const vatRate = 0.21;
+        const vatAmount = Math.round((total - total / (1 + vatRate)) * 100) / 100;
+
+        subtotalEl.textContent = fmt(subtotal);
+        grandTotalEl.textContent = fmt(total);
+        vatText.textContent = fmt(vatAmount) + ' de IVA (21%)';
+        shippingEl.textContent = 'GRATIS';
+        topTotalText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
+
+        // attach listeners (delegado)
+        // quantity inc/dec
+        bagList.querySelectorAll('.qty-select').forEach(qel => {
+          const idx = Number(qel.getAttribute('data-idx'));
+          qel.querySelector('[data-action="inc"]').onclick = () => {
+            cart[idx].qty = (Number(cart[idx].qty || 1) + 1);
+            saveCart(); recalcAndRender();
+          };
+          qel.querySelector('[data-action="dec"]').onclick = () => {
+            cart[idx].qty = Math.max(1, Number(cart[idx].qty || 1) - 1);
+            saveCart(); recalcAndRender();
+          };
+        });
+
+        // remove
+        bagList.querySelectorAll('.remove-btn').forEach(btn => {
+          const idx = Number(btn.getAttribute('data-idx'));
+          btn.onclick = () => {
+            if (!confirm('¿Eliminar este artículo?')) return;
+            cart.splice(idx,1);
+            saveCart(); recalcAndRender();
+          };
+        });
+
+        // applecare toggle
+        bagList.querySelectorAll('.applecare-checkbox').forEach(cb => {
+          const idx = Number(cb.getAttribute('data-idx'));
+          cb.onchange = (e) => {
+            cart[idx].appleCare = !!e.target.checked;
+            saveCart(); recalcAndRender();
+          };
+        });
+
+      } // recalc end
+
+      // inicial render
+      recalcAndRender();
+
+      // botones de pago simulados
+      function paySimulate(method){
+        let subtotal = 0;
+        cart.forEach(it => {
+          const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parsePrice(it.price);
+          const qty = Number(it.qty || 1);
+          const addOn = !!it.appleCare;
+          subtotal += (priceNum + (addOn ? APPLECARE_PRICE : 0)) * qty;
+        });
+        const total = subtotal;
+        if (!cart || cart.length === 0) { alert('Tu carrito está vacío'); return; }
+        alert(`${method} — Simulación de pago. Total: ${fmt(total)}`);
+      }
+
+      document.getElementById('applePayBtn').addEventListener('click', ()=> paySimulate('Apple Pay'));
+      document.getElementById('continueBtn').addEventListener('click', ()=> paySimulate('Continuar con el pago'));
+      document.getElementById('payBottom').addEventListener('click', ()=> paySimulate('Apple Pay'));
+      document.getElementById('continueBottom').addEventListener('click', ()=> paySimulate('Continuar con el pago'));
+
+      // sincronización cross-tab: si otro tab cambia el carrito lo recargamos
+      window.addEventListener('storage', (ev) => {
+        if (ev.key === STORAGE_KEY) {
+          try { cart = JSON.parse(ev.newValue) || []; } catch(e){ cart = []; }
+          recalcAndRender();
+        }
       });
-
-      const shipping = 0; // GRATIS
-      const vatRate = 0.21;
-      const total = subtotal + shipping;
-      // IVA incluido en el total: IVA = total - total/(1+vatRate)
-      const vatAmount = Math.round((total - total / (1 + vatRate)) * 100) / 100;
-
-      subtotalText.textContent = fmt(subtotal);
-      shippingText.textContent = 'GRATIS';
-      totalText.textContent = fmt(total);
-      vatText.textContent = fmt(vatAmount) + ' de IVA (21%)';
-
-      totalsArea.style.display = 'block';
-      emptyMsg.style.display = 'none';
-
-      // eliminar item
-      list.addEventListener('click', (ev) => {
-        const btn = ev.target.closest && ev.target.closest('.remove-btn');
-        if (!btn) return;
-        const idx = Number(btn.getAttribute('data-idx'));
-        if (isNaN(idx)) return;
-        const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        current.splice(idx,1);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-        // recarga la página para recalcular (simple)
-        location.reload();
-      });
-
-      // pay button (simulación)
-      document.getElementById('payBtn').addEventListener('click', (ev) => {
-        ev.preventDefault();
-        alert('Simulación: continuar con el pago — total ' + fmt(total));
-      });
-
     })();
   </script>
 </body>
