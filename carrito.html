@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LIXBY — Carrito</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Ajustes locales a la página del carrito */
+    .nav { top:0; left:0; right:0; position:fixed; padding:10px 12px; z-index:140; }
+    .nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    main { padding-top:84px; max-width:1100px; margin:0 auto 80px; }
+
+    .cart-page { display:flex; gap:28px; align-items:flex-start; }
+    .cart-items { flex:1; background:transparent; }
+    .cart-item {
+      display:flex;
+      gap:14px;
+      align-items:center;
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+    }
+    .cart-item img { width:96px; height:96px; object-fit:cover; border-radius:10px; flex:0 0 96px; }
+    .cart-item .info { flex:1; display:flex; flex-direction:column; gap:6px; }
+    .cart-item .info .name { font-weight:700; }
+    .cart-item .controls { display:flex; gap:8px; align-items:center; }
+    .qty-btn { padding:6px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(255,255,255,0.02); color:var(--text); }
+    .remove-btn { background:transparent; border:none; color:var(--muted); cursor:pointer; }
+
+    .cart-summary {
+      width:340px;
+      min-width:240px;
+      border-radius:12px;
+      padding:18px;
+      box-sizing:border-box;
+    }
+    .summary-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .summary-total { font-size:1.15rem; font-weight:700; margin-top:6px; }
+    .vat-note { font-size:0.95rem; color:var(--muted); margin-top:8px; }
+
+    .empty-cart { padding:28px; text-align:center; color:var(--muted); }
+
+    @media (max-width:900px) {
+      .cart-page { flex-direction:column; }
+      .cart-summary { width:100%; }
+      .cart-item img { width:80px; height:80px; flex:0 0 80px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav glass" role="banner">
+    <div class="nav-inner">
+      <div class="brand" role="button" onclick="location.href='index.html'">LIXBY</div>
+      <nav id="navLinks" role="navigation" aria-label="Principal">
+        <a href="index.html#inicio">Inicio</a>
+        <a href="index.html#productos">Productos</a>
+        <a href="index.html#contacto">Contáctanos</a>
+        <a href="index.html#conocenos">Conócenos</a>
+      </nav>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn ghost" onclick="location.href='index.html'">Seguir comprando</button>
+        <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <h1 style="margin:0 0 14px;">Tu carrito</h1>
+
+    <div class="cart-page">
+      <section class="cart-items glass" id="cartItemsWrap" aria-label="Artículos del carrito" style="padding:12px;">
+        <!-- Items se inyectan aquí -->
+      </section>
+
+      <aside class="cart-summary glass" aria-label="Resumen del pedido" id="cartSummary">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div>
+            <strong>Resumen</strong>
+            <div style="color:var(--muted);font-size:0.95rem;">Revisa tu pedido antes de continuar</div>
+          </div>
+        </div>
+
+        <div class="summary-row"><div>Subtotal</div><div id="subtotalEl">0,00 €</div></div>
+        <div class="summary-row"><div>Envío</div><div id="shippingEl">GRATIS</div></div>
+        <div class="summary-row summary-total"><div>Tu total</div><div id="totalEl">0,00 €</div></div>
+        <div class="vat-note" id="vatNote">Incluye 0,00 € de IVA</div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button id="checkoutBtn" class="btn primary" style="flex:1;">Continuar con el pago</button>
+          <button id="clearBtn" class="btn ghost">Vaciar</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
+    <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    (function(){
+      const CART_KEY = 'lixby_cart_v1';
+      const VAT_RATE = 0.21; // 21% IVA (se usa para desglosar)
+      const yearEl = document.getElementById('year'); if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+      function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e){ return []; } }
+      function saveCart(c){ try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
+      function parsePriceToNumber(priceStr){ if(!priceStr) return 0; const num = String(priceStr).replace(/[^\d.,-]/g,'').replace(',', '.'); return parseFloat(num) || 0; }
+      const currencyFmt = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
+      const cartItemsWrap = document.getElementById('cartItemsWrap');
+      const subtotalEl = document.getElementById('subtotalEl');
+      const totalEl = document.getElementById('totalEl');
+      const vatNote = document.getElementById('vatNote');
+      const shippingEl = document.getElementById('shippingEl');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+      const clearBtn = document.getElementById('clearBtn');
+
+      function renderEmpty(){
+        cartItemsWrap.innerHTML = '<div class="empty-cart"><strong>Tu carrito está vacío</strong><div style="margin-top:10px;">Visita la <a href="index.html#productos">tienda</a> para añadir productos.</div></div>';
+        subtotalEl.textContent = currencyFmt.format(0);
+        totalEl.textContent = currencyFmt.format(0);
+        vatNote.textContent = 'Incluye 0,00 € de IVA';
+        shippingEl.textContent = 'GRATIS';
+      }
+
+      function renderCart(){
+        const cart = loadCart();
+        if (!cart || cart.length === 0) { renderEmpty(); return; }
+
+        cartItemsWrap.innerHTML = ''; // limpiar
+        let totalWithVAT = 0;
+
+        cart.forEach((it, idx) => {
+          const priceNum = (it.priceNum != null) ? Number(it.priceNum) : parsePriceToNumber(it.price || '0');
+          const qty = it.qty || 1;
+          const lineTotal = priceNum * qty;
+          totalWithVAT += lineTotal;
+
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML = `
+            <img src="${it.image || 'https://via.placeholder.com/240'}" alt="${(it.name||'Producto')}" />
+            <div class="info">
+              <div class="name">${it.name || 'Producto'}</div>
+              <div style="color:var(--muted);font-size:0.95rem;">${it.price || currencyFmt.format(priceNum)}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                <div class="controls">
+                  <button class="qty-btn dec" data-idx="${idx}">−</button>
+                  <div style="min-width:34px;text-align:center;font-weight:700;">${qty}</div>
+                  <button class="qty-btn inc" data-idx="${idx}">+</button>
+                </div>
+                <button class="remove-btn" data-idx="${idx}">Eliminar</button>
+              </div>
+            </div>
+            <div style="min-width:110px;text-align:right;font-weight:700;">${currencyFmt.format(lineTotal)}</div>
+          `;
+          cartItemsWrap.appendChild(row);
+        });
+
+        // Calculos: asumimos que los precios almacenados (priceNum) incluyen IVA.
+        const totalInclVAT = totalWithVAT;
+        const subtotalNoVAT = totalInclVAT / (1 + VAT_RATE);
+        const vatAmount = totalInclVAT - subtotalNoVAT;
+        const shipping = 0; // gratis
+
+        subtotalEl.textContent = currencyFmt.format(subtotalNoVAT);
+        totalEl.textContent = currencyFmt.format(totalInclVAT + shipping);
+        vatNote.textContent = `Incluye ${currencyFmt.format(vatAmount)} de IVA (21%)`;
+        shippingEl.textContent = (shipping === 0) ? 'GRATIS' : currencyFmt.format(shipping);
+
+        // attach events (qty inc/dec/remove)
+        cartItemsWrap.querySelectorAll('.inc').forEach(btn => btn.addEventListener('click', (ev) => {
+          const idx = Number(ev.currentTarget.getAttribute('data-idx'));
+          const c = loadCart();
+          if (c[idx]) { c[idx].qty = (c[idx].qty||1) + 1; saveCart(c); renderCart(); }
+        }));
+        cartItemsWrap.querySelectorAll('.dec').forEach(btn => btn.addEventListener('click', (ev) => {
+          const idx = Number(ev.currentTarget.getAttribute('data-idx'));
+          const c = loadCart();
+          if (c[idx]) { c[idx].qty = Math.max(1, (c[idx].qty||1) - 1); saveCart(c); renderCart(); }
+        }));
+        cartItemsWrap.querySelectorAll('.remove-btn').forEach(btn => btn.addEventListener('click', (ev) => {
+          const idx = Number(ev.currentTarget.getAttribute('data-idx'));
+          const c = loadCart();
+          if (!isNaN(idx)) { c.splice(idx,1); saveCart(c); renderCart(); }
+        }));
+      }
+
+      // acciones botones
+      checkoutBtn.addEventListener('click', () => {
+        const cart = loadCart();
+        if (!cart || cart.length === 0) { alert('Tu carrito está vacío'); return; }
+        // Simulación de pago
+        alert('Simulación: redirigiendo al pago — artículos: ' + cart.reduce((s,i)=>s+(i.qty||0),0));
+      });
+      clearBtn.addEventListener('click', () => {
+        if (!confirm('¿Vaciar el carrito?')) return;
+        saveCart([]); renderCart();
+      });
+
+      // re-render si hay cambios desde otras páginas (p.ej. añadir producto)
+      window.addEventListener('storage', (ev) => {
+        if (ev.key === CART_KEY) renderCart();
+      });
+      // evento personalizado por si tu ficha dispara uno
+      window.addEventListener('cartUpdated', () => renderCart());
+
+      // init
+      renderCart();
+    })();
+  </script>
+</body>
+</html>
