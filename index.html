@@ -265,7 +265,7 @@
     JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
   </noscript>
 
-  <!-- pequeño script fallback: ajusta padding-top según header y abre/cierra panel si se pulsa "Ver carrito" -->
+  <!-- small fallback script (mantén como estaba) -->
   <script>
     (function(){
       function adjustPadding(){
@@ -298,28 +298,26 @@
     })();
   </script>
 
-  <!-- tu script principal (defer) -->
-  <script src="script.js" defer></script>
-
-  <!-- === Añadido: FORZAR navegación al carrito (capturing listener que tiene prioridad) ===
-       Esto garantiza que, al hacer click en el icono, vas a carrito.html (estilo Apple).
-       Se usa capture + stopImmediatePropagation para evitar que otros listeners interfieran.
-  -->
+  <!-- OVERRIDE: fuerza que el botón del header lleve a carrito.html (usa captura para anular handlers anteriores) -->
   <script>
     (function(){
-      const btn = document.getElementById('cartBtn');
-      if (!btn) return;
-      btn.addEventListener('click', function(e){
-        try {
-          // evita cualquiera otra acción y fuerza navegación
-          e.preventDefault();
-          e.stopImmediatePropagation && e.stopImmediatePropagation();
-        } catch(err){}
-        // añade un pequeño delay para asegurar persistencia visual (opcional)
+      // si quieres redirigir a carrito.html en lugar de abrir mini-panel, activa esto
+      function goToCart(e){
+        e.preventDefault();
+        // evita que otros listeners del click se ejecuten
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
         window.location.href = 'carrito.html';
-      }, true); // useCapture = true -> ejecuta antes que handlers en bubble
+      }
+      const cartBtn = document.getElementById('cartBtn');
+      if (cartBtn) cartBtn.addEventListener('click', goToCart, {capture:true});
+
+      // también aseguro que el botón "Ver carrito" (miniCart) vaya a carrito.html
+      const viewBtn = document.getElementById('viewCartBtn');
+      if (viewBtn) viewBtn.addEventListener('click', function(e){ e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); window.location.href='carrito.html'; }, {capture:true});
     })();
   </script>
 
+  <!-- tu script principal (defer) -->
+  <script src="script.js" defer></script>
 </body>
 </html>
