@@ -1,4 +1,4 @@
-/* style.css — LIXBY (minimal + liquid glass) — actualizado */
+/* style.css — LIXBY (minimal + liquid glass) — VERSIÓN CORREGIDA */
 
 /* Tipografía */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
@@ -71,11 +71,14 @@ p { color: var(--muted); margin:0; }
   left: 0;
   right: 0;
   z-index: 120;
-  padding: 10px 16px;
-  /* apariencia */
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+  padding: 10px 24px; /* más espacio lateral para un aspecto limpio */
+  /* apariencia tipo liquid glass */
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   border-bottom: 1px solid rgba(255,255,255,0.03);
-  /* por defecto usa el radius/glass heredado si aplica */
+  border-radius: 0;                /* línea recta */
+  box-shadow: none;
 }
 
 /* contenedor centrado con 3 columnas: brand / nav / controls */
@@ -87,6 +90,7 @@ p { color: var(--muted); margin:0; }
   justify-content:space-between;
   gap:16px;
   min-height: var(--header-height);
+  padding: 0 6px;
 }
 
 /* brand a la izquierda (no centrado) */
@@ -105,8 +109,8 @@ p { color: var(--muted); margin:0; }
   align-items:center;
   justify-content:center;
   flex: 1 1 auto;
-  /* evitar que los enlaces se peguen al logo o controles */
   padding: 8px 12px;
+  white-space: nowrap;
 }
 #navLinks a { font-weight:500; opacity:0.95; }
 
@@ -117,6 +121,7 @@ p { color: var(--muted); margin:0; }
   align-items:center;
   justify-content:flex-end;
   flex: 0 0 auto;
+  flex-direction: row !important; /* forzar fila si hay reglas conflictivas inline */
 }
 
 /* Buttons */
@@ -132,19 +137,20 @@ p { color: var(--muted); margin:0; }
 .cart-wrapper { position:relative; }
 .mini-cart {
   position:absolute;
-  right:0;
-  top:44px;
+  right:18px;   /* ajustado para que no se superponga al borde */
+  top:56px;     /* justo debajo del header */
   width:320px;
   display:none;
   flex-direction:column;
   gap:8px;
   padding:12px;
-  z-index:130;
+  z-index:140;
   min-height:80px;
   box-shadow: var(--shadow-soft);
   border-radius:12px;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid rgba(255,255,255,0.04);
+  box-sizing: border-box;
 }
 .mini-cart[aria-hidden="false"] { display:flex; }
 .mini-cart-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
@@ -158,17 +164,18 @@ p { color: var(--muted); margin:0; }
 .lang-wrapper { position:relative; }
 .lang-menu {
   position:absolute;
-  right:0;
-  top:44px;
+  right:18px;
+  top:56px;
   width:160px;
   display:none;
   flex-direction:column;
   gap:6px;
   padding:8px;
-  z-index:130;
+  z-index:140;
   border-radius:10px;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border:1px solid rgba(255,255,255,0.04);
+  box-sizing: border-box;
 }
 .lang-menu[aria-hidden="false"] { display:flex; }
 .lang-item { background:transparent; border:none; padding:8px; text-align:left; cursor:pointer; border-radius:8px; color:var(--text); }
@@ -277,9 +284,23 @@ p { color: var(--muted); margin:0; }
 }
 .card:hover::before { opacity:1; transform: translate3d(0,0,0); }
 
-/* Reveal animation helpers */
-.reveal { opacity:0; transform:translateY(18px); transition: opacity .6s ease, transform .6s ease; }
-.reveal.visible { opacity:1; transform:translateY(0); }
+/* Reveal animation helpers
+   Nota: mantenemos animación, pero por seguridad hacemos que
+   los elementos sean visibles si JS no corre (evita página en blanco).
+*/
+.reveal {
+  /* Visible por defecto para evitar pantalla en blanco si JS falla.
+     La clase .visible sigue dando la entrada animada cuando el script la añade. */
+  opacity: 1;
+  transform: none;
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.hidden-fallback {
+  /* Si por algún motivo quieres forzar el comportamiento oculto (no se usa por defecto),
+     añade la clase hidden-fallback vía JS o HTML. */
+  opacity: 0;
+  transform: translateY(18px);
+}
 
 /* Product detail page (mantener) */
 .product-detail {
@@ -383,3 +404,12 @@ p { color: var(--muted); margin:0; }
   /* adapta mini-cart/lang menu colocación en móvil */
   .mini-cart, .lang-menu { right:8px; top:48px; width:92%; max-width:320px; }
 }
+
+/* Small helper: ensure cart-panel styles exist in case JS injects panel */
+.cart-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 210; display: none; }
+.cart-backdrop.open { display: block; }
+.cart-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 360px; transform: translateX(110%); transition: transform .28s ease; z-index: 220; pointer-events: auto; }
+.cart-panel.open { transform: translateX(0); }
+@media (max-width:720px) { .cart-panel { width: 92%; } }
+
+/* End of style.css — LIXBY */
