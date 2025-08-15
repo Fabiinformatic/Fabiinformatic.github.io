@@ -333,17 +333,49 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // eventos básicos para miniCart botón
-    if (cartBtn && miniCart) {
-      cartBtn.addEventListener('click', () => {
-        const shown = miniCart.getAttribute('aria-hidden') === 'false';
-        miniCart.setAttribute('aria-hidden', String(!shown));
-      });
-      document.addEventListener('click', (e) => {
-        if (cartBtn && miniCart && !cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
-          miniCart.setAttribute('aria-hidden', 'true');
-        }
-      });
+    // Robust cart button handling: toggle miniCart if present, otherwise open cartPanel
+function handleCartBtnClick(e) {
+  try {
+    // prefer mini-cart pop if present
+    if (miniCart) {
+      const isShown = miniCart.getAttribute('aria-hidden') === 'false';
+      miniCart.setAttribute('aria-hidden', String(!isShown));
+      // stop the event so our document click handler doesn't immediately close it
+      e && e.stopPropagation && e.stopPropagation();
+      return;
     }
+    // fallback: open cart panel drawer
+    toggleCartPanel(true);
+  } catch (err) {
+    console.warn('handleCartBtnClick error', err);
+    toggleCartPanel(true);
+  }
+}
+
+// If button exists now, attach directly
+if (cartBtn) {
+  cartBtn.addEventListener('click', handleCartBtnClick);
+} else {
+  // attach delegated handler in case the element is added later
+  document.addEventListener('click', function delegatedCartClick(ev){
+    const target = ev.target;
+    if (!target) return;
+    if (target.id === 'cartBtn' || target.closest && target.closest('#cartBtn')) {
+      handleCartBtnClick(ev);
+    }
+  });
+}
+
+// Close miniCart when clicking outside (only if miniCart exists)
+document.addEventListener('click', (e) => {
+  try {
+    if (!miniCart) return;
+    // if click is not inside the miniCart or the cartBtn, hide it
+    if (cartBtn && !cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
+      miniCart.setAttribute('aria-hidden', 'true');
+    }
+  } catch(e){ /* silent */ }
+});
     if (clearCartBtn) clearCartBtn.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
     if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (cart.length===0) return alert(translations[currentLang]['cart.empty']); alert(`Simulación checkout — artículos: ${cart.reduce((s,i)=>s+(i.qty||0),0)}`); });
 
