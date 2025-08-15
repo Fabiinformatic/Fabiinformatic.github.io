@@ -129,6 +129,11 @@
     .contact-min .actions { display:flex; gap:10px; justify-content:flex-end; align-items:center; margin-top:4px }
     .contact-success { display:none; color:var(--accent); font-weight:600; margin-top:8px }
     @media (max-width:900px){ .contact-min { flex-direction:column; } .contact-min .form{ width:100% } }
+
+    /* small auth-modal tweaks */
+    #authOverlay { display:none; }
+    #authOverlay[aria-hidden="false"] { display:block; }
+    #authModal .btn { min-width:120px; }
   </style>
 </head>
 <body>
@@ -190,11 +195,55 @@
           </div>
         </div>
 
+        <!-- Account button (opens modal) -->
+        <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta">Cuenta</button>
+
         <!-- toggle tema -->
         <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
       </div>
     </div>
   </header>
+
+  <!-- AUTH / WELCOME MODAL - ADDITION (NO BORRAR TODO LO DEMÁS) -->
+  <div id="authOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:9998;display:none;">
+    <div id="authBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px)"></div>
+    <div id="authModal" class="glass" role="dialog" aria-labelledby="authTitle"
+         style="position:relative;max-width:540px;margin:6vh auto;padding:22px;border-radius:12px;z-index:9999;">
+      <h2 id="authTitle" style="margin:0 0 8px">Bienvenido a LIXBY</h2>
+      <p style="margin:0 0 18px;color:var(--muted)">Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="btnGoogle" class="btn ghost" style="flex:1">Iniciar con Google</button>
+        <button id="btnGitHub" class="btn ghost" style="flex:1">Iniciar con GitHub</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--muted)">
+        <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
+        <span style="font-size:0.9rem">o con correo</span>
+        <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
+      </div>
+
+      <form id="authEmailForm" style="display:flex;flex-direction:column;gap:8px">
+        <input id="authEmail" type="email" placeholder="Correo" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
+        <input id="authPass" type="password" placeholder="Contraseña" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
+        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+          <button type="button" id="btnEmailSignIn" class="btn primary">Iniciar sesión</button>
+          <button type="button" id="btnEmailSignUp" class="btn ghost">Registrarse</button>
+        </div>
+      </form>
+
+      <div style="text-align:center;margin-top:12px">
+        <button id="btnAnonymous" class="btn ghost">Continuar como invitado</button>
+      </div>
+
+      <div style="display:flex;justify-content:center;margin-top:12px;font-size:0.9rem">
+        <a id="authToAccount" href="cuenta.html" style="color:var(--muted)">Ya tienes cuenta? Ir a mi cuenta</a>
+      </div>
+
+      <button id="authClose" aria-label="Cerrar" style="position:absolute;right:12px;top:12px;background:transparent;border:0;font-size:18px">✕</button>
+    </div>
+  </div>
+  <!-- END AUTH MODAL -->
 
   <main>
     <!-- HERO -->
@@ -427,6 +476,169 @@
         setTimeout(()=> btn.textContent = 'Añadir al carrito', 900);
       });
     })();
+  </script>
+
+  <!-- ============================
+       FIREBASE AUTH (module) - ADD
+       ============================ -->
+  <script type="module">
+    // Imports (use the same Firebase version your console suggested)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      GithubAuthProvider,
+      signInWithPopup,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInAnonymously,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+    // Your firebaseConfig (use the one you configured in console)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
+      authDomain: "lixby-e0344.firebaseapp.com",
+      projectId: "lixby-e0344",
+      storageBucket: "lixby-e0344.firebasestorage.app",
+      messagingSenderId: "671722866179",
+      appId: "1:671722866179:web:65868eca5146942b507036",
+      measurementId: "G-09SQL30MS8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // providers
+    const googleProvider = new GoogleAuthProvider();
+    const githubProvider = new GithubAuthProvider();
+
+    // UI
+    const overlay = document.getElementById('authOverlay');
+    const authClose = document.getElementById('authClose');
+    const btnGoogle = document.getElementById('btnGoogle');
+    const btnGitHub = document.getElementById('btnGitHub');
+    const btnEmailSignIn = document.getElementById('btnEmailSignIn');
+    const btnEmailSignUp = document.getElementById('btnEmailSignUp');
+    const btnAnonymous = document.getElementById('btnAnonymous');
+    const emailInput = document.getElementById('authEmail');
+    const passInput = document.getElementById('authPass');
+    const accountBtn = document.getElementById('accountBtn');
+
+    function shouldShowWelcome() {
+      try { return !localStorage.getItem('lixby_seen_welcome'); } catch(e){ return true; }
+    }
+    function hideWelcomePermanently(){ try { localStorage.setItem('lixby_seen_welcome','1'); } catch(e){} }
+
+    function showAuthOverlay(){ if(!overlay) return; overlay.style.display='block'; overlay.setAttribute('aria-hidden','false'); }
+    function hideAuthOverlay(){ if(!overlay) return; overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); }
+
+    if (accountBtn) accountBtn.addEventListener('click', (e)=> { e.preventDefault(); showAuthOverlay(); });
+
+    if (authClose) authClose.addEventListener('click', ()=> { hideAuthOverlay(); hideWelcomePermanently(); });
+
+    if (btnGoogle) btnGoogle.addEventListener('click', async ()=> {
+      try {
+        const res = await signInWithPopup(auth, googleProvider);
+        await upsertUserProfile(res.user);
+        hideAuthOverlay();
+      } catch(err){ console.error('Google sign-in', err); alert(err.message || err); }
+    });
+
+    if (btnGitHub) btnGitHub.addEventListener('click', async ()=> {
+      try {
+        const res = await signInWithPopup(auth, githubProvider);
+        await upsertUserProfile(res.user);
+        hideAuthOverlay();
+      } catch(err){ console.error('GitHub sign-in', err); alert(err.message || err); }
+    });
+
+    if (btnEmailSignIn) btnEmailSignIn.addEventListener('click', async ()=> {
+      const email = (emailInput.value||'').trim();
+      const pass = (passInput.value||'').trim();
+      if (!email || !pass) return alert('Introduce email y contraseña');
+      try {
+        const res = await signInWithEmailAndPassword(auth, email, pass);
+        await upsertUserProfile(res.user);
+        hideAuthOverlay();
+      } catch(err){ console.error('email sign-in', err); alert(err.message || err); }
+    });
+
+    if (btnEmailSignUp) btnEmailSignUp.addEventListener('click', async ()=> {
+      const email = (emailInput.value||'').trim();
+      const pass = (passInput.value||'').trim();
+      if (!email || !pass) return alert('Introduce email y contraseña');
+      try {
+        const res = await createUserWithEmailAndPassword(auth, email, pass);
+        await upsertUserProfile(res.user);
+        hideAuthOverlay();
+      } catch(err){ console.error('email signup', err); alert(err.message || err); }
+    });
+
+    if (btnAnonymous) btnAnonymous.addEventListener('click', async ()=> {
+      try {
+        const res = await signInAnonymously(auth);
+        await upsertUserProfile(res.user, { anonymous: true });
+        hideAuthOverlay();
+      } catch(err){ console.error('anonymous', err); alert(err.message || err); }
+    });
+
+    // handle overlay click to close if click outside modal
+    const authBackdrop = document.getElementById('authBackdrop');
+    if (authBackdrop) authBackdrop.addEventListener('click', ()=> { hideAuthOverlay(); hideWelcomePermanently(); });
+
+    // auth state
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log('USER', user.uid, user.email, user.isAnonymous);
+        // show short indicator on header (replace brand text with user email lightly)
+        const brand = document.querySelector('.brand');
+        if (brand) {
+          if (user.email) brand.textContent = user.email.split('@')[0];
+          else if (user.displayName) brand.textContent = user.displayName.split(' ')[0];
+          else if (user.isAnonymous) brand.textContent = 'Invitado';
+        }
+      } else {
+        console.log('No user');
+        // show welcome if first time
+        if (shouldShowWelcome()) {
+          setTimeout(()=> showAuthOverlay(), 300);
+        }
+      }
+    });
+
+    // create/update user doc
+    async function upsertUserProfile(user, extra = {}) {
+      if (!user || !user.uid) return;
+      const ref = doc(db, 'users', user.uid);
+      try {
+        const snapshot = await getDoc(ref);
+        const base = {
+          uid: user.uid,
+          name: user.displayName || null,
+          email: user.email || null,
+          photoURL: user.photoURL || null,
+          provider: user.providerData && user.providerData[0] && user.providerData[0].providerId,
+          createdAt: (snapshot.exists() ? snapshot.data().createdAt : new Date().toISOString())
+        };
+        await setDoc(ref, {...base, ...extra}, { merge: true });
+      } catch(e){ console.warn('upsertUserProfile error', e); }
+    }
+
+    // expose for other pages or header actions
+    window.openAuthOverlay = () => { showAuthOverlay(); };
+    window.closeAuthOverlay = () => { hideAuthOverlay(); };
+    window.lixbySignOut = async function() {
+      try { await signOut(auth); localStorage.removeItem('lixby_seen_welcome'); location.href = 'index.html'; } catch(e){ console.warn(e); }
+    };
+
+    // initial show
+    if (shouldShowWelcome()) {
+      setTimeout(()=> showAuthOverlay(), 300);
+    }
   </script>
 
   <!-- === EMAILJS SDK (carga segura) & contact handler === -->
