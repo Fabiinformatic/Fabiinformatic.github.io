@@ -261,8 +261,9 @@
         <p class="lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
       </div>
 
+      <!-- IMPORTANT: names adjusted to match typical EmailJS template variables -->
       <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;">
-        <!-- Nombres 'from_name', 'from_email', 'message' para que sendForm mapee con la plantilla -->
+        <!-- use names that match your template: from_name, from_email, message -->
         <input id="contactName" name="from_name" type="text" placeholder="Nombre" required autocomplete="name">
         <input id="contactEmail" name="from_email" type="email" placeholder="Correo" required autocomplete="email">
         <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
@@ -428,43 +429,30 @@
     })();
   </script>
 
-  <!-- --- EMAILJS: SDK + init + handler for contact form --- -->
-  <!-- SDK (load first) -->
-  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
-  <script>
-    (function(){
-      // inicializa EmailJS con tu Public Key / User ID
-      try {
-        if (window.emailjs && typeof emailjs.init === 'function') {
-          emailjs.init('xsKpaFjbRsS95AK3i'); // Public Key / User ID
-          console.log('EmailJS inicializado');
-        } else {
-          console.warn('EmailJS SDK no disponible');
-        }
-      } catch (err) {
-        console.error('Error inicializando EmailJS', err);
-      }
-    })();
-  </script>
+  <!-- === EMAILJS SDK (carga segura) & contact handler === -->
+  <!-- Load EmailJS SDK from jsdelivr and init on load using your Public Key -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"
+    crossorigin="anonymous"
+    onload="(function(){ try { if (window.emailjs && typeof emailjs.init === 'function') { emailjs.init('xsKpaFjbRsS95AK3i'); console.info('EmailJS inicializado'); } } catch(e){ console.warn('EmailJS onload init error', e); } })()"
+  ></script>
 
-  <!-- handler for contact form using EmailJS -->
   <script>
     (function(){
+      // Config provided by you
       const SERVICE_ID = 'service_tagcpgm';
       const TEMPLATE_ID = 'template_l1e0go2';
+      const PUBLIC_KEY = 'xsKpaFjbRsS95AK3i'; // already used in onload init
+
       const form = document.getElementById('contactForm');
       const sendBtn = document.getElementById('contactSend');
       const successEl = document.getElementById('contactSuccess');
 
-      if (!form) {
-        console.warn('No se encontró #contactForm');
-        return;
-      }
+      if (!form) { console.warn('No se encontró #contactForm'); return; }
 
-      form.addEventListener('submit', function(e){
+      async function sendEmail(e){
         e.preventDefault();
 
-        // valores
         const name = document.getElementById('contactName').value.trim();
         const email = document.getElementById('contactEmail').value.trim();
         const message = document.getElementById('contactMessage').value.trim();
@@ -474,58 +462,38 @@
           return;
         }
 
-        // UI
+        // UI states
         sendBtn.disabled = true;
-        const prev = sendBtn.textContent;
+        const previousText = sendBtn.textContent;
         sendBtn.textContent = 'Enviando...';
 
-        // Usamos sendForm (envía todos los campos del form por name)
-        if (window.emailjs && typeof emailjs.sendForm === 'function') {
-          emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, '#contactForm')
-            .then(function(response) {
-              console.log('EmailJS: enviado', response);
-              successEl.style.display = 'block';
-              form.reset();
-              setTimeout(()=> { successEl.style.display = 'none'; }, 6000);
-            }, function(error) {
-              console.error('EmailJS fallo', error);
-              // Mensaje amigable
-              alert('Error al enviar el mensaje. Revisa la consola para más detalles.');
-            })
-            .finally(() => {
-              sendBtn.disabled = false;
-              sendBtn.textContent = prev;
-            });
-        } else if (window.emailjs && typeof emailjs.send === 'function') {
-          // alternativa: send con parámetros explícitos
-          const templateParams = {
-            from_name: name,
-            from_email: email,
-            message: message
-            // añade aquí otras variables que tu plantilla necesite
-          };
-          emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
-            .then(function(response){
-              console.log('EmailJS send ok', response);
-              successEl.style.display = 'block';
-              form.reset();
-              setTimeout(()=> { successEl.style.display = 'none'; }, 6000);
-            }, function(error){
-              console.error('EmailJS send error', error);
-              alert('Error al enviar el mensaje. Revisa la consola para más detalles.');
-            })
-            .finally(()=> {
-              sendBtn.disabled = false;
-              sendBtn.textContent = prev;
-            });
-        } else {
-          // fallback: no hay emailjs cargado
-          console.warn('EmailJS no está disponible en esta página.');
-          alert('Servicio de correo no disponible. Intenta más tarde.');
+        // Defensive: ensure SDK loaded
+        if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
+          console.error('EmailJS SDK no está disponible. Revisa la carga del script o las extensiones que lo bloqueen.');
+          alert('Servicio de correo no disponible ahora mismo. Intenta de nuevo más tarde.');
           sendBtn.disabled = false;
-          sendBtn.textContent = prev;
+          sendBtn.textContent = previousText;
+          return;
         }
-      });
+
+        try {
+          // sendForm maps form field names to template variables
+          const response = await emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, '#contactForm');
+          console.info('EmailJS sendForm response:', response);
+          successEl.style.display = 'block';
+          form.reset();
+          setTimeout(()=> { successEl.style.display = 'none'; }, 6000);
+        } catch (err) {
+          console.error('Error enviando con EmailJS:', err);
+          // show friendly message to user
+          alert('No se pudo enviar el mensaje. Comprueba la consola para más detalles o inténtalo más tarde.');
+        } finally {
+          sendBtn.disabled = false;
+          sendBtn.textContent = previousText;
+        }
+      }
+
+      form.addEventListener('submit', sendEmail);
     })();
   </script>
 
