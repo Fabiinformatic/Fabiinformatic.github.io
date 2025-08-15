@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LIXBY — Tecnología minimalista</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- Fixes locales para evitar que el header “coma” la página -->
+  <style>
+    /* En escritorio aseguramos que .nav-right esté en fila (no en columna) */
+    @media (min-width: 900px) {
+      .nav-right { flex-direction: row !important; align-items: center !important; }
+    }
+    /* En móvil está bien que se apile */
+    @media (max-width: 899px) {
+      .nav-right { flex-direction: row; } /* alternativa: row para que no ocupe tanto alto */
+    }
+
+    /* Seguridad: limitar la altura del header para no cubrir la pantalla entera si hay algo raro */
+    .nav { max-height: 140px; overflow: visible; }
+
+    /* Asegurar que main empieza por debajo del header en caso de que JS falle */
+    main { padding-top: 90px; } /* valor por defecto, el script lo ajustará dinámicamente */
+  </style>
 </head>
 <body>
   <!-- NAV -->
@@ -129,6 +146,30 @@
     JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
   </noscript>
 
+  <!-- Ajuste dinámico: coloca el contenido bajo el header fijo -->
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const header = document.querySelector('.nav');
+        if (header) {
+          // 18px extra para separación visual
+          const pad = Math.round(header.getBoundingClientRect().height + 18);
+          document.documentElement.style.setProperty('--lixby-header-height', pad + 'px');
+          document.body.style.paddingTop = pad + 'px';
+        }
+      } catch (e) { /* no romper si falla */ console.warn('Header padding script:', e); }
+    });
+    // también reajustar si se redimensiona (por si el header cambia de alto)
+    window.addEventListener('resize', () => {
+      const header = document.querySelector('.nav');
+      if (header) {
+        const pad = Math.round(header.getBoundingClientRect().height + 18);
+        document.body.style.paddingTop = pad + 'px';
+      }
+    });
+  </script>
+
+  <!-- tu script principal (defer) -->
   <script src="script.js" defer></script>
 </body>
 </html>
