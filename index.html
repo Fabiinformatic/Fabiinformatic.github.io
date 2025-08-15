@@ -427,35 +427,72 @@
     })();
   </script>
 
-  <!-- handler for contact form (minimal, unobtrusive) -->
+  <!-- EmailJS SDK + handler for contact form (integración real) -->
+  <script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
   <script>
     (function(){
+      // Usa los valores que nos diste
+      const SERVICE_ID = 'service_tagcpgm';
+      const TEMPLATE_ID = 'template_l1e0go2';
+      const PUBLIC_KEY = 'xsKpaFjbRsS95AK3i';
+
+      // Inicializa EmailJS con tu Public Key
+      try { emailjs.init(PUBLIC_KEY); } catch(e){ console.warn('EmailJS init failed', e); }
+
       const form = document.getElementById('contactForm');
       const success = document.getElementById('contactSuccess');
       const sendBtn = document.getElementById('contactSend');
+
+      function isEmail(v){ return /\S+@\S+\.\S+/.test(v); }
+
       if (!form) return;
 
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('contactName').value.trim();
-        const email = document.getElementById('contactEmail').value.trim();
-        const msg = document.getElementById('contactMessage').value.trim();
+      // función de envío centralizada
+      function sendEmail(){
+        const name = (document.getElementById('contactName')||{}).value.trim();
+        const email = (document.getElementById('contactEmail')||{}).value.trim();
+        const msg = (document.getElementById('contactMessage')||{}).value.trim();
+
         if (!name || !email || !msg) {
           alert('Por favor completa todos los campos.');
           return;
         }
+        if (!isEmail(email)) {
+          alert('Introduce un correo válido.');
+          return;
+        }
+
         sendBtn.disabled = true;
-        sendBtn.textContent = 'Enviando...';
-        // Simulación de envío: aquí puedes integrar Formspree/Netlify etc.
-        setTimeout(() => {
-          success.style.display = 'block';
-          form.reset();
-          sendBtn.disabled = false;
-          sendBtn.textContent = 'Enviar';
-          // desaparece la notificación después de unos segundos
-          setTimeout(()=> { success.style.display = 'none'; }, 6000);
-        }, 800);
-      });
+        const origText = sendBtn.textContent;
+        sendBtn.textContent = 'Enviando…';
+
+        // Mapea a las variables de la plantilla.
+        // Si tu plantilla usa otros nombres, cámbialos aquí.
+        const templateParams = {
+          from_name: name,
+          reply_to: email,
+          message: msg
+        };
+
+        emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
+          .then(function(response){
+            // éxito
+            if (success) success.style.display = 'block';
+            try { form.reset(); } catch(e){}
+            setTimeout(()=> { if (success) success.style.display = 'none'; }, 6000);
+          }, function(err){
+            console.error('EmailJS error:', err);
+            alert('No se ha podido enviar el mensaje. Intenta de nuevo más tarde.');
+          })
+          .finally(() => {
+            sendBtn.disabled = false;
+            sendBtn.textContent = origText;
+          });
+      }
+
+      // Adjuntamos tanto al submit del formulario como al click del botón por redundancia.
+      form.addEventListener('submit', function(e){ e.preventDefault(); sendEmail(); });
+      if (sendBtn) sendBtn.addEventListener('click', function(e){ e.preventDefault(); sendEmail(); });
     })();
   </script>
 
