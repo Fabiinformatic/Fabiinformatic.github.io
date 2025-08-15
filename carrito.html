@@ -1,138 +1,87 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LIXBY — Tecnología minimalista</title>
+  <title>Carrito — LIXBY</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .nav { top:0; left:0; right:0; position:fixed; padding:12px 18px; z-index:120; }
-    .nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-    .nav-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-    @media (min-width: 900px) {
-      .nav-right { flex-direction:row; align-items:center; }
-      #navLinks { display:flex; gap:18px; align-items:center; }
-    }
-    main { padding-top: 92px; }
-  </style>
 </head>
 <body>
-  <header class="nav glass" role="banner">
+  <!-- HEADER -->
+  <header class="nav glass">
     <div class="nav-inner">
-      <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
-
-      <nav id="navLinks" role="navigation" aria-label="Principal">
-        <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
-        <a href="#productos" data-i18n="nav.productos">Productos</a>
-        <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
-        <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
-      </nav>
-
+      <div class="nav-left">
+        <div class="brand" role="button" onclick="location.href='index.html'">LIXBY</div>
+      </div>
       <div class="nav-right">
-        <!-- carrito -->
-        <div class="cart-wrapper">
-          <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
-        </div>
-
-        <!-- selector idioma -->
-        <div class="lang-wrapper">
-          <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false">
-            🇪🇸 <span id="langLabel">Español</span> ▾
-          </button>
-          <div id="langMenu" class="lang-menu glass" aria-hidden="true">
-            <button class="lang-item" data-lang="es">🇪🇸 Español</button>
-            <button class="lang-item" data-lang="en">🇬🇧 English</button>
-            <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
-          </div>
-        </div>
-
-        <!-- toggle tema -->
-        <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+        <a href="carrito.html" class="icon-btn" aria-label="Ver carrito">
+          🛒 <span id="cartCount" class="badge">0</span>
+        </a>
       </div>
     </div>
   </header>
 
-  <main>
-    <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
-      <div class="hero-content">
-        <h1 id="hero-title">La tecnología que te entiende</h1>
-        <p>Innovación minimalista para tu día a día</p>
-        <a href="#productos" class="btn primary" data-i18n="btn.explorar">Explorar</a>
-      </div>
-    </section>
+  <main class="section">
+    <h1>Tu carrito</h1>
+    <table id="cartTable" border="1" cellpadding="8" style="width:100%;text-align:left;">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Precio</th>
+          <th>Cantidad</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Items dinámicos -->
+      </tbody>
+    </table>
 
-    <section id="productos" class="section reveal" aria-labelledby="prod-title">
-      <h2 id="prod-title">Productos</h2>
-      <div class="grid">
-        <article class="card glass" data-product="lixby-one">
-          <div class="thumb">
-            <img src="https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg" alt="Lixby One">
-          </div>
-          <h3>Lixby One</h3>
-          <p>Ultraligero y potente.</p>
-          <span class="price">349€</span>
-        </article>
+    <div id="totales" style="margin-top:20px;text-align:right;">
+      <p>Subtotal: <span id="subtotal">0€</span></p>
+      <p>IVA (21%): <span id="iva">0€</span></p>
+      <p><strong>Total: <span id="total">0€</span></strong></p>
+    </div>
 
-        <article class="card glass" data-product="lixby-one-plus">
-          <div class="thumb">
-            <img src="https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg" alt="Lixby One Plus">
-          </div>
-          <h3>Lixby One Plus</h3>
-          <p>Teléfono de última generación.</p>
-          <span class="price">659€</span>
-        </article>
-
-        <article class="card glass" data-product="lixby-one-pro">
-          <div class="thumb">
-            <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro">
-          </div>
-          <h3>Lixby One Pro</h3>
-          <p>Audio de alta fidelidad.</p>
-          <span class="price">1099€</span>
-        </article>
-      </div>
-    </section>
-
-    <section id="contacto" class="section glass reveal">
-      <h2>Contáctanos</h2>
-      <form class="contact-form" onsubmit="return false;">
-        <input type="text" placeholder="Nombre" required>
-        <input type="email" placeholder="Correo" required>
-        <textarea placeholder="Tu mensaje" required></textarea>
-        <button class="btn primary">Enviar</button>
-      </form>
-    </section>
-
-    <section id="conocenos" class="section reveal">
-      <h2>Conócenos</h2>
-      <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad.</p>
-    </section>
+    <div style="margin-top:20px;text-align:right;">
+      <button onclick="finalizarCompra()" class="btn primary">Finalizar compra</button>
+    </div>
   </main>
 
-  <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
-    <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
-  </footer>
-
   <script>
-    (function(){
-      // Ajustar padding del body según header
-      function adjustPadding(){
-        const header = document.querySelector('.nav');
-        if(header){
-          document.body.style.paddingTop = (header.getBoundingClientRect().height + 12) + 'px';
-        }
-      }
-      adjustPadding();
-      window.addEventListener('resize', adjustPadding);
+    // Simulación de datos guardados en localStorage
+    const carrito = JSON.parse(localStorage.getItem('carrito')) || [
+      { nombre: 'Lixby One', precio: 349, cantidad: 1 },
+      { nombre: 'Lixby One Plus', precio: 659, cantidad: 2 }
+    ];
 
-      // Botón del carrito → ir a carrito.html
-      const cartBtn = document.getElementById('cartBtn');
-      if (cartBtn) {
-        cartBtn.addEventListener('click', () => {
-          window.location.href = "carrito.html";
-        });
-      }
-    })();
+    const tbody = document.querySelector('#cartTable tbody');
+    let subtotal = 0;
+
+    carrito.forEach(item => {
+      const row = document.createElement('tr');
+      const sub = item.precio * item.cantidad;
+      subtotal += sub;
+      row.innerHTML = `
+        <td>${item.nombre}</td>
+        <td>${item.precio}€</td>
+        <td>${item.cantidad}</td>
+        <td>${sub.toFixed(2)}€</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    const iva = subtotal * 0.21;
+    const total = subtotal + iva;
+
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2) + '€';
+    document.getElementById('iva').textContent = iva.toFixed(2) + '€';
+    document.getElementById('total').textContent = total.toFixed(2) + '€';
+
+    function finalizarCompra() {
+      alert('Gracias por tu compra.');
+      localStorage.removeItem('carrito');
+    }
   </script>
 </body>
 </html>
