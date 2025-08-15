@@ -1,5 +1,5 @@
 // auth-firebase.js  (coloca en la raíz, cargar como <script type="module" src="/auth-firebase.js">)
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
 import {
   getAuth,
   GoogleAuthProvider,
@@ -24,7 +24,8 @@ const firebaseConfig = {
   measurementId: "G-09SQL30MS8"
 };
 
-const app = initializeApp(firebaseConfig);
+// inicialización defensiva
+const app = (getApps() && getApps().length) ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -32,7 +33,7 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
-// simple id helper
+// helpers DOM
 const $ = (id) => document.getElementById(id);
 
 // storage helpers
@@ -40,13 +41,14 @@ function shouldShowWelcome() { try { return !localStorage.getItem('lixby_seen_we
 function hideWelcomePermanently(){ try { localStorage.setItem('lixby_seen_welcome','1'); } catch(e){} }
 function saveLocalUser(user){ if(!user){ localStorage.removeItem('lixby_user'); return; } const u = { uid:user.uid, name: user.displayName || (user.email? user.email.split('@')[0] : 'Usuario'), email: user.email||'', photoURL: user.photoURL||'' }; try{ localStorage.setItem('lixby_user', JSON.stringify(u)); }catch(e){ console.warn(e); } }
 
-// update header UI (avatar + sign out)
+// update header UI (avatar + sign out) — muestra guest-icon y hace el nombre botón a cuenta.html
 function updateHeader(user) {
   const accountBtn = $('accountBtn');
   let holder = document.getElementById('accountHolder');
 
+  const GUEST_AVATAR = 'https://static.vecteezy.com/system/resources/previews/025/667/911/non_2x/guest-icon-design-vector.jpg';
+
   if (user) {
-    // create holder if not exists
     if (!holder) {
       holder = document.createElement('div');
       holder.id = 'accountHolder';
@@ -61,42 +63,42 @@ function updateHeader(user) {
       avatar.style.height = '36px';
       avatar.style.borderRadius = '8px';
       avatar.style.objectFit = 'cover';
-      avatar.src = user.photoURL || `https://via.placeholder.com/64x64?text=${encodeURIComponent((user.name||'U').charAt(0))}`;
+      avatar.src = user.photoURL || GUEST_AVATAR;
 
-      const name = document.createElement('span');
-      name.id = 'headerName';
-      name.style.color = 'var(--muted)';
-      name.textContent = user.name || (user.email ? user.email.split('@')[0] : 'Usuario');
+      const nameBtn = document.createElement('button');
+      nameBtn.id = 'headerNameBtn';
+      nameBtn.className = 'btn ghost';
+      nameBtn.style.padding = '6px 8px';
+      nameBtn.style.fontWeight = '600';
+      nameBtn.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'Usuario');
+      nameBtn.addEventListener('click', () => { window.location.href = 'cuenta.html'; });
 
       const signOutBtn = document.createElement('button');
       signOutBtn.id = 'headerSignOut';
       signOutBtn.className = 'btn ghost';
       signOutBtn.textContent = 'Cerrar sesión';
       signOutBtn.addEventListener('click', async () => {
-        try { await appAuth.signOut(); } catch(e){ console.warn(e); }
+        try { await window.appAuth && window.appAuth.signOut ? window.appAuth.signOut() : fbSignOut(auth); } catch(e){ console.warn(e); }
       });
 
       holder.appendChild(avatar);
-      holder.appendChild(name);
+      holder.appendChild(nameBtn);
       holder.appendChild(signOutBtn);
 
       const navRight = document.querySelector('.nav-right');
       if (navRight) {
-        // insert before themeToggle if present
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) navRight.insertBefore(holder, themeToggle);
         else navRight.appendChild(holder);
       }
     } else {
-      // update content
       const avatar = document.getElementById('headerAvatar');
-      const nameEl = document.getElementById('headerName');
-      if (avatar) avatar.src = user.photoURL || avatar.src;
-      if (nameEl) nameEl.textContent = user.name || nameEl.textContent;
+      const nameEl = document.getElementById('headerNameBtn');
+      if (avatar) avatar.src = user.photoURL || avatar.src || GUEST_AVATAR;
+      if (nameEl) nameEl.textContent = user.displayName || (user.email ? user.email.split('@')[0] : nameEl.textContent);
     }
     if (accountBtn) accountBtn.style.display = 'none';
   } else {
-    // remove holder if exists
     if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
     if (accountBtn) accountBtn.style.display = '';
   }
@@ -122,13 +124,11 @@ async function upsertUserProfile(user, extra = {}) {
   }
 }
 
-// PUBLIC: updateProfileExtra
 async function updateProfileExtra(extra = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error('No authenticated user');
   const ref = doc(db, 'users', user.uid);
   await setDoc(ref, { profile: extra, updatedAt: new Date().toISOString() }, { merge: true });
-  // sync localStorage minimal
   try {
     const raw = localStorage.getItem('lixby_user');
     const local = raw ? JSON.parse(raw) : {};
@@ -140,20 +140,15 @@ async function updateProfileExtra(extra = {}) {
   return true;
 }
 
-// Render account page (if on cuenta.html)
 async function renderAccountPageIfNeeded(user) {
   const isCuenta = location.pathname.endsWith('cuenta.html') || document.getElementById('accountPanel');
   if (!isCuenta) return;
-  // target container
   let target = document.getElementById('accountPanel');
   if (!target) {
-    // create a panel in main if not exists
-    target = document.createElement('div');
-    target.id = 'accountPanel';
+    target = document.createElement('div'); target.id = 'accountPanel';
     const main = document.querySelector('main') || document.body;
     main.prepend(target);
   }
-  // load profile from Firestore
   let profile = {};
   if (user && user.uid) {
     try {
@@ -164,14 +159,9 @@ async function renderAccountPageIfNeeded(user) {
       }
     } catch(e) { console.warn('load profile', e); }
   } else {
-    // try localStorage fallback
-    try {
-      const raw = localStorage.getItem('lixby_user');
-      if (raw) profile = JSON.parse(raw);
-    } catch(e){}
+    try { const raw = localStorage.getItem('lixby_user'); if (raw) profile = JSON.parse(raw); } catch(e){}
   }
 
-  // render minimal form (white card)
   target.innerHTML = `
     <div class="account-profile" style="max-width:980px;margin:28px auto;">
       <div class="avatar">${(user && user.displayName) ? user.displayName.charAt(0).toUpperCase() : 'U'}</div>
@@ -204,10 +194,6 @@ async function renderAccountPageIfNeeded(user) {
     msg.textContent = 'Guardando...';
     try {
       await updateProfileExtra({ firstName, lastName, dob });
-      // also update displayName on auth profile (optional)
-      try {
-        // NOTE: updating Firebase Auth displayName requires updateProfile from auth; omitted to avoid extra imports.
-      } catch(e){}
       msg.textContent = 'Guardado ✔';
     } catch(err) {
       console.error(err);
@@ -220,7 +206,7 @@ async function renderAccountPageIfNeeded(user) {
 function oauthErrorHandler(err, providerName) {
   console.error(`${providerName} sign-in error`, err);
   if (err && err.code === 'auth/unauthorized-domain') {
-    alert('Error: dominio no autorizado para OAuth. Añade tu dominio en Firebase Console → Authentication → Authorized domains (ej: fabiinformatic.github.io).');
+    alert('Error: dominio no autorizado para OAuth. Añade tu dominio en Firebase Console → Authentication → Authorized domains.');
   } else {
     alert(err && err.message ? err.message : String(err));
   }
@@ -234,7 +220,6 @@ async function doPopupSignIn(provider, providerName) {
     await upsertUserProfile(res.user);
     updateHeader({ uid: res.user.uid, name: res.user.displayName || res.user.email, email: res.user.email, photoURL: res.user.photoURL });
     hideAuthOverlaySafe();
-    // redirect to cuenta.html when logging in from homepage
     const path = window.location.pathname;
     if (path === '/' || path.endsWith('/index.html') || path.endsWith('index.html')) {
       window.location.href = 'cuenta.html';
@@ -246,7 +231,6 @@ async function doPopupSignIn(provider, providerName) {
   }
 }
 
-// show/hide overlay helpers (safe)
 function showAuthOverlaySafe() {
   const overlay = $('authOverlay');
   const authClose = $('authClose');
@@ -267,7 +251,6 @@ function hideAuthOverlaySafe() {
   setTimeout(()=> { try{ accountBtn && accountBtn.focus(); }catch(e){} }, 30);
 }
 
-// init UI listeners
 function initAuthUI() {
   const overlay = $('authOverlay');
   const authBackdrop = $('authBackdrop');
@@ -343,7 +326,6 @@ function initAuthUI() {
       await upsertUserProfile(res.user, { anonymous: true });
       updateHeader({ uid: res.user.uid, name: 'Invitado', email: '', photoURL: '' });
       hideAuthOverlaySafe();
-      // no redirect for anonymous by default (you can change)
     } catch (err) {
       console.error('anonymous sign-in', err);
       if (err && err.code === 'auth/admin-restricted-operation') {
@@ -354,7 +336,6 @@ function initAuthUI() {
     }
   });
 
-  // ESC to close
   document.addEventListener('keydown', (e)=> {
     const overlay = $('authOverlay');
     if (e.key === 'Escape' && overlay && overlay.getAttribute('aria-hidden') === 'false') hideAuthOverlaySafe();
@@ -366,7 +347,6 @@ onAuthStateChanged(auth, async (user) => {
   if (user) {
     saveLocalUser(user);
     updateHeader({ uid: user.uid, name: user.displayName || (user.email? user.email.split('@')[0] : 'Usuario'), email: user.email, photoURL: user.photoURL });
-    // if on cuenta.html render form
     await renderAccountPageIfNeeded(user);
   } else {
     localStorage.removeItem('lixby_user');
@@ -418,6 +398,5 @@ window.appAuth = {
   _rawAuth: auth
 };
 
-// init UI when DOM ready
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAuthUI);
 else initAuthUI();
