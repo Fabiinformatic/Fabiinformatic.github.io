@@ -1,5 +1,5 @@
 // =====================
-// script.js — LIXBY (robusto, con panel de carrito)
+// script.js — LIXBY (robusto, con panel de carrito) — CORREGIDO
 // =====================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -104,18 +104,59 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // language
-    const LANG_CURRENT = localStorage.getItem(LANG_KEY) || 'es';
+    // language (estado)
+    let currentLang = localStorage.getItem(LANG_KEY) || "es";
+
+    // apply translations to all [data-i18n] elements and dynamic pieces
     function applyTranslations(lang){
       const map = translations[lang] || translations['es'];
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (key && map[key]) el.textContent = map[key];
       });
-      // actualizar botones dinámicos (si existen)
+      // botones dinámicos (añadidos en fichas)
       document.querySelectorAll('.btn-add').forEach(btn => { btn.textContent = map['btn.add'] || btn.textContent; });
+      // actualizar langLabel visible
+      const label = document.getElementById('langLabel');
+      const names = { es: "Español", en: "English", fr: "Français" };
+      if (label) label.textContent = names[lang] || names['es'];
     }
-    applyTranslations(LANG_CURRENT);
+    applyTranslations(currentLang);
+
+    // language menu interactions
+    const langBtn = document.getElementById("langBtn");
+    const langMenu = document.getElementById("langMenu");
+    if (langBtn && langMenu) {
+      langBtn.addEventListener("click", (e) => {
+        const hidden = langMenu.getAttribute('aria-hidden') === 'false';
+        langMenu.setAttribute('aria-hidden', String(!hidden));
+        langBtn.setAttribute('aria-expanded', String(!hidden));
+      });
+      langMenu.querySelectorAll("[data-lang]").forEach(b => {
+        b.addEventListener("click", () => {
+          const l = b.getAttribute("data-lang");
+          setLanguage(l);
+          langMenu.setAttribute("aria-hidden", "true");
+          langBtn.setAttribute("aria-expanded", "false");
+        });
+      });
+      document.addEventListener("click", (ev) => {
+        if (!langBtn.contains(ev.target) && !langMenu.contains(ev.target)) {
+          langMenu.setAttribute("aria-hidden", "true");
+          langBtn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+
+    function setLanguage(lang) {
+      if (!translations[lang]) lang = "es";
+      currentLang = lang;
+      try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
+      applyTranslations(lang);
+      // actualizar textos que dependen del idioma en paneles/mini-cart
+      updateMiniCartUI();
+      updateCartPanelUI();
+    }
 
     // Mini-cart + cart panel (persistente)
     let cart = loadCart();
@@ -135,24 +176,24 @@ document.addEventListener("DOMContentLoaded", () => {
       panel.setAttribute('aria-hidden','true');
       panel.className = 'cart-panel';
       panel.innerHTML = `
-        <div class="cart-panel-inner glass" role="dialog" aria-label="Carrito">
+        <div class="cart-panel-inner glass" role="dialog" aria-label="${translations[currentLang]['cart.title'] || 'Carrito'}">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04)">
             <strong data-i18n="cart.title">Carrito</strong>
-            <button id="cartPanelClose" class="text-btn" aria-label="Cerrar">✕</button>
+            <button id="cartPanelClose" class="text-btn" aria-label="Cerrar" data-i18n="close">✕</button>
           </div>
           <div id="cartPanelItems" style="padding:12px;max-height:60vh;overflow:auto;"></div>
           <div style="padding:12px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;"><strong>Total</strong><span id="cartPanelTotal">0€</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;"><strong data-i18n="cart.total">Total</strong><span id="cartPanelTotal">0€</span></div>
             <div style="display:flex;gap:8px;">
-              <button id="cartPanelCheckout" class="btn primary">Pagar</button>
-              <button id="cartPanelClear" class="btn ghost">Vaciar</button>
+              <button id="cartPanelCheckout" class="btn primary" data-i18n="cart.checkout">Pagar</button>
+              <button id="cartPanelClear" class="btn ghost" data-i18n="cart.clear">Vaciar</button>
             </div>
           </div>
         </div>
       `;
       document.body.appendChild(panel);
 
-      // estilos-inject mínimos para el drawer
+      // estilos-inject mínimos para el drawer (si no existen)
       if (!document.getElementById('cart-panel-styles')){
         const s = document.createElement('style');
         s.id = 'cart-panel-styles';
@@ -164,7 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .cart-panel .mini-item { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
           .cart-panel .mini-item img{ width:56px; height:56px; object-fit:cover; border-radius:8px; }
           .cart-panel .qty-control { display:flex; gap:6px; align-items:center; }
-          .cart-panel .text-btn { background:transparent; border:none; cursor:pointer; font-size:1rem; padding:6px; }
+          .cart-panel .text-btn { background:transparent; border:none; cursor:pointer; font-size:1rem; padding:6px; color:inherit; }
         `;
         document.head.appendChild(s);
       }
@@ -173,11 +214,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('cartPanelClose').addEventListener('click', () => toggleCartPanel(false));
       document.getElementById('cartPanelClear').addEventListener('click', () => { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
       document.getElementById('cartPanelCheckout').addEventListener('click', () => {
-        if (cart.length === 0) return alert(translations[localStorage.getItem(LANG_KEY) || 'es']['cart.empty'] || 'El carrito está vacío');
+        if (cart.length === 0) return alert(translations[currentLang]['cart.empty'] || 'El carrito está vacío');
         alert('Simulación de checkout — artículos: ' + cart.reduce((s,i)=>s + (i.qty||0), 0));
       });
       // cerrar con escape
       document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') toggleCartPanel(false); });
+
+      // aplicar traducciones al contenido recién creado
+      applyTranslations(currentLang);
     }
 
     function toggleCartPanel(open){
@@ -197,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!miniCartItems) return;
         miniCartItems.innerHTML = '';
         if (cart.length === 0) {
-          miniCartItems.innerHTML = `<div style="padding:8px;color:var(--muted)">${translations[localStorage.getItem(LANG_KEY)||'es']['cart.empty']}</div>`;
+          miniCartItems.innerHTML = `<div style="padding:8px;color:var(--muted)">${translations[currentLang]['cart.empty']}</div>`;
           if (miniCartTotal) miniCartTotal.textContent = '0€';
           return;
         }
@@ -238,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!list || !totalEl) return;
       list.innerHTML = '';
       if (!cart || cart.length === 0) {
-        list.innerHTML = `<div style="padding:12px;color:var(--muted)">${translations[localStorage.getItem(LANG_KEY)||'es']['cart.empty']}</div>`;
+        list.innerHTML = `<div style="padding:12px;color:var(--muted)">${translations[currentLang]['cart.empty']}</div>`;
         totalEl.textContent = '0€';
         return;
       }
@@ -255,7 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="qty-control">
                 <button class="dec text-btn" data-idx="${idx}">−</button>
                 <button class="inc text-btn" data-idx="${idx}">+</button>
-                <button class="remove text-btn" data-idx="${idx}">Eliminar</button>
+                <button class="remove text-btn" data-idx="${idx}">${translations[currentLang]['cart.clear'] ? 'Eliminar' : 'Eliminar'}</button>
               </div>
             </div>
           </div>
@@ -306,12 +350,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
     if (clearCartBtn) clearCartBtn.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
-    if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (cart.length===0) return alert(translations[localStorage.getItem(LANG_KEY)||'es']['cart.empty']); alert(`Simulación checkout — artículos: ${cart.reduce((s,i)=>s+(i.qty||0),0)}`); });
+    if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (cart.length===0) return alert(translations[currentLang]['cart.empty']); alert(`Simulación checkout — artículos: ${cart.reduce((s,i)=>s+(i.qty||0),0)}`); });
 
-    // viewCartBtn dentro del miniCart (pudo no estar en algunas páginas)
+    // viewCartBtn dentro del miniCart (pudo no estar en algunas páginas) — delegación
     document.addEventListener('click', (ev) => {
       const el = ev.target;
-      if (el && (el.id === 'viewCartBtn' || el.closest && el.closest('#viewCartBtn'))) {
+      if (!el) return;
+      if (el.id === 'viewCartBtn' || (el.closest && el.closest('#viewCartBtn'))) {
         toggleCartPanel(true);
       }
     });
@@ -345,8 +390,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } catch(e){ console.warn("cards init error", e); }
 
-    // aplicar traducciones globales
-    applyTranslations(localStorage.getItem(LANG_KEY) || 'es');
+    // reaplicar traducciones al inicio (por si panel fue creado después)
+    applyTranslations(currentLang);
 
   } catch (err) {
     console.error("Script principal fallo:", err);
