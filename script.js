@@ -1,5 +1,5 @@
 // =====================
-// script.js — LIXBY (robusto, con panel de carrito integrado)
+// script.js — LIXBY (robusto, con panel de carrito integrado) — CORREGIDO
 // =====================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,7 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
         "close": "Cerrar",
         "continue.payment": "Continuar con el pago",
         "shipping.free": "GRATIS",
-        "vat.label": "Incluye {vat} de IVA (21%)"
+        "vat.label": "Incluye {vat} de IVA (21%)",
+        "label.subtotal": "Subtotal",
+        "label.shipping": "Envío",
+        "label.your_total": "Tu total:"
       },
       en: {
         "nav.inicio": "Home",
@@ -50,7 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
         "close": "Close",
         "continue.payment": "Continue to payment",
         "shipping.free": "FREE",
-        "vat.label": "Includes {vat} VAT (21%)"
+        "vat.label": "Includes {vat} VAT (21%)",
+        "label.subtotal": "Subtotal",
+        "label.shipping": "Shipping",
+        "label.your_total": "Your total:"
       },
       fr: {
         "nav.inicio": "Accueil",
@@ -71,13 +77,17 @@ document.addEventListener("DOMContentLoaded", () => {
         "close": "Fermer",
         "continue.payment": "Continuer le paiement",
         "shipping.free": "GRATUIT",
-        "vat.label": "Inclut {vat} de TVA (21%)"
+        "vat.label": "Inclut {vat} de TVA (21%)",
+        "label.subtotal": "Sous-total",
+        "label.shipping": "Livraison",
+        "label.your_total": "Votre total :"
       }
     };
 
     // utilidades
     function parsePriceToNumber(priceStr) {
-      if (!priceStr && priceStr !== 0) return 0;
+      if (priceStr === 0) return 0;
+      if (!priceStr) return 0;
       const num = String(priceStr).replace(/[^\d.,-]/g, "").replace(",", ".");
       return parseFloat(num) || 0;
     }
@@ -132,6 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
       currentLang = lang;
       try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
       applyTranslations(lang);
+      // si panel existe, actualizar sus textos
+      updateCartPanelUI();
     }
     setLanguage(currentLang);
 
@@ -152,23 +164,24 @@ document.addEventListener("DOMContentLoaded", () => {
       panel.id = 'cartPanel';
       panel.setAttribute('aria-hidden','true');
       panel.className = 'cart-panel';
+      // usamos data-i18n para que applyTranslations pueda traducir etiquetas estáticas
       panel.innerHTML = `
         <div class="cart-panel-inner glass" role="dialog" aria-label="Carrito">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04)">
             <strong data-i18n="cart.title">Carrito</strong>
             <div style="display:flex;gap:8px;align-items:center;">
-              <button id="cartPanelClear" class="btn ghost" title="Vaciar">Vaciar</button>
+              <button id="cartPanelClear" class="btn ghost" data-i18n="cart.clear" title="Vaciar">Vaciar</button>
               <button id="cartPanelClose" class="text-btn" aria-label="Cerrar">✕</button>
             </div>
           </div>
           <div id="cartPanelItems" style="padding:12px;max-height:56vh;overflow:auto;"></div>
           <div style="padding:12px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;"><div>Subtotal</div><div id="cartPanelSubtotal">0€</div></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;"><div>Envío</div><div>${translations[currentLang]['shipping.free'] || 'GRATIS'}</div></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1.05rem;margin-top:8px;"><div>Tu total:</div><div id="cartPanelTotal">0€</div></div>
-            <div style="font-size:0.92rem;color:var(--muted);margin-top:6px;"><span id="cartPanelVAT">0€</span> de IVA (21%)</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;"><div data-i18n="label.subtotal">Subtotal</div><div id="cartPanelSubtotal">0€</div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;"><div data-i18n="label.shipping">Envío</div><div id="cartPanelShipping">${translations[currentLang]['shipping.free'] || 'GRATIS'}</div></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1.05rem;margin-top:8px;"><div data-i18n="label.your_total">Tu total:</div><div id="cartPanelTotal">0€</div></div>
+            <div style="font-size:0.92rem;color:var(--muted);margin-top:6px;"><span id="cartPanelVAT">0€</span> <span data-i18n="vat.label">{vat}</span></div>
             <div style="display:flex;gap:8px;margin-top:8px;">
-              <button id="cartPanelCheckout" class="btn primary" style="flex:1">${translations[currentLang]['continue.payment'] || 'Continuar con el pago'}</button>
+              <button id="cartPanelCheckout" class="btn primary" style="flex:1" data-i18n="continue.payment">${translations[currentLang]['continue.payment'] || 'Continuar con el pago'}</button>
             </div>
           </div>
         </div>
@@ -210,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(`Simulación de checkout — artículos: ${cart.reduce((s,i)=>s+(i.qty||0),0)} — Total: ${document.getElementById('cartPanelTotal') ? document.getElementById('cartPanelTotal').textContent : ''}`);
       });
 
-      // cerrar con Escape
+      // cerrar con Escape (añadido una vez; ensureCartPanel solo crea panel 1 vez)
       document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') toggleCartPanel(false); });
     }
 
@@ -271,7 +284,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const subtotalEl = document.getElementById('cartPanelSubtotal');
       const totalEl = document.getElementById('cartPanelTotal');
       const vatEl = document.getElementById('cartPanelVAT');
+      const shippingEl = document.getElementById('cartPanelShipping');
       if (!list || !subtotalEl || !totalEl || !vatEl) return;
+
+      // actualizar textos traducibles del panel
+      if (shippingEl) shippingEl.textContent = translations[currentLang]['shipping.free'] || shippingEl.textContent;
+      // actualiza label vat span con formato traducible
+      const vatLabelSpan = panelVatLabelSpan(); // helper below
 
       list.innerHTML = '';
       if (!cart || cart.length === 0) {
@@ -279,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
         subtotalEl.textContent = '0€';
         totalEl.textContent = '0€';
         vatEl.textContent = '0€';
+        if (vatLabelSpan) vatLabelSpan.textContent = translations[currentLang]['vat.label'].replace('{vat}', formatPriceNum(0));
         return;
       }
 
@@ -311,12 +331,26 @@ document.addEventListener("DOMContentLoaded", () => {
       totalEl.textContent = formatPriceNum(total);
       vatEl.textContent = formatPriceNum(vatAmount);
 
+      // actualizar VAT label textual (ej: "Incluye 166,44 € de IVA (21%)")
+      if (vatLabelSpan) {
+        const tpl = translations[currentLang]['vat.label'] || translations['es']['vat.label'];
+        vatLabelSpan.textContent = tpl.replace('{vat}', formatPriceNum(vatAmount));
+      }
+
       // actualizar mini-cart total si existe
       if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(subtotal);
       if (cartCount) cartCount.textContent = cart.reduce((s,i)=>s+(i.qty||0),0);
 
       // attach quantity/remove events inside panel (if you later add controls)
       // currently we only show quantity; you can extend with + / - controls if wanted
+    }
+
+    // helper to find the span that holds the vat label placeholder inside panel
+    function panelVatLabelSpan(){
+      const panel = document.getElementById('cartPanel');
+      if (!panel) return null;
+      // the vat label is the element with data-i18n="vat.label" (we placed it in ensureCartPanel)
+      return panel.querySelector('[data-i18n="vat.label"]') || null;
     }
 
     // Exponer addToCart para que fichas / index usen
@@ -332,50 +366,50 @@ document.addEventListener("DOMContentLoaded", () => {
       if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
     };
 
-    // eventos básicos para miniCart botón
     // Robust cart button handling: toggle miniCart if present, otherwise open cartPanel
-function handleCartBtnClick(e) {
-  try {
-    // prefer mini-cart pop if present
-    if (miniCart) {
-      const isShown = miniCart.getAttribute('aria-hidden') === 'false';
-      miniCart.setAttribute('aria-hidden', String(!isShown));
-      // stop the event so our document click handler doesn't immediately close it
-      e && e.stopPropagation && e.stopPropagation();
-      return;
+    function handleCartBtnClick(e) {
+      try {
+        // prefer mini-cart pop if present
+        if (miniCart) {
+          const isShown = miniCart.getAttribute('aria-hidden') === 'false';
+          miniCart.setAttribute('aria-hidden', String(!isShown));
+          // stop the event so our document click handler doesn't immediately close it
+          if (e && e.stopPropagation) e.stopPropagation();
+          return;
+        }
+        // fallback: open cart panel drawer
+        toggleCartPanel(true);
+      } catch (err) {
+        console.warn('handleCartBtnClick error', err);
+        toggleCartPanel(true);
+      }
     }
-    // fallback: open cart panel drawer
-    toggleCartPanel(true);
-  } catch (err) {
-    console.warn('handleCartBtnClick error', err);
-    toggleCartPanel(true);
-  }
-}
 
-// If button exists now, attach directly
-if (cartBtn) {
-  cartBtn.addEventListener('click', handleCartBtnClick);
-} else {
-  // attach delegated handler in case the element is added later
-  document.addEventListener('click', function delegatedCartClick(ev){
-    const target = ev.target;
-    if (!target) return;
-    if (target.id === 'cartBtn' || target.closest && target.closest('#cartBtn')) {
-      handleCartBtnClick(ev);
+    // If button exists now, attach directly
+    if (cartBtn) {
+      cartBtn.addEventListener('click', handleCartBtnClick);
+    } else {
+      // attach delegated handler in case the element is added later
+      document.addEventListener('click', function delegatedCartClick(ev){
+        const target = ev.target;
+        if (!target) return;
+        // use closest to handle clicks on inner elements
+        const btn = (target.closest && target.closest('#cartBtn')) ? target.closest('#cartBtn') : null;
+        if (btn) handleCartBtnClick(ev);
+      });
     }
-  });
-}
 
-// Close miniCart when clicking outside (only if miniCart exists)
-document.addEventListener('click', (e) => {
-  try {
-    if (!miniCart) return;
-    // if click is not inside the miniCart or the cartBtn, hide it
-    if (cartBtn && !cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
-      miniCart.setAttribute('aria-hidden', 'true');
-    }
-  } catch(e){ /* silent */ }
-});
+    // Close miniCart when clicking outside (only if miniCart exists)
+    document.addEventListener('click', (e) => {
+      try {
+        if (!miniCart) return;
+        // if click is not inside the miniCart or the cartBtn, hide it
+        if (cartBtn && !cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
+          miniCart.setAttribute('aria-hidden', 'true');
+        }
+      } catch(e){ /* silent */ }
+    });
+
     if (clearCartBtn) clearCartBtn.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
     if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (cart.length===0) return alert(translations[currentLang]['cart.empty']); alert(`Simulación checkout — artículos: ${cart.reduce((s,i)=>s+(i.qty||0),0)}`); });
 
@@ -422,9 +456,10 @@ document.addEventListener('click', (e) => {
     const langMenu = document.getElementById("langMenu");
     if (langBtn && langMenu) {
       langBtn.addEventListener("click", (e) => {
-        const hidden = langMenu.getAttribute('aria-hidden') !== 'false';
-        langMenu.setAttribute('aria-hidden', String(!hidden));
-        langBtn.setAttribute('aria-expanded', String(hidden));
+        // corrected logic: check current hidden state and toggle; aria-expanded should match !hidden
+        const isHidden = langMenu.getAttribute('aria-hidden') === 'true' || langMenu.getAttribute('aria-hidden') === null;
+        langMenu.setAttribute('aria-hidden', String(!isHidden));
+        langBtn.setAttribute('aria-expanded', String(!isHidden));
       });
       langMenu.querySelectorAll("[data-lang]").forEach(b => {
         b.addEventListener("click", () => {
@@ -437,10 +472,12 @@ document.addEventListener('click', (e) => {
         });
       });
       document.addEventListener("click", (ev) => {
-        if (!langBtn.contains(ev.target) && !langMenu.contains(ev.target)) {
-          langMenu.setAttribute("aria-hidden", "true");
-          if (langBtn) langBtn.setAttribute("aria-expanded", "false");
-        }
+        try {
+          if (!langBtn.contains(ev.target) && !langMenu.contains(ev.target)) {
+            langMenu.setAttribute("aria-hidden", "true");
+            if (langBtn) langBtn.setAttribute("aria-expanded", "false");
+          }
+        } catch(e){}
       });
     }
 
