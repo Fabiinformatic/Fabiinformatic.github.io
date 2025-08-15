@@ -9,9 +9,7 @@
 <body>
   <!-- NAV -->
   <header class="nav glass" role="banner">
-    <div class="nav-left">
-      <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
-    </div>
+    <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
 
     <nav id="navLinks" role="navigation" aria-label="Principal">
       <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
@@ -20,7 +18,7 @@
       <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
     </nav>
 
-    <div class="nav-right">
+    <div class="nav-right" aria-hidden="false">
       <!-- carrito -->
       <div class="cart-wrapper">
         <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
@@ -127,12 +125,10 @@
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <!-- noscript fallback (visible si JS falla) -->
   <noscript style="display:block;background:#fffb; padding:10px; text-align:center;">
-    JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console) y copia aquí cualquier error.
+    JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
   </noscript>
 
-  <!-- carga script con defer -->
   <script src="script.js" defer></script>
 </body>
 </html>
