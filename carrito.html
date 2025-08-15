@@ -3,274 +3,234 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bolsa — LIXBY</title>
-
-  <!-- Tipografía similar -->
+  <title>Carrito — LIXBY</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
   <style>
     :root{
-      --bg:#f6f7f9;
-      --card:#ffffff;
-      --muted:#6b7280;
-      --accent:#0071e3;
-      --accent-2:#000;
-      --success:#07c160;
-      --shadow: 0 8px 24px rgba(2,6,23,0.06);
+      --bg:#0b0c10;
+      --panel:#0f1316;
+      --card:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));
+      --muted:#aab3ba;
+      --text:#e9eef2;
+      --accent:#0a84ff;
+      --accent-dark:#000;
+      --shadow: 0 10px 30px rgba(0,0,0,0.6);
       --radius:12px;
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial; background:var(--bg); color:#0b1220;}
-    .wrap{max-width:1100px;margin:28px auto;padding:20px;}
-    /* TOP summary (big) */
-    .top-summary{background:var(--card);border-radius:12px;padding:22px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
-    .top-summary h2{margin:0;font-weight:700;font-size:1.25rem}
-    .top-summary .actions{display:flex;gap:12px;align-items:center}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
+    .wrap{max-width:1200px;margin:28px auto;padding:24px;}
+    header.simple{display:flex;align-items:center;justify-content:space-between;padding:16px 0;margin-bottom:18px}
+    header.simple .brand{font-weight:700;cursor:pointer}
+
+    h1{margin:14px 0 18px;font-size:2rem}
+
+    .top-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .top-actions .left{font-size:1.05rem}
+    .top-actions .right{display:flex;gap:12px}
+
     .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
     .btn-apple{background:#000;color:#fff}
-    .btn-primary{background:var(--accent);color:#fff}
-    .small-muted{color:var(--muted);font-size:0.95rem}
+    .btn-primary{background:var(--accent);color:#00121a}
 
-    /* items list */
-    .bag{margin-top:18px}
-    .item-card{background:var(--card);border-radius:12px;padding:18px;display:flex;gap:18px;align-items:flex-start;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid rgba(0,0,0,0.04)}
-    .item-thumb{flex:0 0 120px}
-    .item-thumb img{width:120px;height:120px;object-fit:cover;border-radius:10px}
-    .item-body{flex:1;min-width:0}
-    .item-title{font-weight:700;margin:0 0 6px}
-    .item-mini{color:var(--muted);margin:0 0 8px;font-size:0.95rem}
-    .item-meta{display:flex;align-items:center;gap:12px;margin-top:8px}
-    .qty-select{display:inline-flex;align-items:center;border:1px solid rgba(0,0,0,0.08);border-radius:8px;overflow:hidden}
-    .qty-select button{background:transparent;border:0;padding:6px 10px;cursor:pointer}
-    .qty-select span{padding:6px 10px;min-width:36px;text-align:center}
-    .remove-btn{background:transparent;border:0;color:#d00;cursor:pointer;font-size:0.95rem}
+    .bag-list{margin-top:20px}
+    .item{display:flex;gap:16px;padding:18px;border-radius:12px;margin-bottom:14px;background:var(--panel);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02);align-items:flex-start}
+    .thumb{flex:0 0 120px}
+    .thumb img{width:120px;height:120px;object-fit:cover;border-radius:10px}
+    .info{flex:1;min-width:0}
+    .title{font-weight:700;margin:0 0 6px}
+    .mini{color:var(--muted);margin-bottom:8px}
+    .meta{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
+    .qty{display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
+    .qty button{background:transparent;border:0;padding:6px 10px;cursor:pointer;color:var(--text)}
+    .qty span{padding:6px 10px;min-width:36px;text-align:center}
+    .remove{background:transparent;border:0;color:#ff6b6b;cursor:pointer}
 
-    /* price column */
-    .item-price{flex:0 0 140px;text-align:right;font-weight:700;font-size:1.05rem}
+    .price{flex:0 0 160px;text-align:right;font-weight:700}
 
-    /* subtotals area */
-    .summary-card{background:var(--card);border-radius:12px;padding:18px;box-shadow:var(--shadow);margin-top:18px;border:1px solid rgba(0,0,0,0.04)}
-    .summary-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;color:var(--muted)}
-    .summary-row.total{font-weight:700;font-size:1.1rem;color:#061025}
+    .summary{width:360px;flex:0 0 360px;margin-left:20px;background:var(--panel);padding:18px;border-radius:12px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02)}
+    .summary-row{display:flex;justify-content:space-between;padding:8px 0;color:var(--muted)}
+    .summary-row.total{font-weight:700;color:var(--text);font-size:1.05rem}
+    .layout{display:flex;gap:20px;align-items:flex-start}
+    .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+    .applecare{display:flex;gap:10px;align-items:flex-start;margin-top:10px;color:var(--muted);font-size:0.95rem;border-left:3px solid rgba(255,255,255,0.02);padding-left:10px}
 
-    /* sticky checkout at bottom on mobile */
-    .sticky-checkout{position:sticky;bottom:12px;display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
-    .small-note{font-size:0.92rem;color:var(--muted);margin-top:8px}
-
-    /* applecare box (small) */
-    .addon { display:flex; gap:10px; align-items:flex-start; margin-top:10px; border-left:3px solid rgba(0,0,0,0.04); padding-left:10px; color:var(--muted); font-size:0.95rem; }
-
-    /* responsive */
-    @media(max-width:760px){
-      .top-summary{flex-direction:column;align-items:flex-start}
-      .item-card{flex-direction:column;align-items:flex-start}
-      .item-price{width:100%;text-align:left;margin-top:10px}
-      .item-thumb img{width:100%;height:auto;aspect-ratio:1/1}
-      .sticky-checkout{position:fixed;left:0;right:0;bottom:0;padding:12px 16px;background:linear-gradient(180deg, transparent, rgba(0,0,0,0.02));box-shadow:0 -6px 20px rgba(2,6,23,0.06);justify-content:center}
-      body{padding-bottom:92px}
+    @media (max-width:960px){
+      .layout{flex-direction:column}
+      .summary{width:100%;margin-left:0}
+      .thumb img{width:100%;height:auto;aspect-ratio:1/1}
     }
   </style>
 </head>
 <body>
-
   <div class="wrap">
-    <!-- top summary -->
-    <div class="top-summary" role="region" aria-label="Resumen de la bolsa">
-      <div>
-        <h2 id="topTotalText">El total de tu bolsa es de 0,00 €.</h2>
-        <div class="small-muted">Revisa los artículos antes de continuar con el pago.</div>
-      </div>
+    <header class="simple">
+      <div class="brand" onclick="location.href='index.html'">LIXBY</div>
+      <nav style="color:var(--muted);display:flex;gap:18px">
+        <a href="index.html#productos" style="color:var(--muted);text-decoration:none">Inicio</a>
+        <a href="index.html#productos" style="color:var(--muted);text-decoration:none">Productos</a>
+        <a href="index.html#contacto" style="color:var(--muted);text-decoration:none">Contáctanos</a>
+      </nav>
+    </header>
 
-      <div class="actions">
-        <button id="applePayBtn" class="btn btn-apple">Pagar con Apple Pay</button>
-        <button id="continueBtn" class="btn btn-primary">Continuar con el pago</button>
-      </div>
-    </div>
+    <h1>Tu carrito</h1>
 
-    <!-- list -->
-    <div class="bag" id="bagList" aria-live="polite">
-      <!-- items dinámicos -->
-    </div>
-
-    <!-- summary -->
-    <div class="summary-card" id="summaryCard" style="display:none;">
-      <div class="summary-row"><div>Subtotal</div><div id="subtotal">0,00 €</div></div>
-      <div class="summary-row"><div>Envío</div><div id="shipping">GRATIS</div></div>
-      <div class="summary-row total"><div>Tu total:</div><div id="grandTotal">0,00 €</div></div>
-      <div class="summary-row" style="font-size:0.95rem;color:var(--muted)"><div>Incluye</div><div id="vatText">0,00 € de IVA (21%)</div></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:10px">
-        <button id="payBottom" class="btn btn-apple">Pagar con Apple Pay</button>
-        <button id="continueBottom" class="btn btn-primary">Continuar con el pago</button>
+    <div class="top-actions" style="margin-bottom:12px">
+      <div class="left" id="topText">Aquí tienes lo que hay en tu bolsa.</div>
+      <div class="right">
+        <button class="btn btn-apple" id="applePayTop">Pagar con Apple Pay</button>
+        <button class="btn btn-primary" id="continueTop">Continuar con el pago</button>
       </div>
     </div>
 
-    <div id="emptyBag" style="display:none;margin-top:18px;background:var(--card);padding:24px;border-radius:12px;text-align:center;box-shadow:var(--shadow)">
-      <h3>Tu bolsa está vacía</h3>
-      <p class="small-muted">Añade productos desde la tienda.</p>
-      <p style="margin-top:12px"><a href="index.html" class="btn btn-primary" style="text-decoration:none">Volver a la tienda</a></p>
-    </div>
+    <div class="layout">
+      <div style="flex:1">
+        <div id="bag" class="bag-list"></div>
+        <div id="emptyMsg" class="empty" style="display:none;margin-top:12px">
+          <strong>Tu bolsa está vacía</strong>
+          <p style="color:var(--muted)">Añade productos desde la tienda.</p>
+          <p><a href="index.html" class="btn btn-primary">Volver a la tienda</a></p>
+        </div>
+      </div>
 
+      <aside class="summary" id="summaryAside" style="display:none">
+        <div style="font-weight:700;margin-bottom:6px">Resumen</div>
+        <div class="summary-row"><div>Subtotal</div><div id="sub">0,00 €</div></div>
+        <div class="summary-row"><div>Envío</div><div id="ship">GRATIS</div></div>
+        <div class="summary-row total"><div>Tu total:</div><div id="tot">0,00 €</div></div>
+        <div style="font-size:0.94rem;color:var(--muted);margin-top:8px">Incluye <span id="vat">0,00 €</span> de IVA (21%)</div>
+        <div style="margin-top:12px;display:flex;gap:10px;justify-content:space-between">
+          <button class="btn btn-apple" id="applePayBottom">Pagar con Apple Pay</button>
+          <button class="btn btn-primary" id="continueBottom">Continuar con el pago</button>
+        </div>
+      </aside>
+    </div>
   </div>
 
   <script>
     (function(){
-      const STORAGE_KEY = 'lixby_cart_v1'; // coincide con tu script.js
-      const APPLECARE_PRICE = 169.00;
+      const KEY = 'lixby_cart_v1'; // misma clave que tu script.js
+      const APPLECARE = 169.00;
+      const bag = document.getElementById('bag');
+      const subEl = document.getElementById('sub');
+      const totEl = document.getElementById('tot');
+      const vatEl = document.getElementById('vat');
+      const summaryAside = document.getElementById('summaryAside');
+      const emptyMsg = document.getElementById('emptyMsg');
+      const topText = document.getElementById('topText');
 
-      function parsePrice(v){
-        if (v === undefined || v === null) return 0;
-        if (typeof v === 'number') return v;
-        const s = String(v).replace(/[^\d.,-]/g,'').replace(',','.');
-        return parseFloat(s) || 0;
-      }
-      function fmt(n){
-        // español: 2 decimales, coma decimal
-        return n.toFixed(2).replace('.', ',') + ' €';
-      }
+      function parse(v){ if (typeof v === 'number') return v; if (!v) return 0; const s = String(v).replace(/[^\d.,-]/g,'').replace(',','.'); return parseFloat(s)||0; }
+      function fmt(n){ return n.toFixed(2).replace('.', ',') + ' €'; }
 
-      // carga carrito
       let cart = [];
-      try { cart = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e){ cart = []; }
-      const bagList = document.getElementById('bagList');
-      const topTotalText = document.getElementById('topTotalText');
-      const summaryCard = document.getElementById('summaryCard');
-      const subtotalEl = document.getElementById('subtotal');
-      const grandTotalEl = document.getElementById('grandTotal');
-      const vatText = document.getElementById('vatText');
-      const shippingEl = document.getElementById('shipping');
+      try { cart = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ cart = []; }
 
-      function saveCart(){
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); } catch(e){}
-      }
-
-      function recalcAndRender(){
-        bagList.innerHTML = '';
+      function render(){
+        bag.innerHTML = '';
         if (!cart || cart.length === 0) {
-          document.getElementById('emptyBag').style.display = 'block';
-          summaryCard.style.display = 'none';
-          topTotalText.textContent = 'El total de tu bolsa es de 0,00 €.';
+          summaryAside.style.display = 'none';
+          emptyMsg.style.display = 'block';
+          topText.textContent = 'Tu bolsa está vacía.';
           return;
-        } else {
-          document.getElementById('emptyBag').style.display = 'none';
-          summaryCard.style.display = 'block';
         }
-
+        emptyMsg.style.display = 'none';
+        summaryAside.style.display = 'block';
         let subtotal = 0;
+
         cart.forEach((it, idx) => {
-          const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parsePrice(it.price);
+          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parse(it.price);
           const qty = Number(it.qty || 1);
-          const addOn = !!it.appleCare; // boolean
-          const addOnCost = addOn ? APPLECARE_PRICE : 0;
-          const line = (priceNum + addOnCost) * qty;
+          const hasAC = !!it.appleCare;
+          const addon = hasAC ? APPLECARE : 0;
+          const line = (price + addon) * qty;
           subtotal += line;
 
-          // item DOM
-          const row = document.createElement('div');
-          row.className = 'item-card';
-          row.innerHTML = `
-            <div class="item-thumb"><img src="${it.image || 'https://via.placeholder.com/400'}" alt="${(it.name||'Producto').replace(/"/g,'')}"></div>
-            <div class="item-body">
-              <h3 class="item-title">${it.name || 'Producto'}</h3>
-              <div class="item-mini">${it.description ? it.description : ''}</div>
+          const item = document.createElement('div');
+          item.className = 'item';
+          item.innerHTML = `
+            <div class="thumb"><img src="${it.image || 'https://via.placeholder.com/400'}" alt="${(it.name||'Producto').replace(/"/g,'') }"></div>
+            <div class="info">
+              <div class="title">${it.name || 'Producto'}</div>
+              <div class="mini">${it.description || ''}</div>
 
-              <div class="addon">
-                <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
-                  <input type="checkbox" data-idx="${idx}" class="applecare-checkbox" ${addOn ? 'checked' : ''}>
+              <div class="applecare">
+                <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
+                  <input type="checkbox" data-idx="${idx}" class="acbox" ${hasAC ? 'checked' : ''}>
                   <div>
-                    <div style="font-weight:700">Añade AppleCare+ por ${fmt(APPLECARE_PRICE)}</div>
-                    <div style="color:var(--muted);font-size:0.92rem;margin-top:6px">Reparaciones ilimitadas por daños accidentales y prioridad de servicio.</div>
+                    <div style="font-weight:700">Añadir AppleCare+ — ${fmt(APPLECARE)}</div>
+                    <div style="color:var(--muted);margin-top:6px;font-size:0.95rem">Protección por daños accidentales y prioridad en reparación.</div>
                   </div>
                 </label>
               </div>
 
-              <div class="item-meta">
-                <div class="qty-select" data-idx="${idx}">
-                  <button data-action="dec" aria-label="Disminuir">−</button>
-                  <span class="qty-value">${qty}</span>
-                  <button data-action="inc" aria-label="Aumentar">+</button>
+              <div class="meta">
+                <div class="qty" data-idx="${idx}">
+                  <button data-action="dec">−</button>
+                  <span class="qval">${qty}</span>
+                  <button data-action="inc">+</button>
                 </div>
-                <button class="remove-btn" data-idx="${idx}">Eliminar</button>
+                <button class="remove" data-idx="${idx}">Eliminar</button>
               </div>
             </div>
-
-            <div class="item-price" aria-hidden="false">${fmt(line)}</div>
+            <div class="price">${fmt(line)}</div>
           `;
-          bagList.appendChild(row);
+          bag.appendChild(item);
         });
 
         const shipping = 0;
         const total = subtotal + shipping;
         const vatRate = 0.21;
+        // IVA incluido = total - total/(1+vatRate)
         const vatAmount = Math.round((total - total / (1 + vatRate)) * 100) / 100;
 
-        subtotalEl.textContent = fmt(subtotal);
-        grandTotalEl.textContent = fmt(total);
-        vatText.textContent = fmt(vatAmount) + ' de IVA (21%)';
-        shippingEl.textContent = 'GRATIS';
-        topTotalText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
+        subEl.textContent = fmt(subtotal);
+        totEl.textContent = fmt(total);
+        vatEl.textContent = fmt(vatAmount);
+        topText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
 
-        // attach listeners (delegado)
-        // quantity inc/dec
-        bagList.querySelectorAll('.qty-select').forEach(qel => {
-          const idx = Number(qel.getAttribute('data-idx'));
-          qel.querySelector('[data-action="inc"]').onclick = () => {
-            cart[idx].qty = (Number(cart[idx].qty || 1) + 1);
-            saveCart(); recalcAndRender();
-          };
-          qel.querySelector('[data-action="dec"]').onclick = () => {
-            cart[idx].qty = Math.max(1, Number(cart[idx].qty || 1) - 1);
-            saveCart(); recalcAndRender();
-          };
+        // attach events
+        bag.querySelectorAll('.qty').forEach(q => {
+          const idx = Number(q.getAttribute('data-idx'));
+          q.querySelector('[data-action="inc"]').onclick = () => { cart[idx].qty = (Number(cart[idx].qty || 1) + 1); saveAndRerender(); };
+          q.querySelector('[data-action="dec"]').onclick = () => { cart[idx].qty = Math.max(1, Number(cart[idx].qty || 1) - 1); saveAndRerender(); };
         });
-
-        // remove
-        bagList.querySelectorAll('.remove-btn').forEach(btn => {
-          const idx = Number(btn.getAttribute('data-idx'));
-          btn.onclick = () => {
-            if (!confirm('¿Eliminar este artículo?')) return;
-            cart.splice(idx,1);
-            saveCart(); recalcAndRender();
-          };
+        bag.querySelectorAll('.remove').forEach(b => {
+          const idx = Number(b.getAttribute('data-idx'));
+          b.onclick = () => { if (!confirm('Eliminar este artículo?')) return; cart.splice(idx,1); saveAndRerender(); };
         });
-
-        // applecare toggle
-        bagList.querySelectorAll('.applecare-checkbox').forEach(cb => {
+        bag.querySelectorAll('.acbox').forEach(cb => {
           const idx = Number(cb.getAttribute('data-idx'));
-          cb.onchange = (e) => {
-            cart[idx].appleCare = !!e.target.checked;
-            saveCart(); recalcAndRender();
-          };
+          cb.onchange = (e) => { cart[idx].appleCare = !!e.target.checked; saveAndRerender(); };
         });
-
-      } // recalc end
-
-      // inicial render
-      recalcAndRender();
-
-      // botones de pago simulados
-      function paySimulate(method){
-        let subtotal = 0;
-        cart.forEach(it => {
-          const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parsePrice(it.price);
-          const qty = Number(it.qty || 1);
-          const addOn = !!it.appleCare;
-          subtotal += (priceNum + (addOn ? APPLECARE_PRICE : 0)) * qty;
-        });
-        const total = subtotal;
-        if (!cart || cart.length === 0) { alert('Tu carrito está vacío'); return; }
-        alert(`${method} — Simulación de pago. Total: ${fmt(total)}`);
       }
 
-      document.getElementById('applePayBtn').addEventListener('click', ()=> paySimulate('Apple Pay'));
-      document.getElementById('continueBtn').addEventListener('click', ()=> paySimulate('Continuar con el pago'));
-      document.getElementById('payBottom').addEventListener('click', ()=> paySimulate('Apple Pay'));
-      document.getElementById('continueBottom').addEventListener('click', ()=> paySimulate('Continuar con el pago'));
+      function saveAndRerender(){
+        try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e){}
+        render();
+      }
 
-      // sincronización cross-tab: si otro tab cambia el carrito lo recargamos
-      window.addEventListener('storage', (ev) => {
-        if (ev.key === STORAGE_KEY) {
-          try { cart = JSON.parse(ev.newValue) || []; } catch(e){ cart = []; }
-          recalcAndRender();
-        }
+      // initial render
+      render();
+
+      // payment simulation
+      function paySim(method){
+        if (!cart || cart.length === 0) { alert('Tu carrito está vacío'); return; }
+        let total = 0;
+        cart.forEach(it => {
+          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parse(it.price);
+          const qty = Number(it.qty || 1);
+          const add = it.appleCare ? APPLECARE : 0;
+          total += (price + add) * qty;
+        });
+        alert(method + ' — Simulación. Total: ' + fmt(total));
+      }
+      document.getElementById('applePayTop').addEventListener('click', ()=> paySim('Apple Pay'));
+      document.getElementById('continueTop').addEventListener('click', ()=> paySim('Continuar con el pago'));
+      document.getElementById('applePayBottom').addEventListener('click', ()=> paySim('Apple Pay'));
+      document.getElementById('continueBottom').addEventListener('click', ()=> paySim('Continuar con el pago'));
+
+      // keep in sync if user changes cart elsewhere (other tab)
+      window.addEventListener('storage', (ev)=>{
+        if (ev.key === KEY) { try { cart = JSON.parse(ev.newValue) || []; } catch(e){ cart = []; } render(); }
       });
     })();
   </script>
