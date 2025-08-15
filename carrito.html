@@ -3,74 +3,147 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Carrito - LIXBY</title>
+  <title>Carrito — LIXBY</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body { padding-top:80px; }
+    .container { max-width:1000px; margin:20px auto; padding:18px; }
+    .cart-row { display:flex; gap:16px; align-items:center; padding:12px 0; border-bottom:1px solid rgba(0,0,0,0.06); }
+    .cart-row img { width:120px; height:120px; object-fit:cover; border-radius:10px; flex:0 0 120px; }
+    .cart-row .info { flex:1; min-width:0; }
+    .cart-row .info h3 { margin:0 0 6px; font-size:1.05rem; }
+    .cart-row .info p { margin:0; color: #666; font-size:0.95rem; }
+    .cart-row .price { font-weight:700; white-space:nowrap; flex:0 0 auto; margin-left:12px; }
+    .totals { margin-top:20px; text-align:right; }
+    .totals .line { display:flex; justify-content:flex-end; gap:24px; margin:6px 0; }
+    .totals .line strong { min-width:120px; display:inline-block; text-align:left; }
+    .pay-btn { margin-top:14px; display:inline-block; padding:12px 18px; border-radius:10px; background:#7cc7ff; color:#00121a; font-weight:700; text-decoration:none; }
+    .empty { text-align:center; padding:40px; color:#666; }
+    /* responsive */
+    @media (max-width:700px){
+      .cart-row { flex-direction:column; align-items:flex-start; }
+      .cart-row img { width:80%; height:auto; aspect-ratio:4/3; }
+      .cart-row .price { margin-left:0; margin-top:8px; }
+      body { padding-top:72px; }
+    }
+  </style>
 </head>
 <body>
-  <header class="nav glass">
-    <div class="nav-inner">
-      <div class="nav-left">
-        <div class="brand" onclick="location.href='index.html'" role="button">LIXBY</div>
-      </div>
-      <nav id="navLinks">
-        <a href="index.html#inicio">Inicio</a>
-        <a href="index.html#productos">Productos</a>
-        <a href="index.html#contacto">Contáctanos</a>
-        <a href="index.html#conocenos">Conócenos</a>
-      </nav>
+  <header class="nav glass" style="position:fixed;top:0;left:0;right:0;z-index:120;">
+    <div class="nav-inner" style="max-width:1000px;margin:0 auto;">
+      <div class="nav-left"><div class="brand" role="button" onclick="location.href='index.html'">LIXBY</div></div>
+      <div style="flex:1"></div>
+      <div class="nav-right"><a href="index.html" class="btn ghost" style="text-decoration:none;">Seguir comprando</a></div>
     </div>
   </header>
 
-  <main style="padding:80px 20px;">
+  <main class="container">
     <h1>Tu carrito</h1>
-    <table border="1" cellpadding="8" cellspacing="0" style="width:100%;max-width:800px;margin:auto;">
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <th>Precio</th>
-          <th>Cantidad</th>
-          <th>Subtotal</th>
-        </tr>
-      </thead>
-      <tbody id="cartTableBody">
-        <!-- Productos dinámicos -->
-      </tbody>
-    </table>
+    <div id="cartList"></div>
 
-    <div style="max-width:800px;margin:20px auto;text-align:right;">
-      <p>Subtotal: <span id="subtotal">0€</span></p>
-      <p>IVA (21%): <span id="iva">0€</span></p>
-      <h3>Total: <span id="total">0€</span></h3>
+    <div class="totals" id="totalsArea" style="display:none;">
+      <div class="line"><strong>Subtotal</strong><div id="subtotalText">0,00 €</div></div>
+      <div class="line"><strong>Envío</strong><div id="shippingText">GRATIS</div></div>
+      <div class="line" style="font-size:1.15rem;font-weight:700;"><strong>Tu total:</strong><div id="totalText">0,00 €</div></div>
+      <div class="line" style="font-size:0.95rem;color:#666;"><strong>Incluye</strong><div id="vatText">0,00 € de IVA (21%)</div></div>
+      <a id="payBtn" class="pay-btn" href="#" role="button">Continuar con el pago</a>
+    </div>
+
+    <div id="emptyMsg" class="empty" style="display:none;">
+      <p>Tu carrito está vacío.</p>
+      <p><a href="index.html">Volver a la tienda</a></p>
     </div>
   </main>
 
   <script>
-    // Simulación: cargar carrito desde localStorage
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const tbody = document.getElementById('cartTableBody');
+    (function(){
+      const STORAGE_KEY = 'lixby_cart_v1'; // <-- coincide con script.js
+      // si tu script guarda en otra clave, cámbiala aquí
 
-    let subtotal = 0;
-    cart.forEach(item => {
-      const price = parseFloat(item.price);
-      const totalItem = price * item.quantity;
-      subtotal += totalItem;
+      function parsePriceToNumber(v){
+        if (v === undefined || v === null) return 0;
+        // if priceNum stored, prefer it
+        if (typeof v === 'number') return v;
+        const s = String(v).replace(/[^\d.,-]/g,'').replace(',', '.');
+        return parseFloat(s) || 0;
+      }
+      function fmt(n){
+        // formato europeo con coma y 2 decimales
+        return n.toFixed(2).replace('.', ',') + ' €';
+      }
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${item.name}</td>
-        <td>${price.toFixed(2)}€</td>
-        <td>${item.quantity}</td>
-        <td>${totalItem.toFixed(2)}€</td>
-      `;
-      tbody.appendChild(tr);
-    });
+      const cart = (function(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e){ return []; } })();
 
-    const iva = subtotal * 0.21;
-    const total = subtotal + iva;
+      const list = document.getElementById('cartList');
+      const totalsArea = document.getElementById('totalsArea');
+      const emptyMsg = document.getElementById('emptyMsg');
+      const subtotalText = document.getElementById('subtotalText');
+      const shippingText = document.getElementById('shippingText');
+      const totalText = document.getElementById('totalText');
+      const vatText = document.getElementById('vatText');
 
-    document.getElementById('subtotal').textContent = subtotal.toFixed(2) + '€';
-    document.getElementById('iva').textContent = iva.toFixed(2) + '€';
-    document.getElementById('total').textContent = total.toFixed(2) + '€';
+      if (!cart || cart.length === 0) {
+        emptyMsg.style.display = 'block';
+        totalsArea.style.display = 'none';
+        return;
+      }
+
+      let subtotal = 0;
+      cart.forEach((it, idx) => {
+        // intenta sacar precio num: priceNum o price
+        const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parsePriceToNumber(it.price);
+        const qty = it.qty || it.quantity || 1;
+        const line = priceNum * qty;
+        subtotal += line;
+
+        const row = document.createElement('div');
+        row.className = 'cart-row';
+        row.innerHTML = `
+          <img src="${it.image || 'https://via.placeholder.com/400x400?text=Sin+imagen'}" alt="${(it.name||'Producto').replace(/"/g,'')}">
+          <div class="info">
+            <h3>${it.name || 'Producto'}</h3>
+            <p>${it.description ? it.description : ''}</p>
+            <p style="margin-top:8px;"><button data-idx="${idx}" class="remove-btn" style="background:transparent;border:1px solid #ddd;padding:6px 8px;border-radius:8px;cursor:pointer;">Eliminar</button></p>
+          </div>
+          <div class="price">${fmt(line)}</div>
+        `;
+        list.appendChild(row);
+      });
+
+      const shipping = 0; // GRATIS
+      const vatRate = 0.21;
+      const total = subtotal + shipping;
+      // IVA incluido en el total: IVA = total - total/(1+vatRate)
+      const vatAmount = Math.round((total - total / (1 + vatRate)) * 100) / 100;
+
+      subtotalText.textContent = fmt(subtotal);
+      shippingText.textContent = 'GRATIS';
+      totalText.textContent = fmt(total);
+      vatText.textContent = fmt(vatAmount) + ' de IVA (21%)';
+
+      totalsArea.style.display = 'block';
+      emptyMsg.style.display = 'none';
+
+      // eliminar item
+      list.addEventListener('click', (ev) => {
+        const btn = ev.target.closest && ev.target.closest('.remove-btn');
+        if (!btn) return;
+        const idx = Number(btn.getAttribute('data-idx'));
+        if (isNaN(idx)) return;
+        const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        current.splice(idx,1);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+        // recarga la página para recalcular (simple)
+        location.reload();
+      });
+
+      // pay button (simulación)
+      document.getElementById('payBtn').addEventListener('click', (ev) => {
+        ev.preventDefault();
+        alert('Simulación: continuar con el pago — total ' + fmt(total));
+      });
+
+    })();
   </script>
 </body>
 </html>
