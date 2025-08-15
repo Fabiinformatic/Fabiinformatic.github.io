@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
   <!-- small inline fallback styles for header-only overrides (kept minimal) -->
   <style>
-    /* keep header fallback small in head so page doesn't flash without CSS file */
     :root{ --header-height:72px }
     body{ padding-top: var(--header-height); }
   </style>
@@ -71,8 +70,11 @@
           </div>
         </div>
 
-        <!-- Account button (opens modal). Replaced by header avatar when logged in -->
-        <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta">Cuenta</button>
+        <!-- Account holder (reemplaza botón Cuenta cuando haya sesión) -->
+        <div id="accountContainer" style="display:inline-flex;align-items:center;gap:8px;">
+          <!-- por defecto mostramos el botón Cuenta -->
+          <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta">Cuenta</button>
+        </div>
 
         <!-- toggle tema -->
         <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
@@ -116,7 +118,10 @@
       </form>
 
       <div style="text-align:center;margin-top:12px">
-        <button id="btnAnonymous" class="btn ghost">Continuar como invitado</button>
+        <button id="btnAnonymous" class="btn ghost" title="Entrar como invitado">
+          <img src="https://static.vecteezy.com/system/resources/previews/025/667/911/non_2x/guest-icon-design-vector.jpg" alt="Invitado" style="width:20px;height:20px;border-radius:4px;vertical-align:middle;margin-right:8px;">
+          Continuar como invitado
+        </button>
       </div>
 
       <div style="display:flex;justify-content:center;margin-top:12px;font-size:0.9rem">
@@ -143,7 +148,7 @@
       <h2 id="prod-title">Productos</h2>
       <div class="grid">
         <!-- Lixby One Air -->
-        <article class="card glass" data-product="lixby-one-air" role="button" tabindex="0" aria-label="Lixby One Air">
+        <article class="card glass" data-product="lixby-one-air" data-href="producto.html?id=lixby-one-air" role="button" tabindex="0" aria-label="Lixby One Air">
           <div class="thumb">
             <img src="https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg" alt="Lixby One Air">
           </div>
@@ -157,7 +162,7 @@
         </article>
 
         <!-- Lixby One -->
-        <article class="card glass" data-product="lixby-one" role="button" tabindex="0" aria-label="Lixby One">
+        <article class="card glass" data-product="lixby-one" data-href="producto.html?id=lixby-one" role="button" tabindex="0" aria-label="Lixby One">
           <div class="thumb">
             <img src="https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg" alt="Lixby One">
           </div>
@@ -171,7 +176,7 @@
         </article>
 
         <!-- Lixby One Pro -->
-        <article class="card glass" data-product="lixby-one-pro" role="button" tabindex="0" aria-label="Lixby One Pro">
+        <article class="card glass" data-product="lixby-one-pro" data-href="producto.html?id=lixby-one-pro" role="button" tabindex="0" aria-label="Lixby One Pro">
           <div class="thumb">
             <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro">
           </div>
@@ -186,7 +191,7 @@
       </div>
     </section>
 
-    <!-- CONTACTO -->
+    <!-- CONTACTO (sin cambios) -->
     <section id="contacto" class="section contact-min glass reveal" aria-labelledby="contact-title">
       <div class="left">
         <h2 id="contact-title">Contáctanos</h2>
@@ -211,6 +216,29 @@
     <section id="conocenos" class="section reveal" aria-labelledby="about-title">
       <h2 id="about-title">Conócenos</h2>
       <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
+    </section>
+
+    <!-- Panel mínimo para editar perfil (name / last name / dob) - aparece al loguear -->
+    <section id="profilePanel" class="section profile-panel glass" aria-labelledby="profile-title" style="display:none;max-width:900px;margin-top:40px;">
+      <h2 id="profile-title" style="margin-bottom:10px;">Tu perfil</h2>
+      <div class="account-profile">
+        <div class="avatar" id="profileAvatar">—</div>
+        <div class="fields">
+          <div class="profile-row">
+            <input id="firstName" placeholder="Nombre" />
+            <input id="lastName" placeholder="Apellidos" />
+          </div>
+          <div class="profile-row">
+            <input id="dob" type="date" placeholder="Fecha de nacimiento" />
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button id="saveProfile" class="btn primary">Guardar</button>
+          </div>
+          <div style="font-size:0.9rem;color:var(--muted);margin-top:8px;">
+            Los cambios se almacenan en tu cuenta (si tu backend lo admite) — si quieres que guarde automáticamente en Firestore, dime y lo conecto.
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -346,14 +374,167 @@
     })();
   </script>
 
-  <!-- LOAD AUTH MODULE (asegúrate de tener /auth-firebase.js en la raíz) -->
+  <!-- ============================
+       FIREBASE AUTH (module) - ADD
+       ============================ -->
+  <!-- NOTE: auth-firebase.js debe estar en la raíz (cargado como module). -->
   <script type="module" src="/auth-firebase.js"></script>
 
-  <!-- EMAILJS SDK -->
+  <!-- Script UI local — actualiza header / panel de perfil en base a localStorage o events -->
+  <script>
+    (function(){
+      const accountContainer = document.getElementById('accountContainer');
+      const accountBtn = document.getElementById('accountBtn');
+      const profilePanel = document.getElementById('profilePanel');
+      const profileAvatar = document.getElementById('profileAvatar');
+      const firstNameInput = document.getElementById('firstName');
+      const lastNameInput = document.getElementById('lastName');
+      const dobInput = document.getElementById('dob');
+      const saveProfileBtn = document.getElementById('saveProfile');
+
+      function renderLogged(userSnapshot){
+        // userSnapshot: { uid, name, email, photoURL } or null
+        if(!accountContainer) return;
+        accountContainer.innerHTML = ''; // reemplazo seguro del contenido
+        if (userSnapshot) {
+          const img = document.createElement('img');
+          img.src = userSnapshot.photoURL || 'https://static.vecteezy.com/system/resources/previews/025/667/911/non_2x/guest-icon-design-vector.jpg';
+          img.alt = userSnapshot.name || 'Usuario';
+          img.style.width = '36px';
+          img.style.height = '36px';
+          img.style.borderRadius = '8px';
+          img.style.objectFit = 'cover';
+          img.style.display = 'inline-block';
+
+          const nameBtn = document.createElement('button');
+          nameBtn.textContent = userSnapshot.name || 'Usuario';
+          nameBtn.className = 'btn ghost';
+          nameBtn.style.padding = '6px 10px';
+          nameBtn.addEventListener('click', ()=> { window.location.href = 'cuenta.html'; });
+
+          accountContainer.appendChild(img);
+          accountContainer.appendChild(nameBtn);
+
+          // show profile panel and prefill
+          profilePanel.style.display = 'block';
+          profileAvatar.textContent = (userSnapshot.name && userSnapshot.name[0]) ? userSnapshot.name[0].toUpperCase() : 'U';
+          const parts = (userSnapshot.name || '').split(' ');
+          firstNameInput.value = parts[0] || '';
+          lastNameInput.value = parts.slice(1).join(' ') || '';
+          // try to get saved dob from localStorage
+          const storedProfile = (function(){ try { return JSON.parse(localStorage.getItem('lixby_profile')||'null'); } catch(e){ return null; } })();
+          if (storedProfile && storedProfile.dob) dobInput.value = storedProfile.dob;
+        } else {
+          // show default Cuenta button
+          const btn = document.createElement('button');
+          btn.id = 'accountBtn';
+          btn.className = 'btn ghost';
+          btn.textContent = 'Cuenta';
+          btn.addEventListener('click', (e)=> { e.preventDefault(); window.openAuthOverlay && window.openAuthOverlay(); });
+          accountContainer.appendChild(btn);
+
+          profilePanel.style.display = 'none';
+        }
+      }
+
+      // Read initial state from localStorage (auth-firebase.js guarda lixby_user)
+      function readLocalUser(){
+        try {
+          const raw = localStorage.getItem('lixby_user');
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch(e){ return null; }
+      }
+
+      // react to global onAuthState if exists (auth module exposes appAuth.onAuthState)
+      function tryWireAppAuth(){
+        if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
+          window.appAuth.onAuthState((u) => {
+            if (u) {
+              // normalize u -> { uid, name, email, photoURL }
+              const norm = { uid: u.uid, name: u.name || (u.email? u.email.split('@')[0] : ''), email: u.email, photoURL: u.photoURL || '' };
+              try { localStorage.setItem('lixby_user', JSON.stringify(norm)); } catch(e){}
+              renderLogged(norm);
+            } else {
+              localStorage.removeItem('lixby_user');
+              renderLogged(null);
+            }
+          });
+          return true;
+        }
+        return false;
+      }
+
+      // Listen to storage events from other tabs (login happens elsewhere)
+      window.addEventListener('storage', (ev)=>{
+        if (ev.key === 'lixby_user') {
+          renderLogged(readLocalUser());
+        }
+      });
+
+      // Init
+      if (!tryWireAppAuth()) {
+        // fallback: read local snapshot
+        renderLogged(readLocalUser());
+        // keep trying for a short window until appAuth becomes available
+        let tries = 0;
+        const poll = setInterval(()=> {
+          tries++;
+          if (tryWireAppAuth() || tries > 25) clearInterval(poll);
+        }, 200);
+      }
+
+      // Save profile button -> dispatch custom event for auth script to capture and persist
+      if (saveProfileBtn) saveProfileBtn.addEventListener('click', (e)=>{
+        const firstName = (firstNameInput.value||'').trim();
+        const lastName = (lastNameInput.value||'').trim();
+        const dob = (dobInput.value||'').trim();
+        // store locally too
+        try { localStorage.setItem('lixby_profile', JSON.stringify({ firstName, lastName, dob })); } catch(e){}
+        // notify any listener (p. ej. auth-firebase.js puede escuchar y llamar a Firestore)
+        window.dispatchEvent(new CustomEvent('profile:save', { detail: { firstName, lastName, dob } }));
+        // small feedback
+        saveProfileBtn.textContent = 'Guardado';
+        setTimeout(()=> saveProfileBtn.textContent = 'Guardar', 1400);
+      });
+
+      // Make entire .card clickable (but preserve internal buttons)
+      document.addEventListener('click', function(ev){
+        const card = ev.target.closest && ev.target.closest('.card[data-href]');
+        if (!card) return;
+        // if clicked element is a button/link inside card, let it handle it
+        const innerBtn = ev.target.closest && ev.target.closest('button, a');
+        if (innerBtn && card.contains(innerBtn) && !innerBtn.classList.contains('card-click-target')) {
+          return;
+        }
+        const href = card.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+
+      // keyboard accessibility: Enter on card
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' && document.activeElement && document.activeElement.classList.contains('card')) {
+          const href = document.activeElement.getAttribute('data-href');
+          if (href) window.location.href = href;
+        }
+      });
+
+      // small helper: if user clicks auth "Cuenta" default button, forward to openAuthOverlay
+      accountContainer.addEventListener('click', (e) => {
+        const t = e.target;
+        if (t && t.id === 'accountBtn') {
+          e.preventDefault();
+          window.openAuthOverlay && window.openAuthOverlay();
+        }
+      });
+
+    })();
+  </script>
+
+  <!-- EMAILJS + contact handler (sin cambios) -->
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js" crossorigin="anonymous"
     onload="(function(){ try { if (window.emailjs && typeof emailjs.init === 'function') { emailjs.init('xsKpaFjbRsS95AK3i'); } } catch(e){ console.warn('EmailJS init', e); } })()"></script>
 
-  <!-- contact handler -->
   <script>
     (function(){
       const SERVICE_ID = 'service_tagcpgm';
