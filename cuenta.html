@@ -4,9 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mi cuenta — LIXBY</title>
+
+  <!-- PERF -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Small self-contained styles for account page */
     .wrap { max-width:1100px; margin:36px auto; padding:20px; }
     header.account-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
     .userbox { display:flex; gap:12px; align-items:center; }
@@ -24,19 +28,12 @@
     .order .title { font-weight:700; }
     .small-muted { color:var(--muted); font-size:0.95rem; }
     .actions { display:flex; gap:8px; }
-    .btn { padding:8px 12px; border-radius:10px; cursor:pointer; border:0; font-weight:700; transition: transform .18s cubic-bezier(.2,.9,.3,1), box-shadow .18s ease; }
+    .btn { padding:8px 12px; border-radius:10px; cursor:pointer; border:0; font-weight:700; }
     .btn.primary { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 65%, white 35%)); color:#00121a; }
     .btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--text); }
     .center { text-align:center; color:var(--muted); padding:18px; }
     .signedout { display:flex; gap:8px; align-items:center; justify-content:center; padding:18px; }
-    .info-inline { display:flex; gap:10px; align-items:center; }
-    @media (max-width:900px) {
-      .row { flex-direction:column; align-items:stretch; }
-      header.account-head { flex-direction:column; align-items:flex-start; gap:8px; }
-    }
-
-    /* hover animation for buttons (global) */
-    .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 24px rgba(2,6,12,0.12); }
+    @media (max-width:900px) { .row { flex-direction:column; align-items:stretch; } header.account-head { flex-direction:column; align-items:flex-start; gap:8px; } }
   </style>
 </head>
 <body>
@@ -120,33 +117,12 @@
     </div>
   </div>
 
-  <!-- Firebase modular SDK -->
+  <!-- Reutilizamos Firebase modular (defensivo: getApps/getApp en caso de cargas múltiples) -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithPopup,
-      GoogleAuthProvider,
-      GithubAuthProvider,
-      signInAnonymously,
-      signOut,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      collection,
-      getDocs,
-      query,
-      orderBy,
-      deleteDoc
-    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, signInAnonymously, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-    // CONFIG: usa el mismo firebaseConfig que tengas en index.html
     const firebaseConfig = {
       apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
       authDomain: "lixby-e0344.firebaseapp.com",
@@ -157,11 +133,10 @@
       measurementId: "G-09SQL30MS8"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = (getApps() && getApps().length) ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // UI refs
     const avatarEl = document.getElementById('avatar');
     const userNameEl = document.getElementById('userName');
     const userEmailEl = document.getElementById('userEmail');
@@ -173,7 +148,6 @@
     const panelFavs = document.getElementById('panelFavs');
     const signedOutBox = document.getElementById('signedOutBox');
 
-    // profile fields
     const displayNameInput = document.getElementById('displayName');
     const phoneInput = document.getElementById('phone');
     const shippingInput = document.getElementById('shipping');
@@ -181,17 +155,14 @@
     const btnSaveProfile = document.getElementById('btnSaveProfile');
     const profileMsg = document.getElementById('profileMsg');
 
-    // lists
     const ordersList = document.getElementById('ordersList');
     const ordersEmpty = document.getElementById('ordersEmpty');
     const favsList = document.getElementById('favsList');
     const favsEmpty = document.getElementById('favsEmpty');
 
-    // providers
     const googleProvider = new GoogleAuthProvider();
     const githubProvider = new GithubAuthProvider();
 
-    // TAB SWITCH
     tabs.forEach(t => t.addEventListener('click', () => {
       tabs.forEach(x => x.classList.remove('active'));
       t.classList.add('active');
@@ -201,60 +172,28 @@
       panelFavs.style.display = target === 'favs' ? '' : 'none';
     }));
 
-    // sign in flow: prefer opening your site modal if present
     btnSignIn.addEventListener('click', async () => {
-      // if the site exposes a modal (from index), use it
-      if (window.openAuthOverlay && typeof window.openAuthOverlay === 'function') {
-        try { window.openAuthOverlay(); return; } catch(e){ /* fallback below */ }
-      }
-
-      // fallback: simple prompt-based flow (keeps your original behaviour)
       const choice = window.prompt('Iniciar sesión:\n1 = Google\n2 = GitHub\n3 = Email\n4 = Invitado\nIntroduce número:','1');
       if (!choice) return;
       try {
-        if (choice === '1') {
-          await signInWithPopup(auth, googleProvider);
-        } else if (choice === '2') {
-          await signInWithPopup(auth, githubProvider);
-        } else if (choice === '3') {
-          const email = prompt('Email:');
-          const pass = prompt('Contraseña:');
+        if (choice === '1') await signInWithPopup(auth, googleProvider);
+        else if (choice === '2') await signInWithPopup(auth, githubProvider);
+        else if (choice === '3') {
+          const email = prompt('Email:'); const pass = prompt('Contraseña:');
           if (!email || !pass) return alert('Email y contraseña requeridos');
-          try {
-            await signInWithEmailAndPassword(auth, email, pass);
-          } catch(sigErr) {
+          try { await signInWithEmailAndPassword(auth, email, pass); } catch(sigErr) {
             const ok = confirm('No existe cuenta o credenciales incorrectas. ¿Quieres registrar una nueva cuenta con estos datos?');
-            if (ok) {
-              await createUserWithEmailAndPassword(auth, email, pass);
-            }
+            if (ok) await createUserWithEmailAndPassword(auth, email, pass);
           }
-        } else if (choice === '4') {
-          await signInAnonymously(auth);
-        } else {
-          alert('Opción no válida');
-        }
-      } catch(err) {
-        console.error('Sign-in error', err);
-        alert('Error al iniciar sesión: ' + (err && err.message ? err.message : String(err)));
-      }
+        } else if (choice === '4') await signInAnonymously(auth);
+        else alert('Opción no válida');
+      } catch(err) { console.error('Sign-in error', err); alert('Error al iniciar sesión: ' + (err && err.message ? err.message : String(err))); }
     });
 
-    // sign out (use appAuth if available)
-    btnSignOut.addEventListener('click', async () => {
-      try {
-        if (window.appAuth && typeof window.appAuth.signOut === 'function') {
-          await window.appAuth.signOut();
-          return;
-        }
-        await signOut(auth);
-        location.href = 'index.html';
-      } catch(err) { console.warn(err); alert('Error cerrando sesión'); }
-    });
+    btnSignOut.addEventListener('click', async () => { try { await signOut(auth); location.href = 'index.html'; } catch(err) { console.warn(err); } });
 
-    // Auth state
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // populate header
         userNameEl.textContent = user.displayName || 'Usuario';
         userEmailEl.textContent = user.email || (user.isAnonymous ? 'Invitado' : 'Sin email');
         if (user.photoURL) {
@@ -266,41 +205,27 @@
         btnSignOut.style.display = '';
         btnSignIn.style.display = 'none';
         signedOutBox.style.display = 'none';
-        // load user data
         await loadProfile(user.uid);
         await loadOrders(user.uid);
         await loadFavs(user.uid);
       } else {
-        // not signed in
         userNameEl.textContent = 'Invitado';
         userEmailEl.textContent = 'No autenticado';
         avatarEl.textContent = 'LX';
         btnSignOut.style.display = 'none';
         btnSignIn.style.display = '';
         signedOutBox.style.display = '';
-        // clear UI
-        displayNameInput.value = '';
-        phoneInput.value = '';
-        shippingInput.value = '';
-        paymentInput.value = '';
-        ordersList.innerHTML = '';
-        favsList.innerHTML = '';
-        ordersEmpty.style.display = 'none';
-        favsEmpty.style.display = 'none';
+        displayNameInput.value = ''; phoneInput.value = ''; shippingInput.value = ''; paymentInput.value = '';
+        ordersList.innerHTML = ''; favsList.innerHTML = ''; ordersEmpty.style.display = 'none'; favsEmpty.style.display = 'none';
       }
     });
 
-    // load user profile from users/{uid}
     async function loadProfile(uid) {
       try {
         const ref = doc(db, 'users', uid);
         const snap = await getDoc(ref);
         if (!snap.exists()) {
           await setDoc(ref, { createdAt: new Date().toISOString() }, { merge: true });
-          displayNameInput.value = '';
-          phoneInput.value = '';
-          shippingInput.value = '';
-          paymentInput.value = '';
         } else {
           const data = snap.data();
           displayNameInput.value = data.name || '';
@@ -308,84 +233,28 @@
           shippingInput.value = data.shipping || '';
           paymentInput.value = data.payment || '';
         }
-      } catch(err) {
-        console.warn('loadProfile err', err);
-      }
+      } catch(err) { console.warn('loadProfile err', err); }
     }
 
-    // Save profile (button)
     btnSaveProfile.addEventListener('click', async () => {
       const user = auth.currentUser;
       if (!user) return alert('Autentícate primero');
-      btnSaveProfile.disabled = true;
-      profileMsg.style.display = 'none';
+      btnSaveProfile.disabled = true; profileMsg.style.display = 'none';
       try {
         const ref = doc(db, 'users', user.uid);
-        const payload = {
-          name: displayNameInput.value.trim() || null,
-          phone: phoneInput.value.trim() || null,
-          shipping: shippingInput.value.trim() || null,
-          payment: paymentInput.value || null,
-          updatedAt: new Date().toISOString()
-        };
+        const payload = { name: displayNameInput.value.trim() || null, phone: phoneInput.value.trim() || null, shipping: shippingInput.value.trim() || null, payment: paymentInput.value || null, updatedAt: new Date().toISOString() };
         await setDoc(ref, payload, { merge: true });
-        profileMsg.textContent = 'Perfil actualizado';
-        profileMsg.style.display = '';
-        setTimeout(()=> profileMsg.style.display = 'none', 4000);
-      } catch(err) {
-        console.error('save profile', err);
-        alert('Error guardando perfil');
-      } finally {
-        btnSaveProfile.disabled = false;
-      }
+        profileMsg.textContent = 'Perfil actualizado'; profileMsg.style.display = ''; setTimeout(()=> profileMsg.style.display = 'none', 4000);
+      } catch(err) { console.error('save profile', err); alert('Error guardando perfil'); } finally { btnSaveProfile.disabled = false; }
     });
 
-    // Listen to external "profile:save" events (emitted by index.js or other pages)
-    window.addEventListener('profile:save', async (ev) => {
-      const user = auth.currentUser;
-      if (!user) {
-        console.warn('profile:save received but no authenticated user');
-        return;
-      }
-      const detail = ev && ev.detail ? ev.detail : {};
-      // map fields if provided
-      const payload = {
-        firstName: detail.firstName || null,
-        lastName: detail.lastName || null,
-        dob: detail.dob || null,
-        updatedAt: new Date().toISOString()
-      };
-      try {
-        const ref = doc(db, 'users', user.uid);
-        await setDoc(ref, payload, { merge: true });
-        // Optionally update UI (displayName)
-        if (detail.firstName || detail.lastName) {
-          const fullname = ((detail.firstName || '') + ' ' + (detail.lastName || '')).trim();
-          if (fullname) {
-            // Reflect in the "displayName" field and in Firestore 'name' as well
-            displayNameInput.value = fullname;
-            await setDoc(ref, { name: fullname }, { merge: true });
-          }
-        }
-        profileMsg.textContent = 'Perfil guardado (desde el evento)';
-        profileMsg.style.display = '';
-        setTimeout(()=> profileMsg.style.display = 'none', 3500);
-      } catch(err) {
-        console.error('profile:save handler error', err);
-      }
-    });
-
-    // ORDERS: from users/{uid}/orders (if any)
     async function loadOrders(uid) {
       ordersList.innerHTML = '';
       try {
         const col = collection(db, 'users', uid, 'orders');
         const q = query(col, orderBy('createdAt','desc'));
         const snap = await getDocs(q);
-        if (snap.empty) {
-          ordersEmpty.style.display = '';
-          return;
-        }
+        if (snap.empty) { ordersEmpty.style.display = ''; return; }
         ordersEmpty.style.display = 'none';
         snap.forEach(docSnap => {
           const o = docSnap.data();
@@ -402,22 +271,15 @@
           `;
           ordersList.appendChild(el);
         });
-      } catch(err) {
-        console.warn('loadOrders err', err);
-        ordersEmpty.style.display = '';
-      }
+      } catch(err) { console.warn('loadOrders err', err); ordersEmpty.style.display = ''; }
     }
 
-    // FAVORITES: users/{uid}/favorites collection
     async function loadFavs(uid) {
       favsList.innerHTML = '';
       try {
         const col = collection(db, 'users', uid, 'favorites');
         const snap = await getDocs(col);
-        if (snap.empty) {
-          favsEmpty.style.display = '';
-          return;
-        }
+        if (snap.empty) { favsEmpty.style.display = ''; return; }
         favsEmpty.style.display = 'none';
         snap.forEach(docSnap => {
           const f = docSnap.data();
@@ -436,15 +298,11 @@
           favsList.appendChild(el);
         });
 
-        // attach listeners
         Array.from(document.querySelectorAll('.removeFav')).forEach(b => {
           b.onclick = async (e) => {
             const id = b.getAttribute('data-id');
             if (!confirm('Eliminar favorito?')) return;
-            try {
-              await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'favorites', id));
-              await loadFavs(auth.currentUser.uid);
-            } catch(err) { console.warn(err); alert('No se pudo eliminar'); }
+            try { await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'favorites', id)); await loadFavs(auth.currentUser.uid); } catch(err) { console.warn(err); alert('No se pudo eliminar'); }
           };
         });
         Array.from(document.querySelectorAll('.viewProd')).forEach(b => {
@@ -454,10 +312,7 @@
           };
         });
 
-      } catch(err) {
-        console.warn('loadFavs err', err);
-        favsEmpty.style.display = '';
-      }
+      } catch(err) { console.warn('loadFavs err', err); favsEmpty.style.display = ''; }
     }
 
   </script>
