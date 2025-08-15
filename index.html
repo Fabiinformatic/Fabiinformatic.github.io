@@ -7,29 +7,93 @@
   <link rel="stylesheet" href="style.css" />
   <!-- Overrides locales para header y comportamiento consistente -->
   <style>
-    /* Header pegado al borde y contenedor centrado */
-    .nav { top:0; left:0; right:0; position:fixed; padding:12px 18px; z-index:120; }
-    .nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-
-    /* nav-right: vertical por defecto (evita que el header se vuelva gigantesco).
-       En pantallas >= 900px pasa a fila. */
-    .nav-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-    @media (min-width: 900px) {
-      .nav-right { flex-direction:row; align-items:center; }
-      /* mantener navLinks en fila en escritorio */
-      #navLinks { display:flex; gap:18px; align-items:center; }
+    /* header pegado al borde, layout 3 columnas: logo | nav centrado | controles a la derecha (vertical) */
+    .nav {
+      top: 0;
+      left: 0;
+      right: 0;
+      position: fixed;
+      padding: 10px 18px;
+      z-index: 120;
+      background: transparent;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
     }
 
-    /* Asegura que main empieza debajo del header (en caso de que el script no se ejecute) */
-    main { padding-top: 92px; }
+    /* logo a la izquierda */
+    .nav-left { justify-self: start; display:flex; align-items:center; gap:8px; }
+
+    /* nav links centrados */
+    #navLinks { justify-self: center; display:flex; gap:18px; align-items:center; }
+
+    /* controles a la derecha - SIEMPRE vertical (apilados) */
+    .nav-right {
+      justify-self: end;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:8px;
+    }
+
+    /* pequeño ajuste en móvil para mantener enlaces legibles */
+    @media (max-width:640px) {
+      #navLinks { gap: 10px; font-size:0.95rem; }
+      .nav-inner { padding: 6px; grid-template-columns: auto 1fr auto; }
+    }
+
+    /* asegurar que main empieza debajo del header (fallback si JS no se ejecuta) */
+    main { padding-top: 84px; }
+
+    /* Cart panel styles (basics - controlado por script.js si lo tienes actualizado) */
+    .cart-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 210; display: none; }
+    .cart-backdrop.open { display: block; }
+    .cart-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: 360px;
+      transform: translateX(112%);
+      transition: transform .28s ease, box-shadow .28s ease;
+      z-index: 220;
+      display: flex;
+      pointer-events: none;
+    }
+    .cart-panel.open { transform: translateX(0); pointer-events: auto; box-shadow: -24px 0 48px rgba(2,6,12,0.6); }
+    .cart-panel .cart-panel-inner {
+      width: 100%;
+      display:flex;
+      flex-direction:column;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      border-left: 1px solid rgba(255,255,255,0.04);
+      padding: 0;
+      box-sizing: border-box;
+      height: 100%;
+    }
+    .cart-header { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .cart-list { padding:12px; overflow:auto; flex:1; }
+    .cart-item { display:flex; gap:12px; margin-bottom:10px; align-items:center; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.02); }
+    .cart-item img { width:64px; height:64px; object-fit:cover; border-radius:8px; }
+    .cart-footer { padding:12px; border-top:1px solid rgba(255,255,255,0.04); display:flex; flex-direction:column; gap:10px; }
+    @media (max-width:720px) { .cart-panel { width: 92%; } }
   </style>
 </head>
 <body>
   <!-- NAV -->
   <header class="nav glass" role="banner">
     <div class="nav-inner">
-      <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
+      <!-- LEFT: logo -->
+      <div class="nav-left">
+        <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
+      </div>
 
+      <!-- CENTER: nav links -->
       <nav id="navLinks" role="navigation" aria-label="Principal">
         <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
         <a href="#productos" data-i18n="nav.productos">Productos</a>
@@ -37,9 +101,10 @@
         <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
       </nav>
 
+      <!-- RIGHT: vertical controls -->
       <div class="nav-right" aria-hidden="false">
-        <!-- carrito -->
-        <div class="cart-wrapper">
+        <!-- carrito (mini) -->
+        <div class="cart-wrapper" style="position:relative;">
           <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
 
           <div id="miniCart" class="mini-cart glass" aria-hidden="true">
@@ -154,9 +219,68 @@
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
+  <!-- Cart panel (estático) + backdrop -->
+  <div id="cartBackdrop" class="cart-backdrop" aria-hidden="true"></div>
+  <aside id="cartPanel" class="cart-panel" aria-hidden="true">
+    <div class="cart-panel-inner glass" role="dialog" aria-label="Carrito">
+      <div class="cart-header">
+        <strong data-i18n="cart.title">Carrito</strong>
+        <button id="cartPanelClose" class="text-btn" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div id="cartPanelItems" class="cart-list">
+        <!-- items dinámicos -->
+      </div>
+
+      <div class="cart-footer">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong>Total</strong>
+          <span id="cartPanelTotal">0€</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button id="cartPanelCheckout" class="btn primary" data-i18n="cart.checkout">Pagar</button>
+          <button id="cartPanelClear" class="btn ghost" data-i18n="cart.clear">Vaciar</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <noscript style="display:block;background:#fffb; padding:10px; text-align:center;">
     JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
   </noscript>
+
+  <!-- pequeño script fallback: ajusta padding-top según header y abre/cierra panel si se pulsa "Ver carrito" -->
+  <script>
+    (function(){
+      function adjustPadding(){
+        try {
+          const header = document.querySelector('.nav');
+          if(!header) return;
+          const pad = Math.round(header.getBoundingClientRect().height + 12);
+          document.body.style.paddingTop = pad + 'px';
+        } catch(e){}
+      }
+      adjustPadding();
+      window.addEventListener('resize', adjustPadding);
+
+      // Fallback very small panel toggle (no conflict if tienes script.js completo)
+      const viewBtn = document.getElementById('viewCartBtn');
+      const cartPanel = document.getElementById('cartPanel');
+      const cartBackdrop = document.getElementById('cartBackdrop');
+      const cartPanelClose = document.getElementById('cartPanelClose');
+
+      function setPanel(open){
+        if(!cartPanel || !cartBackdrop) return;
+        cartPanel.classList.toggle('open', !!open);
+        cartBackdrop.classList.toggle('open', !!open);
+        cartPanel.setAttribute('aria-hidden', String(!open));
+        cartBackdrop.setAttribute('aria-hidden', String(!open));
+      }
+      if (viewBtn) viewBtn.addEventListener('click', ()=> setPanel(true));
+      if (cartBackdrop) cartBackdrop.addEventListener('click', ()=> setPanel(false));
+      if (cartPanelClose) cartPanelClose.addEventListener('click', ()=> setPanel(false));
+    })();
+  </script>
 
   <!-- tu script principal (defer) -->
   <script src="script.js" defer></script>
