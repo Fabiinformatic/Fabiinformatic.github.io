@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mi cuenta — LIXBY</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Small self-contained styles for account page */
+    .wrap { max-width:1100px; margin:36px auto; padding:20px; }
+    header.account-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .userbox { display:flex; gap:12px; align-items:center; }
+    .avatar { width:56px; height:56px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--muted); }
+    .user-meta { display:flex; flex-direction:column; gap:4px; }
+    .tabs { display:flex; gap:8px; margin:18px 0; }
+    .tab { padding:8px 14px; border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.03); background:transparent; }
+    .tab.active { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 65%, white 35%)); color:#00121a; font-weight:700; }
+    .panel { padding:18px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.03); margin-bottom:12px; }
+    .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+    .field input, .field textarea, .field select { padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.015); color:var(--text); }
+    .row { display:flex; gap:12px; align-items:center; }
+    .orders-list, .fav-list { display:flex; flex-direction:column; gap:10px; }
+    .order, .fav { display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); background: rgba(255,255,255,0.01); }
+    .order .title { font-weight:700; }
+    .small-muted { color:var(--muted); font-size:0.95rem; }
+    .actions { display:flex; gap:8px; }
+    .btn { padding:8px 12px; border-radius:10px; cursor:pointer; border:0; font-weight:700; }
+    .btn.primary { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 65%, white 35%)); color:#00121a; }
+    .btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--text); }
+    .center { text-align:center; color:var(--muted); padding:18px; }
+    .signedout { display:flex; gap:8px; align-items:center; justify-content:center; padding:18px; }
+    @media (max-width:900px) {
+      .row { flex-direction:column; align-items:stretch; }
+      header.account-head { flex-direction:column; align-items:flex-start; gap:8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="account-head">
+      <div class="userbox">
+        <div id="avatar" class="avatar">LX</div>
+        <div class="user-meta">
+          <div id="userName">Invitado</div>
+          <div id="userEmail" class="small-muted">No autenticado</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnSignOut" class="btn ghost" style="display:none">Cerrar sesión</button>
+        <button id="btnSignIn" class="btn primary">Iniciar sesión</button>
+        <a href="index.html" class="btn ghost">Volver a la tienda</a>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Secciones de cuenta">
+      <button class="tab active" data-panel="info">Información de la cuenta</button>
+      <button class="tab" data-panel="orders">Pedidos</button>
+      <button class="tab" data-panel="favs">Productos favoritos</button>
+    </nav>
+
+    <section id="panelInfo" class="panel">
+      <h3>Información de la cuenta</h3>
+      <div id="infoContent">
+        <div class="field">
+          <label>Nombre para mostrar</label>
+          <input id="displayName" placeholder="Nombre visible">
+        </div>
+
+        <div class="field">
+          <label>Teléfono</label>
+          <input id="phone" placeholder="Teléfono de contacto">
+        </div>
+
+        <div class="field">
+          <label>Dirección de envío</label>
+          <textarea id="shipping" rows="3" placeholder="Calle, número, ciudad, CP"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Método de pago (nota: no guardamos tarjetas reales en este demo)</label>
+          <select id="payment">
+            <option value="">Seleccionar...</option>
+            <option value="card">Tarjeta</option>
+            <option value="paypal">PayPal</option>
+            <option value="transfer">Transferencia</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="btnSaveProfile" class="btn primary">Guardar cambios</button>
+        </div>
+
+        <div id="profileMsg" class="small-muted" style="margin-top:10px; display:none"></div>
+      </div>
+    </section>
+
+    <section id="panelOrders" class="panel" style="display:none">
+      <h3>Tus pedidos</h3>
+      <div id="ordersContent">
+        <div id="ordersList" class="orders-list"></div>
+        <div id="ordersEmpty" class="center" style="display:none">No tienes pedidos registrados.</div>
+      </div>
+    </section>
+
+    <section id="panelFavs" class="panel" style="display:none">
+      <h3>Productos favoritos</h3>
+      <div id="favsContent">
+        <div id="favsList" class="fav-list"></div>
+        <div id="favsEmpty" class="center" style="display:none">No hay productos favoritos.</div>
+      </div>
+    </section>
+
+    <div id="signedOutBox" class="signedout" style="display:none">
+      <div class="small-muted">No estás autenticado. Inicia sesión para ver tu cuenta y pedidos.</div>
+    </div>
+  </div>
+
+  <!-- Firebase modular SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithPopup,
+      GoogleAuthProvider,
+      GithubAuthProvider,
+      signInAnonymously,
+      signOut,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      collection,
+      getDocs,
+      query,
+      orderBy,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+    // CONFIG: usa el mismo firebaseConfig que tengas en index.html
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
+      authDomain: "lixby-e0344.firebaseapp.com",
+      projectId: "lixby-e0344",
+      storageBucket: "lixby-e0344.firebasestorage.app",
+      messagingSenderId: "671722866179",
+      appId: "1:671722866179:web:65868eca5146942b507036",
+      measurementId: "G-09SQL30MS8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // UI refs
+    const avatarEl = document.getElementById('avatar');
+    const userNameEl = document.getElementById('userName');
+    const userEmailEl = document.getElementById('userEmail');
+    const btnSignIn = document.getElementById('btnSignIn');
+    const btnSignOut = document.getElementById('btnSignOut');
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const panelInfo = document.getElementById('panelInfo');
+    const panelOrders = document.getElementById('panelOrders');
+    const panelFavs = document.getElementById('panelFavs');
+    const signedOutBox = document.getElementById('signedOutBox');
+
+    // profile fields
+    const displayNameInput = document.getElementById('displayName');
+    const phoneInput = document.getElementById('phone');
+    const shippingInput = document.getElementById('shipping');
+    const paymentInput = document.getElementById('payment');
+    const btnSaveProfile = document.getElementById('btnSaveProfile');
+    const profileMsg = document.getElementById('profileMsg');
+
+    // lists
+    const ordersList = document.getElementById('ordersList');
+    const ordersEmpty = document.getElementById('ordersEmpty');
+    const favsList = document.getElementById('favsList');
+    const favsEmpty = document.getElementById('favsEmpty');
+
+    // providers
+    const googleProvider = new GoogleAuthProvider();
+    const githubProvider = new GithubAuthProvider();
+
+    // TAB SWITCH
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      const target = t.getAttribute('data-panel');
+      panelInfo.style.display = target === 'info' ? '' : 'none';
+      panelOrders.style.display = target === 'orders' ? '' : 'none';
+      panelFavs.style.display = target === 'favs' ? '' : 'none';
+    }));
+
+    // sign in flow: show simple popup choices
+    btnSignIn.addEventListener('click', async () => {
+      // small modal-less simple choice via prompt (minimal)
+      const choice = window.prompt('Iniciar sesión:\n1 = Google\n2 = GitHub\n3 = Email\n4 = Invitado\nIntroduce número:','1');
+      if (!choice) return;
+      try {
+        if (choice === '1') {
+          await signInWithPopup(auth, googleProvider);
+        } else if (choice === '2') {
+          await signInWithPopup(auth, githubProvider);
+        } else if (choice === '3') {
+          // email prompt
+          const email = prompt('Email:');
+          const pass = prompt('Contraseña:');
+          if (!email || !pass) return alert('Email y contraseña requeridos');
+          // try to sign in, if fails propose registro
+          try {
+            await signInWithEmailAndPassword(auth, email, pass);
+          } catch(sigErr) {
+            const ok = confirm('No existe cuenta o credenciales incorrectas. ¿Quieres registrar una nueva cuenta con estos datos?');
+            if (ok) {
+              await createUserWithEmailAndPassword(auth, email, pass);
+            }
+          }
+        } else if (choice === '4') {
+          await signInAnonymously(auth);
+        } else {
+          alert('Opción no válida');
+        }
+      } catch(err) {
+        console.error('Sign-in error', err);
+        alert('Error al iniciar sesión: ' + (err && err.message ? err.message : String(err)));
+      }
+    });
+
+    btnSignOut.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        location.href = 'index.html';
+      } catch(err) { console.warn(err); }
+    });
+
+    // Auth state
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // populate header
+        userNameEl.textContent = user.displayName || 'Usuario';
+        userEmailEl.textContent = user.email || (user.isAnonymous ? 'Invitado' : 'Sin email');
+        if (user.photoURL) {
+          avatarEl.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;object-fit:cover">`;
+        } else {
+          const initials = (user.displayName || user.email || 'LX').split(' ')[0].slice(0,2).toUpperCase();
+          avatarEl.textContent = initials;
+        }
+        btnSignOut.style.display = '';
+        btnSignIn.style.display = 'none';
+        signedOutBox.style.display = 'none';
+        // load user data
+        await loadProfile(user.uid);
+        await loadOrders(user.uid);
+        await loadFavs(user.uid);
+      } else {
+        // not signed in
+        userNameEl.textContent = 'Invitado';
+        userEmailEl.textContent = 'No autenticado';
+        avatarEl.textContent = 'LX';
+        btnSignOut.style.display = 'none';
+        btnSignIn.style.display = '';
+        signedOutBox.style.display = '';
+        // clear UI
+        displayNameInput.value = '';
+        phoneInput.value = '';
+        shippingInput.value = '';
+        paymentInput.value = '';
+        ordersList.innerHTML = '';
+        favsList.innerHTML = '';
+        ordersEmpty.style.display = 'none';
+        favsEmpty.style.display = 'none';
+      }
+    });
+
+    // load user profile from users/{uid}
+    async function loadProfile(uid) {
+      try {
+        const ref = doc(db, 'users', uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          // set minimal doc
+          await setDoc(ref, { createdAt: new Date().toISOString() }, { merge: true });
+        } else {
+          const data = snap.data();
+          displayNameInput.value = data.name || '';
+          phoneInput.value = data.phone || '';
+          shippingInput.value = data.shipping || '';
+          paymentInput.value = data.payment || '';
+        }
+      } catch(err) {
+        console.warn('loadProfile err', err);
+      }
+    }
+
+    btnSaveProfile.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) return alert('Autentícate primero');
+      btnSaveProfile.disabled = true;
+      profileMsg.style.display = 'none';
+      try {
+        const ref = doc(db, 'users', user.uid);
+        const payload = {
+          name: displayNameInput.value.trim() || null,
+          phone: phoneInput.value.trim() || null,
+          shipping: shippingInput.value.trim() || null,
+          payment: paymentInput.value || null,
+          updatedAt: new Date().toISOString()
+        };
+        await setDoc(ref, payload, { merge: true });
+        profileMsg.textContent = 'Perfil actualizado';
+        profileMsg.style.display = '';
+        setTimeout(()=> profileMsg.style.display = 'none', 4000);
+      } catch(err) {
+        console.error('save profile', err);
+        alert('Error guardando perfil');
+      } finally {
+        btnSaveProfile.disabled = false;
+      }
+    });
+
+    // ORDERS: from users/{uid}/orders (if any)
+    async function loadOrders(uid) {
+      ordersList.innerHTML = '';
+      try {
+        const col = collection(db, 'users', uid, 'orders');
+        const q = query(col, orderBy('createdAt','desc'));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          ordersEmpty.style.display = '';
+          return;
+        }
+        ordersEmpty.style.display = 'none';
+        snap.forEach(docSnap => {
+          const o = docSnap.data();
+          const el = document.createElement('div');
+          el.className = 'order';
+          el.innerHTML = `
+            <div style="flex:1">
+              <div class="title">${o.title || ('Pedido ' + docSnap.id)}</div>
+              <div class="small-muted">Fecha: ${o.createdAt ? new Date(o.createdAt).toLocaleString() : '—'}</div>
+              <div class="small-muted">Estado: ${o.status || 'Pendiente'}</div>
+              <div style="margin-top:8px">${o.items ? o.items.map(it => `<div>${it.qty||1} × ${it.name}</div>`).join('') : ''}</div>
+            </div>
+            <div style="min-width:140px;text-align:right;font-weight:700">${o.total ? (Number(o.total).toFixed(2) + ' €') : ''}</div>
+          `;
+          ordersList.appendChild(el);
+        });
+      } catch(err) {
+        console.warn('loadOrders err', err);
+        ordersEmpty.style.display = '';
+      }
+    }
+
+    // FAVORITES: users/{uid}/favorites collection
+    async function loadFavs(uid) {
+      favsList.innerHTML = '';
+      try {
+        const col = collection(db, 'users', uid, 'favorites');
+        const snap = await getDocs(col);
+        if (snap.empty) {
+          favsEmpty.style.display = '';
+          return;
+        }
+        favsEmpty.style.display = 'none';
+        snap.forEach(docSnap => {
+          const f = docSnap.data();
+          const el = document.createElement('div');
+          el.className = 'fav';
+          el.innerHTML = `
+            <div style="flex:1">
+              <div class="title">${f.name || docSnap.id}</div>
+              <div class="small-muted">${f.price || ''}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+              <button class="btn ghost removeFav" data-id="${docSnap.id}">Eliminar</button>
+              <button class="btn primary viewProd" data-id="${f.id || docSnap.id}">Ver</button>
+            </div>
+          `;
+          favsList.appendChild(el);
+        });
+
+        // attach listeners
+        Array.from(document.querySelectorAll('.removeFav')).forEach(b => {
+          b.onclick = async (e) => {
+            const id = b.getAttribute('data-id');
+            if (!confirm('Eliminar favorito?')) return;
+            try {
+              await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'favorites', id));
+              await loadFavs(auth.currentUser.uid);
+            } catch(err) { console.warn(err); alert('No se pudo eliminar'); }
+          };
+        });
+        Array.from(document.querySelectorAll('.viewProd')).forEach(b => {
+          b.onclick = (e) => {
+            const pid = b.getAttribute('data-id');
+            window.location.href = 'producto.html?id=' + encodeURIComponent(pid);
+          };
+        });
+
+      } catch(err) {
+        console.warn('loadFavs err', err);
+        favsEmpty.style.display = '';
+      }
+    }
+
+    // If user bookmarks the page and is not logged in, let them sign in
+    // Also, helpful: try to prefill profile fields if available
+    // (handled by loadProfile on auth state change)
+
+  </script>
+</body>
+</html>
