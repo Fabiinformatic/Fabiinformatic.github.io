@@ -13,6 +13,9 @@
   --glass-strong: rgba(255,255,255,0.12);
   --stroke: rgba(255,255,255,0.12);
   --shadow-soft: 0 8px 30px rgba(3,6,15,0.6);
+
+  /* fallback header height (JS recalcula al cargar y al redimensionar) */
+  --header-height: 72px;
 }
 
 :root.light {
@@ -38,6 +41,9 @@ body{
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
   line-height:1.45;
+
+  /* Fallback: si el script no corre, deja espacio para el header */
+  padding-top: var(--header-height);
 }
 
 /* Links & text */
@@ -55,27 +61,63 @@ p { color: var(--muted); margin:0; }
   box-shadow: var(--shadow-soft);
 }
 
-/* Header / Nav */
+/* ---------------------------
+   Header / Nav (nuevo layout)
+   --------------------------- */
+/* barra fija a lo ancho de la pantalla */
 .nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  padding: 10px 16px;
+  /* apariencia */
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  /* por defecto usa el radius/glass heredado si aplica */
+}
+
+/* contenedor centrado con 3 columnas: brand / nav / controls */
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:16px;
-  padding:14px 20px;
-  position:fixed;
-  top:14px;
-  left:16px;
-  right:16px;
-  z-index:120;
+  min-height: var(--header-height);
 }
+
+/* brand a la izquierda (no centrado) */
 .brand {
   font-weight:700;
   letter-spacing:0.06em;
   font-size:1.05rem;
   cursor:pointer;
+  flex: 0 0 auto;
 }
-#navLinks { display:flex; gap:18px; align-items:center; }
+
+/* nav links centrados: ocupan espacio flexible y centran su contenido */
+#navLinks {
+  display:flex;
+  gap:18px;
+  align-items:center;
+  justify-content:center;
+  flex: 1 1 auto;
+  /* evitar que los enlaces se peguen al logo o controles */
+  padding: 8px 12px;
+}
 #navLinks a { font-weight:500; opacity:0.95; }
+
+/* area de controles a la derecha: carrito, idioma, tema */
+.nav-right {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+  flex: 0 0 auto;
+}
 
 /* Buttons */
 .btn { cursor:pointer; border:none; padding:8px 14px; border-radius:10px; font-weight:600; }
@@ -131,15 +173,20 @@ p { color: var(--muted); margin:0; }
 .lang-menu[aria-hidden="false"] { display:flex; }
 .lang-item { background:transparent; border:none; padding:8px; text-align:left; cursor:pointer; border-radius:8px; color:var(--text); }
 
+/* ---------------------------
+   Resto del CSS (sin cambios significativos)
+   --------------------------- */
+
 /* HERO full-bleed */
 .hero {
-  height:100vh;
+  /* restamos el header si el navegador no ejecutó el script (JS ajusta body padding) */
+  height: calc(100vh - var(--header-height));
   display:flex;
   align-items:center;
   justify-content:center;
   text-align:center;
   padding:0 20px;
-  margin-top:18px; /* leave space for fixed nav */
+  margin-top:0;
 }
 .hero-content {
   max-width:900px;
@@ -234,7 +281,7 @@ p { color: var(--muted); margin:0; }
 .reveal { opacity:0; transform:translateY(18px); transition: opacity .6s ease, transform .6s ease; }
 .reveal.visible { opacity:1; transform:translateY(0); }
 
-/* Product detail page */
+/* Product detail page (mantener) */
 .product-detail {
   display:flex;
   gap:36px;
@@ -321,12 +368,17 @@ p { color: var(--muted); margin:0; }
 /* Footer small */
 .footer { text-align:center; padding:30px 16px; }
 
-/* Responsive */
+/* Responsive adjustments */
 @media (max-width:900px){
   .product-detail { flex-direction:column; align-items:center; margin:90px 16px; }
   .image-wrap { width:100%; height:auto; aspect-ratio:1/1; padding:18px; }
   .product-image { width:80%; height:auto; }
-  .nav { padding:10px 12px; left:10px; right:10px; top:10px; }
+  .nav { padding:10px 12px; }
+  .nav-inner { gap:10px; }
+  /* En pantallas reducidas la navegación puede quedar a la izquierda para ahorrar espacio */
+  #navLinks { justify-content:flex-start; gap:12px; padding:0; }
+  /* coloca controles en fila (para que no ocupen tanto alto) */
+  .nav-right { flex-direction:row; gap:8px; align-items:center; }
   .hero-content { padding:24px; }
   /* adapta mini-cart/lang menu colocación en móvil */
   .mini-cart, .lang-menu { right:8px; top:48px; width:92%; max-width:320px; }
