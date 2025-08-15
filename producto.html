@@ -169,21 +169,29 @@
     }
     function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY))||[]; } catch(e){ return []; } }
     function saveCart(c){ try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
-    function parsePriceToNumber(priceStr){ if(!priceStr) return 0; const num=priceStr.replace(/[^\d.,]/g,'').replace(',','.'); return parseFloat(num)||0; }
+    function parsePriceToNumber(priceStr){ if(!priceStr) return 0; const num=String(priceStr).replace(/[^\d.,]/g,'').replace(',','.'); return parseFloat(num)||0; }
     function formatPriceNum(num){ return (Math.round(num*100)/100) + '€'; }
 
     // set year
     const yearEl = document.getElementById('year'); if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Datos de productos (añadí id en cada objeto)
+    // Datos de productos (añadí id en cada objeto y nuevos precios/imagenes)
     const products = {
+      "lixby-one-air": {
+        id: 'lixby-one-air',
+        name: "Lixby One Air",
+        description: "Versión ligera y asequible, ideal para un uso diario eficiente.",
+        mini: "Pantalla OLED 6.1\" • Rendimiento equilibrado • Compacto y ligero",
+        price: "249€",
+        image: "https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg"
+      },
       "lixby-one": {
         id: 'lixby-one',
         name: "Lixby One",
         description: "Ultraligero, potente y diseñado para la vida moderna. Perfecto para productividad y movilidad.",
         mini: "Pantalla OLED 6.7\", 120 Hz • SoC 5G • Cámara dual 50 MP + 8 MP • Batería 5.000 mAh",
         price: "349€",
-        image: "https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg",
+        image: "https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg",
         bom: [
           ["SoC 5G (Snapdragon 7s Gen 2 / Dimensity 8300) + PMIC", ""],
           ["RAM 8 GB LPDDR5X", ""],
@@ -213,7 +221,7 @@
         name: "Lixby One Pro",
         description: "Rendimiento y audio de alta fidelidad para creadores y audiófilos.",
         mini: "Audio premium • CPU/GPU potentes • Diseño robusto",
-        price: "1099€",
+        price: "899€",
         image: "https://m.media-amazon.com/images/I/61rriyfRKwL.jpg"
       }
     };
@@ -270,7 +278,7 @@
     window.addToCart = function(product){
       const existing = cart.find(p => p.id === product.id);
       if (existing) existing.qty = (existing.qty||1) + 1;
-      else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: parsePriceToNumber(product.price), qty:1, image: product.image });
+      else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: parsePriceToNumber(product.price) || product.priceNum || 0, qty:1, image: product.image });
       saveCart(cart);
       updateMiniCartUI();
       if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
@@ -341,7 +349,7 @@
     if (themeToggle) themeToggle.addEventListener('click', ()=>{ const isLight = document.documentElement.classList.toggle('light'); try{ localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark'); }catch(e){} });
 
     // -------------------------
-    // Render product on this page
+    // Render product on this page (logic to render selected id)
     // -------------------------
     try {
       function proxiedUrl(originalUrl){ const stripped = originalUrl.replace(/^https?:\/\//,''); return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=1200`; }
@@ -389,7 +397,7 @@
       addBtn.className = 'btn-add';
       addBtn.textContent = (translations[currentLang] && translations[currentLang]['btn.add']) || 'Añadir al carrito';
       addBtn.addEventListener('click', () => {
-        const productData = { id: p.id||id, name: p.name, price: p.price, image: p.image };
+        const productData = { id: p.id||id, name: p.name, price: p.price, image: p.image, priceNum: parsePriceToNumber(p.price) };
         if (typeof window.addToCart === 'function') {
           window.addToCart(productData);
         } else {
