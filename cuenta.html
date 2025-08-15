@@ -24,15 +24,19 @@
     .order .title { font-weight:700; }
     .small-muted { color:var(--muted); font-size:0.95rem; }
     .actions { display:flex; gap:8px; }
-    .btn { padding:8px 12px; border-radius:10px; cursor:pointer; border:0; font-weight:700; }
+    .btn { padding:8px 12px; border-radius:10px; cursor:pointer; border:0; font-weight:700; transition: transform .18s cubic-bezier(.2,.9,.3,1), box-shadow .18s ease; }
     .btn.primary { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 65%, white 35%)); color:#00121a; }
     .btn.ghost { background:transparent; border:1px solid rgba(255,255,255,0.03); color:var(--text); }
     .center { text-align:center; color:var(--muted); padding:18px; }
     .signedout { display:flex; gap:8px; align-items:center; justify-content:center; padding:18px; }
+    .info-inline { display:flex; gap:10px; align-items:center; }
     @media (max-width:900px) {
       .row { flex-direction:column; align-items:stretch; }
       header.account-head { flex-direction:column; align-items:flex-start; gap:8px; }
     }
+
+    /* hover animation for buttons (global) */
+    .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 24px rgba(2,6,12,0.12); }
   </style>
 </head>
 <body>
@@ -197,9 +201,14 @@
       panelFavs.style.display = target === 'favs' ? '' : 'none';
     }));
 
-    // sign in flow: show simple popup choices
+    // sign in flow: prefer opening your site modal if present
     btnSignIn.addEventListener('click', async () => {
-      // small modal-less simple choice via prompt (minimal)
+      // if the site exposes a modal (from index), use it
+      if (window.openAuthOverlay && typeof window.openAuthOverlay === 'function') {
+        try { window.openAuthOverlay(); return; } catch(e){ /* fallback below */ }
+      }
+
+      // fallback: simple prompt-based flow (keeps your original behaviour)
       const choice = window.prompt('Iniciar sesión:\n1 = Google\n2 = GitHub\n3 = Email\n4 = Invitado\nIntroduce número:','1');
       if (!choice) return;
       try {
@@ -208,11 +217,9 @@
         } else if (choice === '2') {
           await signInWithPopup(auth, githubProvider);
         } else if (choice === '3') {
-          // email prompt
           const email = prompt('Email:');
           const pass = prompt('Contraseña:');
           if (!email || !pass) return alert('Email y contraseña requeridos');
-          // try to sign in, if fails propose registro
           try {
             await signInWithEmailAndPassword(auth, email, pass);
           } catch(sigErr) {
@@ -232,11 +239,16 @@
       }
     });
 
+    // sign out (use appAuth if available)
     btnSignOut.addEventListener('click', async () => {
       try {
+        if (window.appAuth && typeof window.appAuth.signOut === 'function') {
+          await window.appAuth.signOut();
+          return;
+        }
         await signOut(auth);
         location.href = 'index.html';
-      } catch(err) { console.warn(err); }
+      } catch(err) { console.warn(err); alert('Error cerrando sesión'); }
     });
 
     // Auth state
@@ -284,8 +296,11 @@
         const ref = doc(db, 'users', uid);
         const snap = await getDoc(ref);
         if (!snap.exists()) {
-          // set minimal doc
           await setDoc(ref, { createdAt: new Date().toISOString() }, { merge: true });
+          displayNameInput.value = '';
+          phoneInput.value = '';
+          shippingInput.value = '';
+          paymentInput.value = '';
         } else {
           const data = snap.data();
           displayNameInput.value = data.name || '';
@@ -298,6 +313,7 @@
       }
     }
 
+    // Save profile (button)
     btnSaveProfile.addEventListener('click', async () => {
       const user = auth.currentUser;
       if (!user) return alert('Autentícate primero');
@@ -321,6 +337,41 @@
         alert('Error guardando perfil');
       } finally {
         btnSaveProfile.disabled = false;
+      }
+    });
+
+    // Listen to external "profile:save" events (emitted by index.js or other pages)
+    window.addEventListener('profile:save', async (ev) => {
+      const user = auth.currentUser;
+      if (!user) {
+        console.warn('profile:save received but no authenticated user');
+        return;
+      }
+      const detail = ev && ev.detail ? ev.detail : {};
+      // map fields if provided
+      const payload = {
+        firstName: detail.firstName || null,
+        lastName: detail.lastName || null,
+        dob: detail.dob || null,
+        updatedAt: new Date().toISOString()
+      };
+      try {
+        const ref = doc(db, 'users', user.uid);
+        await setDoc(ref, payload, { merge: true });
+        // Optionally update UI (displayName)
+        if (detail.firstName || detail.lastName) {
+          const fullname = ((detail.firstName || '') + ' ' + (detail.lastName || '')).trim();
+          if (fullname) {
+            // Reflect in the "displayName" field and in Firestore 'name' as well
+            displayNameInput.value = fullname;
+            await setDoc(ref, { name: fullname }, { merge: true });
+          }
+        }
+        profileMsg.textContent = 'Perfil guardado (desde el evento)';
+        profileMsg.style.display = '';
+        setTimeout(()=> profileMsg.style.display = 'none', 3500);
+      } catch(err) {
+        console.error('profile:save handler error', err);
       }
     });
 
@@ -408,10 +459,6 @@
         favsEmpty.style.display = '';
       }
     }
-
-    // If user bookmarks the page and is not logged in, let them sign in
-    // Also, helpful: try to prefill profile fields if available
-    // (handled by loadProfile on auth state change)
 
   </script>
 </body>
