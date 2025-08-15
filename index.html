@@ -5,135 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LIXBY — Tecnología minimalista</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Overrides locales para header y comportamiento consistente -->
+  <!-- small inline fallback styles for header-only overrides (kept minimal) -->
   <style>
-    /* Header compacto, línea recta, minimal */
-    .nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 120;
-      padding: 10px 24px;
-      background: rgba(255,255,255,0.02);
-      backdrop-filter: blur(8px) saturate(120%);
-      -webkit-backdrop-filter: blur(8px) saturate(120%);
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .nav-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      min-height: 64px;
-      padding: 0 6px;
-    }
-
-    /* logo a la izquierda */
-    .nav-left { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
-
-    /* nav links centrados */
-    #navLinks {
-      display:flex;
-      gap:18px;
-      align-items:center;
-      justify-content:center;
-      flex: 1 1 auto;
-      padding: 8px 12px;
-      white-space: nowrap;
-    }
-
-    /* controles a la derecha en UNA FILA */
-    .nav-right {
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:flex-end;
-      flex: 0 0 auto;
-      flex-direction: row !important; /* evita columnas impuestas por inline */
-    }
-
-    /* Mini-cart / lang positioning (no se apilen) */
-    .cart-wrapper { position:relative; }
-    .mini-cart { right:18px; top:56px; width:320px; box-sizing:border-box; z-index:140; }
-    .lang-menu { right:18px; top:56px; box-sizing:border-box; z-index:140; }
-
-    /* asegurar que main empieza debajo del header (fallback si JS no se ejecuta) */
-    main { padding-top: calc(64px + 12px); }
-
-    /* Cart panel styles (basics) */
-    .cart-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 210; display: none; }
-    .cart-backdrop.open { display: block; }
-    .cart-panel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 360px;
-      transform: translateX(112%);
-      transition: transform .28s ease, box-shadow .28s ease;
-      z-index: 220;
-      display: flex;
-      pointer-events: none;
-    }
-    .cart-panel.open { transform: translateX(0); pointer-events: auto; box-shadow: -24px 0 48px rgba(2,6,12,0.6); }
-    .cart-panel .cart-panel-inner {
-      width: 100%;
-      display:flex;
-      flex-direction:column;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
-      border-left: 1px solid rgba(255,255,255,0.04);
-      padding: 0;
-      box-sizing: border-box;
-      height: 100%;
-    }
-    .cart-header { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.04); }
-    .cart-list { padding:12px; overflow:auto; flex:1; }
-    .cart-item { display:flex; gap:12px; margin-bottom:10px; align-items:center; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.02); }
-    .cart-item img { width:64px; height:64px; object-fit:cover; border-radius:8px; }
-    .cart-footer { padding:12px; border-top:1px solid rgba(255,255,255,0.04); display:flex; flex-direction:column; gap:10px; }
-    @media (max-width:720px) { .cart-panel { width: 92%; } }
-
-    /* pequeño estilo para el botón añadir en las cards */
-    .card .actions { display:flex; gap:8px; align-items:center; margin-top:8px; }
-    .btn-add { padding:8px 12px; border-radius:8px; border: none; cursor:pointer; background:linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; font-weight:700; }
-    .btn-view { padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--text); cursor:pointer; }
-
-    /* ===== added contact-specific minimal styles inline as fallback ===== */
-    .contact-min {
-      max-width: 1100px;
-      margin: 28px auto;
-      padding: 30px;
-      display:flex;
-      gap:24px;
-      align-items:center;
-      justify-content:space-between;
-      border-radius:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
-      border:1px solid rgba(255,255,255,0.03);
-      box-sizing:border-box;
-    }
-    .contact-min .left {flex:1}
-    .contact-min h2 { margin:0 0 6px; font-size:1.4rem; }
-    .contact-min p.lead { margin:0; color:var(--muted); font-size:1rem }
-    .contact-min .form { flex:0 0 360px; display:flex; flex-direction:column; gap:10px }
-    .contact-min input, .contact-min textarea {
-      width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04);
-      background: rgba(255,255,255,0.015); color:var(--text); font-size:0.95rem; box-sizing:border-box;
-    }
-    .contact-min .actions { display:flex; gap:10px; justify-content:flex-end; align-items:center; margin-top:4px }
-    .contact-success { display:none; color:var(--accent); font-weight:600; margin-top:8px }
-    @media (max-width:900px){ .contact-min { flex-direction:column; } .contact-min .form{ width:100% } }
-
-    /* small auth-modal tweaks */
-    #authOverlay { display:none; }
-    #authOverlay[aria-hidden="false"] { display:block; }
-    #authModal .btn { min-width:120px; }
+    /* keep header fallback small in head so page doesn't flash without CSS file */
+    :root{ --header-height:72px }
+    body{ padding-top: var(--header-height); }
   </style>
 </head>
 <body>
@@ -195,7 +71,7 @@
           </div>
         </div>
 
-        <!-- Account button (opens modal) -->
+        <!-- Account button (opens modal). Replaced by header avatar when logged in -->
         <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta">Cuenta</button>
 
         <!-- toggle tema -->
@@ -204,28 +80,35 @@
     </div>
   </header>
 
-  <!-- AUTH / WELCOME MODAL - ADDITION (NO BORRAR TODO LO DEMÁS) -->
+  <!-- AUTH / WELCOME MODAL -->
   <div id="authOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:9998;display:none;">
-    <div id="authBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px)"></div>
-    <div id="authModal" class="glass" role="dialog" aria-labelledby="authTitle"
-         style="position:relative;max-width:540px;margin:6vh auto;padding:22px;border-radius:12px;z-index:9999;">
-      <h2 id="authTitle" style="margin:0 0 8px">Bienvenido a LIXBY</h2>
-      <p style="margin:0 0 18px;color:var(--muted)">Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</p>
+    <div id="authBackdrop"></div>
+
+    <div id="authModal" class="glass" role="dialog" aria-labelledby="authTitle" style="position:relative;max-width:540px;margin:6vh auto;z-index:9999;">
+      <h2 id="authTitle">Bienvenido a LIXBY</h2>
+      <p>Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</p>
 
       <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button id="btnGoogle" class="btn ghost" style="flex:1">Iniciar con Google</button>
-        <button id="btnGitHub" class="btn ghost" style="flex:1">Iniciar con GitHub</button>
+        <button id="btnGoogle" class="auth-btn ghost" type="button" aria-label="Iniciar con Google">
+          <img class="icon" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+          <span>Iniciar con Google</span>
+        </button>
+
+        <button id="btnGitHub" class="auth-btn ghost" type="button" aria-label="Iniciar con GitHub">
+          <img class="icon" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width:18px;height:18px;">
+          <span>Iniciar con GitHub</span>
+        </button>
       </div>
 
       <div style="display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--muted)">
-        <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
-        <span style="font-size:0.9rem">o con correo</span>
-        <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
+        <hr style="flex:1;border:none;height:1px;background:rgba(0,0,0,0.06)"/>
+        <span style="font-size:0.9rem;color:#556">o con correo</span>
+        <hr style="flex:1;border:none;height:1px;background:rgba(0,0,0,0.06)"/>
       </div>
 
       <form id="authEmailForm" style="display:flex;flex-direction:column;gap:8px">
-        <input id="authEmail" type="email" placeholder="Correo" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
-        <input id="authPass" type="password" placeholder="Contraseña" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
+        <input id="authEmail" type="email" placeholder="Correo" required style="padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)"/>
+        <input id="authPass" type="password" placeholder="Contraseña" required style="padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)"/>
         <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
           <button type="button" id="btnEmailSignIn" class="btn primary">Iniciar sesión</button>
           <button type="button" id="btnEmailSignUp" class="btn ghost">Registrarse</button>
@@ -237,7 +120,7 @@
       </div>
 
       <div style="display:flex;justify-content:center;margin-top:12px;font-size:0.9rem">
-        <a id="authToAccount" href="cuenta.html" style="color:var(--muted)">Ya tienes cuenta? Ir a mi cuenta</a>
+        <a id="authToAccount" href="cuenta.html" style="color:#556">Ya tienes cuenta? Ir a mi cuenta</a>
       </div>
 
       <button id="authClose" aria-label="Cerrar" style="position:absolute;right:12px;top:12px;background:transparent;border:0;font-size:18px">✕</button>
@@ -303,16 +186,14 @@
       </div>
     </section>
 
-    <!-- CONTACTO: minimalista y moderno (hecho sin borrar nada fuera de esta sección) -->
+    <!-- CONTACTO -->
     <section id="contacto" class="section contact-min glass reveal" aria-labelledby="contact-title">
       <div class="left">
         <h2 id="contact-title">Contáctanos</h2>
         <p class="lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
       </div>
 
-      <!-- IMPORTANT: names adjusted to match typical EmailJS template variables -->
       <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;">
-        <!-- use names that match your template: from_name, from_email, message -->
         <input id="contactName" name="from_name" type="text" placeholder="Nombre" required autocomplete="name">
         <input id="contactEmail" name="from_email" type="email" placeholder="Correo" required autocomplete="email">
         <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
@@ -368,7 +249,7 @@
     JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
   </noscript>
 
-  <!-- small fallback script (mantén como estaba) -->
+  <!-- small fallback script -->
   <script>
     (function(){
       function adjustPadding(){
@@ -382,7 +263,6 @@
       adjustPadding();
       window.addEventListener('resize', adjustPadding);
 
-      // Fallback very small panel toggle (no conflict if tienes script.js completo)
       const viewBtn = document.getElementById('viewCartBtn');
       const cartPanel = document.getElementById('cartPanel');
       const cartBackdrop = document.getElementById('cartBackdrop');
@@ -401,34 +281,27 @@
     })();
   </script>
 
-  <!-- OVERRIDE: fuerza que el botón del header lleve a carrito.html (usa captura para anular handlers anteriores) -->
+  <!-- OVERRIDE: cart button redirect -->
   <script>
     (function(){
-      // si quieres redirigir a carrito.html en lugar de abrir mini-panel, activa esto
       function goToCart(e){
         e.preventDefault();
-        // evita que otros listeners del click se ejecuten
         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
         window.location.href = 'carrito.html';
       }
       const cartBtn = document.getElementById('cartBtn');
       if (cartBtn) cartBtn.addEventListener('click', goToCart, {capture:true});
 
-      // también aseguro que el botón "Ver carrito" (miniCart) vaya a carrito.html
       const viewBtn = document.getElementById('viewCartBtn');
       if (viewBtn) viewBtn.addEventListener('click', function(e){ e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); window.location.href='carrito.html'; }, {capture:true});
     })();
   </script>
 
-  <!-- FALLBACK addToCart (solo si script.js no define window.addToCart) -->
+  <!-- FALLBACK addToCart -->
   <script>
     (function(){
       const KEY = 'lixby_cart_v1';
-      function parsePrice(s){
-        if (s === undefined || s === null) return 0;
-        return Number(String(s).replace(/[^\d.,-]/g,'').replace(',', '.')) || 0;
-      }
-      // product data mirror para index rápido
+      function parsePrice(s){ if (s === undefined || s === null) return 0; return Number(String(s).replace(/[^\d.,-]/g,'').replace(',', '.')) || 0; }
       const PRODUCTS_BRIEF = {
         'lixby-one-air': { id:'lixby-one-air', name: 'Lixby One Air', price: '249€', priceNum: 249, image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg' },
         'lixby-one': { id:'lixby-one', name: 'Lixby One', price: '349€', priceNum: 349, image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg' },
@@ -450,15 +323,12 @@
             image: product.image || ''
           });
           localStorage.setItem(KEY, JSON.stringify(cart));
-          // dispatch storage event-style signal
           window.dispatchEvent(new Event('cartUpdated'));
-          // visual cue: briefly show miniCart if present
           const mini = document.getElementById('miniCart');
           if (mini) { mini.setAttribute('aria-hidden','false'); setTimeout(()=> mini.setAttribute('aria-hidden','true'), 1800); }
         } catch(e){ console.warn('fallbackAdd error', e); }
       }
 
-      // Attach handlers to btn-add
       document.addEventListener('click', (ev) => {
         const btn = ev.target.closest && ev.target.closest('.btn-add');
         if (!btn) return;
@@ -466,254 +336,56 @@
         const product = PRODUCTS_BRIEF[id];
         const payload = product ? product : { id: id, name: id, price: '0€', priceNum: 0, image: '' };
         if (typeof window.addToCart === 'function' && window.addToCart !== fallbackAdd) {
-          // prefer global addToCart if present
           window.addToCart(payload);
         } else {
           fallbackAdd(payload);
         }
-        // small feedback
         btn.textContent = 'Añadido';
         setTimeout(()=> btn.textContent = 'Añadir al carrito', 900);
       });
     })();
   </script>
 
-  <!-- ============================
-       FIREBASE AUTH (module) - ADD
-       ============================ -->
-  <script type="module">
-    // Imports (use the same Firebase version your console suggested)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-    import {
-      getAuth,
-      GoogleAuthProvider,
-      GithubAuthProvider,
-      signInWithPopup,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signInAnonymously,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  <!-- LOAD AUTH MODULE (asegúrate de tener /auth-firebase.js en la raíz) -->
+  <script type="module" src="/auth-firebase.js"></script>
 
-    // Your firebaseConfig (use the one you configured in console)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
-      authDomain: "lixby-e0344.firebaseapp.com",
-      projectId: "lixby-e0344",
-      storageBucket: "lixby-e0344.firebasestorage.app",
-      messagingSenderId: "671722866179",
-      appId: "1:671722866179:web:65868eca5146942b507036",
-      measurementId: "G-09SQL30MS8"
-    };
+  <!-- EMAILJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js" crossorigin="anonymous"
+    onload="(function(){ try { if (window.emailjs && typeof emailjs.init === 'function') { emailjs.init('xsKpaFjbRsS95AK3i'); } } catch(e){ console.warn('EmailJS init', e); } })()"></script>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // providers
-    const googleProvider = new GoogleAuthProvider();
-    const githubProvider = new GithubAuthProvider();
-
-    // UI
-    const overlay = document.getElementById('authOverlay');
-    const authClose = document.getElementById('authClose');
-    const btnGoogle = document.getElementById('btnGoogle');
-    const btnGitHub = document.getElementById('btnGitHub');
-    const btnEmailSignIn = document.getElementById('btnEmailSignIn');
-    const btnEmailSignUp = document.getElementById('btnEmailSignUp');
-    const btnAnonymous = document.getElementById('btnAnonymous');
-    const emailInput = document.getElementById('authEmail');
-    const passInput = document.getElementById('authPass');
-    const accountBtn = document.getElementById('accountBtn');
-
-    function shouldShowWelcome() {
-      try { return !localStorage.getItem('lixby_seen_welcome'); } catch(e){ return true; }
-    }
-    function hideWelcomePermanently(){ try { localStorage.setItem('lixby_seen_welcome','1'); } catch(e){} }
-
-    function showAuthOverlay(){ if(!overlay) return; overlay.style.display='block'; overlay.setAttribute('aria-hidden','false'); }
-    function hideAuthOverlay(){ if(!overlay) return; overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); }
-
-    if (accountBtn) accountBtn.addEventListener('click', (e)=> { e.preventDefault(); showAuthOverlay(); });
-
-    if (authClose) authClose.addEventListener('click', ()=> { hideAuthOverlay(); hideWelcomePermanently(); });
-
-    if (btnGoogle) btnGoogle.addEventListener('click', async ()=> {
-      try {
-        const res = await signInWithPopup(auth, googleProvider);
-        await upsertUserProfile(res.user);
-        hideAuthOverlay();
-      } catch(err){ console.error('Google sign-in', err); alert(err.message || err); }
-    });
-
-    if (btnGitHub) btnGitHub.addEventListener('click', async ()=> {
-      try {
-        const res = await signInWithPopup(auth, githubProvider);
-        await upsertUserProfile(res.user);
-        hideAuthOverlay();
-      } catch(err){ console.error('GitHub sign-in', err); alert(err.message || err); }
-    });
-
-    if (btnEmailSignIn) btnEmailSignIn.addEventListener('click', async ()=> {
-      const email = (emailInput.value||'').trim();
-      const pass = (passInput.value||'').trim();
-      if (!email || !pass) return alert('Introduce email y contraseña');
-      try {
-        const res = await signInWithEmailAndPassword(auth, email, pass);
-        await upsertUserProfile(res.user);
-        hideAuthOverlay();
-      } catch(err){ console.error('email sign-in', err); alert(err.message || err); }
-    });
-
-    if (btnEmailSignUp) btnEmailSignUp.addEventListener('click', async ()=> {
-      const email = (emailInput.value||'').trim();
-      const pass = (passInput.value||'').trim();
-      if (!email || !pass) return alert('Introduce email y contraseña');
-      try {
-        const res = await createUserWithEmailAndPassword(auth, email, pass);
-        await upsertUserProfile(res.user);
-        hideAuthOverlay();
-      } catch(err){ console.error('email signup', err); alert(err.message || err); }
-    });
-
-    if (btnAnonymous) btnAnonymous.addEventListener('click', async ()=> {
-      try {
-        const res = await signInAnonymously(auth);
-        await upsertUserProfile(res.user, { anonymous: true });
-        hideAuthOverlay();
-      } catch(err){ console.error('anonymous', err); alert(err.message || err); }
-    });
-
-    // handle overlay click to close if click outside modal
-    const authBackdrop = document.getElementById('authBackdrop');
-    if (authBackdrop) authBackdrop.addEventListener('click', ()=> { hideAuthOverlay(); hideWelcomePermanently(); });
-
-    // auth state
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        console.log('USER', user.uid, user.email, user.isAnonymous);
-        // show short indicator on header (replace brand text with user email lightly)
-        const brand = document.querySelector('.brand');
-        if (brand) {
-          if (user.email) brand.textContent = user.email.split('@')[0];
-          else if (user.displayName) brand.textContent = user.displayName.split(' ')[0];
-          else if (user.isAnonymous) brand.textContent = 'Invitado';
-        }
-      } else {
-        console.log('No user');
-        // show welcome if first time
-        if (shouldShowWelcome()) {
-          setTimeout(()=> showAuthOverlay(), 300);
-        }
-      }
-    });
-
-    // create/update user doc
-    async function upsertUserProfile(user, extra = {}) {
-      if (!user || !user.uid) return;
-      const ref = doc(db, 'users', user.uid);
-      try {
-        const snapshot = await getDoc(ref);
-        const base = {
-          uid: user.uid,
-          name: user.displayName || null,
-          email: user.email || null,
-          photoURL: user.photoURL || null,
-          provider: user.providerData && user.providerData[0] && user.providerData[0].providerId,
-          createdAt: (snapshot.exists() ? snapshot.data().createdAt : new Date().toISOString())
-        };
-        await setDoc(ref, {...base, ...extra}, { merge: true });
-      } catch(e){ console.warn('upsertUserProfile error', e); }
-    }
-
-    // expose for other pages or header actions
-    window.openAuthOverlay = () => { showAuthOverlay(); };
-    window.closeAuthOverlay = () => { hideAuthOverlay(); };
-    window.lixbySignOut = async function() {
-      try { await signOut(auth); localStorage.removeItem('lixby_seen_welcome'); location.href = 'index.html'; } catch(e){ console.warn(e); }
-    };
-
-    // initial show
-    if (shouldShowWelcome()) {
-      setTimeout(()=> showAuthOverlay(), 300);
-    }
-  </script>
-
-  <!-- === EMAILJS SDK (carga segura) & contact handler === -->
-  <!-- Load EmailJS SDK from jsdelivr and init on load using your Public Key -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"
-    crossorigin="anonymous"
-    onload="(function(){ try { if (window.emailjs && typeof emailjs.init === 'function') { emailjs.init('xsKpaFjbRsS95AK3i'); console.info('EmailJS inicializado'); } } catch(e){ console.warn('EmailJS onload init error', e); } })()"
-  ></script>
-
+  <!-- contact handler -->
   <script>
     (function(){
-      // Config provided by you
       const SERVICE_ID = 'service_tagcpgm';
       const TEMPLATE_ID = 'template_l1e0go2';
-      const PUBLIC_KEY = 'xsKpaFjbRsS95AK3i'; // already used in onload init
-
       const form = document.getElementById('contactForm');
       const sendBtn = document.getElementById('contactSend');
       const successEl = document.getElementById('contactSuccess');
-
-      if (!form) { console.warn('No se encontró #contactForm'); return; }
-
+      if (!form) return;
       async function sendEmail(e){
         e.preventDefault();
-
         const name = document.getElementById('contactName').value.trim();
         const email = document.getElementById('contactEmail').value.trim();
         const message = document.getElementById('contactMessage').value.trim();
-
-        if (!name || !email || !message) {
-          alert('Por favor completa todos los campos.');
-          return;
-        }
-
-        // UI states
+        if (!name || !email || !message) { alert('Por favor completa todos los campos.'); return; }
         sendBtn.disabled = true;
-        const previousText = sendBtn.textContent;
-        sendBtn.textContent = 'Enviando...';
-
-        // Defensive: ensure SDK loaded
-        if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
-          console.error('EmailJS SDK no está disponible. Revisa la carga del script o las extensiones que lo bloqueen.');
-          alert('Servicio de correo no disponible ahora mismo. Intenta de nuevo más tarde.');
-          sendBtn.disabled = false;
-          sendBtn.textContent = previousText;
-          return;
-        }
-
+        const previousText = sendBtn.textContent; sendBtn.textContent = 'Enviando...';
+        if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') { alert('Servicio de correo no disponible ahora mismo.'); sendBtn.disabled=false; sendBtn.textContent=previousText; return; }
         try {
-          // sendForm maps form field names to template variables
-          const response = await emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, '#contactForm');
-          console.info('EmailJS sendForm response:', response);
+          await emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, '#contactForm');
           successEl.style.display = 'block';
           form.reset();
-          setTimeout(()=> { successEl.style.display = 'none'; }, 6000);
-        } catch (err) {
-          console.error('Error enviando con EmailJS:', err);
-          // show friendly message to user
-          alert('No se pudo enviar el mensaje. Comprueba la consola para más detalles o inténtalo más tarde.');
-        } finally {
-          sendBtn.disabled = false;
-          sendBtn.textContent = previousText;
-        }
+          setTimeout(()=> successEl.style.display = 'none', 6000);
+        } catch (err) { console.error('EmailJS error', err); alert('No se pudo enviar el mensaje.'); }
+        sendBtn.disabled = false; sendBtn.textContent = previousText;
       }
-
       form.addEventListener('submit', sendEmail);
     })();
   </script>
 
-  <!-- tu script principal (defer) -->
+  <!-- principal (opcional) -->
   <script src="script.js" defer></script>
 
-  <script>
-    try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
-  </script>
+  <script> try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){} </script>
 </body>
 </html>
