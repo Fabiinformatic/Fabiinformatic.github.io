@@ -6,32 +6,32 @@
   <title>LIXBY — Detalle de producto</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Estilos locales para la ficha (uniformidad de imágenes y controles) */
+    /* Header: igual que en index — 3 columnas (logo | nav | controles) */
     .nav {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px 20px;
-      position:fixed;
-      top:14px;
-      left:16px;
-      right:16px;
-      z-index:120;
+      top: 0;
+      left: 0;
+      right: 0;
+      position: fixed;
+      padding: 10px 18px;
+      z-index: 120;
+      background: transparent;
     }
-    .nav-left { display:flex; align-items:center; gap:12px; }
-    /* AHORA: nav-right vertical en escritorio, horizontal en móvil */
-    .nav-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-left { justify-self: start; display:flex; align-items:center; gap:8px; }
+    #navLinks { justify-self:center; display:flex; gap:18px; align-items:center; }
+    .nav-right { justify-self:end; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+
     @media (max-width:900px) {
+      #navLinks { gap:10px; font-size:0.95rem; }
       .nav-right { flex-direction:row; align-items:center; }
     }
-
-    .icon-btn{ background:transparent; border:none; color:var(--text); font-size:1rem; cursor:pointer; padding:8px; border-radius:8px; display:inline-flex; align-items:center; gap:8px; position:relative; }
-    .badge{ background:var(--accent); color:#00121a; font-weight:700; border-radius:999px; padding:2px 8px; font-size:0.8rem; margin-left:6px; }
-
-    .mini-cart, .lang-menu { position:absolute; display:none; right:0; top:44px; z-index:130; }
-    .mini-cart { width:320px; padding:12px; flex-direction:column; gap:8px; }
-    .mini-cart[aria-hidden="false"], .lang-menu[aria-hidden="false"]{ display:flex; }
 
     /* ficha */
     .product-detail {
@@ -71,17 +71,16 @@
     .detail-block h3 { margin:12px 0 6px; font-size:1.05rem; }
     .detail-block p { margin:0 0 8px; color:var(--muted); }
 
+    /* BOM: ahora renderizaremos solo la lista de componentes (sin precios) */
     .bom { margin-top:18px; border-collapse:collapse; width:100%; max-width:760px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); }
     .bom thead { background: rgba(255,255,255,0.02); }
     .bom th, .bom td { padding:12px 14px; text-align:left; font-size:0.95rem; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text); }
     .bom th { font-weight:700; color:var(--muted); }
 
-    .ratings { margin-top:18px; display:flex; flex-direction:column; gap:12px; }
-    .stars { color:var(--accent); font-weight:700; }
-    .review { background: rgba(255,255,255,0.01); padding:12px; border-radius:8px; color:var(--muted); }
+    /* pequeño fallback para main debajo del header si JS no corre */
+    main { padding-top: 84px; }
 
-    .debug { margin:18px auto; max-width:1100px; padding:10px 14px; border-radius:10px; background:#2b2b2b; color:#fff; font-size:0.9rem; display:none; white-space:pre-wrap; }
-
+    /* responsive tweaks */
     @media(max-width:900px){
       .product-detail{ flex-direction:column; margin:90px 16px; }
       .image-wrap{ width:100%; height:auto; aspect-ratio:1/1; padding:18px; }
@@ -91,47 +90,49 @@
   </style>
 </head>
 <body>
-  <header class="nav glass">
-    <div class="nav-left">
-      <div class="brand" role="button" onclick="window.location.href='index.html'">LIXBY</div>
-    </div>
-
-    <nav id="navLinks" role="navigation" aria-label="Principal">
-      <a href="index.html#inicio" data-i18n="nav.inicio">Inicio</a>
-      <a href="index.html#productos" data-i18n="nav.productos">Productos</a>
-      <a href="index.html#contacto" data-i18n="nav.contacto">Contáctanos</a>
-      <a href="index.html#conocenos" data-i18n="nav.conocenos">Conócenos</a>
-    </nav>
-
-    <div class="nav-right">
-      <!-- mini-cart -->
-      <div class="cart-wrapper" style="position:relative;">
-        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
-        <div id="miniCart" class="mini-cart glass" aria-hidden="true" style="flex-direction:column;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <strong data-i18n="cart.title">Carrito</strong>
-            <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
-          </div>
-          <div id="miniCartItems" style="max-height:200px;overflow:auto;"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
-            <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
-            <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button></div>
-          </div>
-        </div>
+  <header class="nav glass" role="banner">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <div class="brand" role="button" onclick="window.location.href='index.html'">LIXBY</div>
       </div>
 
-      <!-- idioma -->
-      <div class="lang-wrapper" style="position:relative;">
-        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false">🇪🇸 <span id="langLabel">Español</span> ▾</button>
-        <div id="langMenu" class="lang-menu glass" aria-hidden="true" style="flex-direction:column;gap:6px;padding:8px;width:160px;">
-          <button class="lang-item" data-lang="es">🇪🇸 Español</button>
-          <button class="lang-item" data-lang="en">🇬🇧 English</button>
-          <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
-        </div>
-      </div>
+      <nav id="navLinks" role="navigation" aria-label="Principal">
+        <a href="index.html#inicio" data-i18n="nav.inicio">Inicio</a>
+        <a href="index.html#productos" data-i18n="nav.productos">Productos</a>
+        <a href="index.html#contacto" data-i18n="nav.contacto">Contáctanos</a>
+        <a href="index.html#conocenos" data-i18n="nav.conocenos">Conócenos</a>
+      </nav>
 
-      <!-- tema -->
-      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+      <div class="nav-right">
+        <!-- mini-cart -->
+        <div class="cart-wrapper" style="position:relative;">
+          <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
+          <div id="miniCart" class="mini-cart glass" aria-hidden="true" style="flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <strong data-i18n="cart.title">Carrito</strong>
+              <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
+            </div>
+            <div id="miniCartItems" style="max-height:200px;overflow:auto;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
+              <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- idioma -->
+        <div class="lang-wrapper" style="position:relative;">
+          <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false">🇪🇸 <span id="langLabel">Español</span> ▾</button>
+          <div id="langMenu" class="lang-menu glass" aria-hidden="true" style="flex-direction:column;gap:6px;padding:8px;width:160px;">
+            <button class="lang-item" data-lang="es">🇪🇸 Español</button>
+            <button class="lang-item" data-lang="en">🇬🇧 English</button>
+            <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
+          </div>
+        </div>
+
+        <!-- tema -->
+        <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+      </div>
     </div>
   </header>
 
@@ -161,6 +162,7 @@
     const CART_KEY = 'lixby_cart_v1';
     function showDebug(msg){
       const el = document.getElementById('debug');
+      if (!el) return;
       el.style.display = 'block';
       el.textContent += msg + "\n";
       console.log("DEBUG:", msg);
@@ -183,19 +185,19 @@
         price: "349€",
         image: "https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg",
         bom: [
-          ["SoC 5G (Snapdragon 7s Gen 2 / Dimensity 8300) + PMIC", "45 – 55"],
-          ["RAM 8 GB LPDDR5X", "18 – 22"],
-          ["Almacenamiento UFS 3.1 256 GB", "20 – 25"],
-          ["Pantalla OLED 6.7\" 120 Hz + táctil + vidrio", "32 – 38"],
-          ["Cámaras (50 MP OIS + 8 MP UGA + 16 MP frontal)", "20 – 25"],
-          ["Batería 5,000 mAh + BMS", "7 – 9"],
-          ["Antenas + RF front-end (PA, filtros, switches)", "10 – 15"],
-          ["Sensores (IMU, proximidad, luz, NFC)", "4 – 6"],
-          ["Audio (altavoces, micros, motor háptico)", "5 – 7"],
-          ["Chasis (aluminio) + trasera (policarbonato o vidrio)", "12 – 15"],
-          ["PCB, pasivos y conectores", "8 – 10"],
-          ["Ensamblaje y pruebas (EMS)", "6 – 8"],
-          ["Embalaje + cargador/cable", "4 – 6"]
+          ["SoC 5G (Snapdragon 7s Gen 2 / Dimensity 8300) + PMIC", ""],
+          ["RAM 8 GB LPDDR5X", ""],
+          ["Almacenamiento UFS 3.1 256 GB", ""],
+          ["Pantalla OLED 6.7\" 120 Hz + táctil + vidrio", ""],
+          ["Cámaras (50 MP OIS + 8 MP UGA + 16 MP frontal)", ""],
+          ["Batería 5,000 mAh + BMS", ""],
+          ["Antenas + RF front-end (PA, filtros, switches)", ""],
+          ["Sensores (IMU, proximidad, luz, NFC)", ""],
+          ["Audio (altavoces, micros, motor háptico)", ""],
+          ["Chasis (aluminio) + trasera (policarbonato o vidrio)", ""],
+          ["PCB, pasivos y conectores", ""],
+          ["Ensamblaje y pruebas (EMS)", ""],
+          ["Embalaje + cargador/cable", ""]
         ]
       },
       "lixby-one-plus": {
@@ -217,7 +219,7 @@
     };
 
     // -------------------------
-    // Mini-cart UI
+    // Mini-cart UI (igual que en index)
     // -------------------------
     let cart = loadCart();
     const cartBtn = document.getElementById('cartBtn');
@@ -234,7 +236,7 @@
       if (!miniCartItems) return;
       miniCartItems.innerHTML = '';
       if (cart.length === 0) {
-        miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">'+ (translations[currentLang]?.['cart.empty'] || 'Tu carrito está vacío.') +'</div>';
+        miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
         if (miniCartTotal) miniCartTotal.textContent = '0€';
         return;
       }
@@ -263,24 +265,21 @@
       });
     }
     if (clearCartBtn) clearCartBtn.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); });
-    if (checkoutBtn) checkoutBtn.addEventListener('click', () => { if (cart.length===0) return alert(translations[currentLang]?.['cart.empty'] || 'El carrito está vacío'); alert('Simulación de checkout: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
+    if (checkoutBtn) checkoutBtn.addEventListener('click', () => { if (cart.length===0) return alert('El carrito está vacío'); alert('Simulación de checkout: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
 
-    // función pública para añadir al carrito (compatible con el index)
     window.addToCart = function(product){
-      // product: {id,name,price,image}
       const existing = cart.find(p => p.id === product.id);
       if (existing) existing.qty = (existing.qty||1) + 1;
       else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: parsePriceToNumber(product.price), qty:1, image: product.image });
       saveCart(cart);
       updateMiniCartUI();
-      // mostrar mini-cart brevemente
       if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
     };
 
     updateMiniCartUI();
 
     // -------------------------
-    // Language selector (simple + traducciones locales)
+    // Language selector & translations
     // -------------------------
     const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu'), langLabel = document.getElementById('langLabel');
     const translations = {
@@ -310,9 +309,7 @@
         const key = el.getAttribute('data-i18n');
         if (key && map[key]) el.textContent = map[key];
       });
-      // actualizar botones añadidos dinámicamente (si existen)
       document.querySelectorAll('.btn-add').forEach(btn => btn.textContent = map['btn.add'] || btn.textContent);
-      // actualizar label visible
       const label = document.getElementById('langLabel');
       const names = { es:'Español', en:'English', fr:'Français' };
       if (label) label.textContent = names[lang] || names['es'];
@@ -323,7 +320,6 @@
       try { localStorage.setItem('lixby_lang', l); } catch(e){}
       applyTranslations(l);
     }
-    // init
     setLang(localStorage.getItem('lixby_lang') || currentLang);
 
     if (langBtn && langMenu){
@@ -393,12 +389,10 @@
       addBtn.className = 'btn-add';
       addBtn.textContent = (translations[currentLang] && translations[currentLang]['btn.add']) || 'Añadir al carrito';
       addBtn.addEventListener('click', () => {
-        // if global addToCart exists, use it; otherwise use local implementation
         const productData = { id: p.id||id, name: p.name, price: p.price, image: p.image };
         if (typeof window.addToCart === 'function') {
           window.addToCart(productData);
         } else {
-          // fallback local: same logic as earlier
           const existing = cart.find(x => x.id === productData.id);
           if (existing) existing.qty = (existing.qty||1)+1; else cart.push({ id: productData.id, name: productData.name, price: productData.price, priceNum: parsePriceToNumber(productData.price), qty:1, image: productData.image });
           saveCart(cart); updateMiniCartUI();
@@ -417,16 +411,26 @@
       container.appendChild(wrap);
       container.appendChild(info);
 
-      // BOM (si aplica)
+      // BOM (si aplica) — ahora mostramos solo la lista de componentes (sin precios)
       if (id === 'lixby-one' && Array.isArray(p.bom)) {
         const tableWrap = document.createElement('div'); tableWrap.style.marginTop='18px';
-        const note = document.createElement('div'); note.textContent = 'Coste estimado de fabricación (BOM + ensamblaje)'; note.style.fontWeight='700'; note.style.marginBottom='8px'; note.style.color='var(--muted)';
+        const note = document.createElement('div'); note.textContent = 'Lista de componentes (BOM)'; note.style.fontWeight='700'; note.style.marginBottom='8px'; note.style.color='var(--muted)';
         tableWrap.appendChild(note);
+
+        // Usamos una tabla con una sola columna (solo componente)
         const table = document.createElement('table'); table.className='bom';
-        const thead = document.createElement('thead'); thead.innerHTML = '<tr><th>Componente / Parte</th><th>Precio aprox. (€)</th></tr>'; table.appendChild(thead);
+        const thead = document.createElement('thead'); thead.innerHTML = '<tr><th>Componente / Parte</th></tr>'; table.appendChild(thead);
         const tbody = document.createElement('tbody');
-        p.bom.forEach(row => { const tr=document.createElement('tr'); const td1=document.createElement('td'); td1.textContent=row[0]; const td2=document.createElement('td'); td2.textContent=row[1]; tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr); });
-        table.appendChild(tbody); tableWrap.appendChild(table); info.appendChild(tableWrap);
+        p.bom.forEach(row => {
+          const tr = document.createElement('tr');
+          const td1 = document.createElement('td');
+          td1.textContent = row[0]; // solo el nombre del componente
+          tr.appendChild(td1);
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        tableWrap.appendChild(table);
+        info.appendChild(tableWrap);
       }
 
       // descripción ampliada (solo Lixby One)
@@ -475,6 +479,19 @@
       const pd = document.getElementById('productDetail');
       if (pd) pd.innerHTML = '<div style="padding:20px;"><h2>Error cargando la ficha</h2><p>Mira la consola para más detalles.</p></div>';
     }
+
+    // Ajuste dinámico: aseguramos padding-top suficiente según header
+    try {
+      const header = document.querySelector('.nav');
+      if (header) {
+        const pad = Math.round(header.getBoundingClientRect().height + 12);
+        document.body.style.paddingTop = pad + 'px';
+        window.addEventListener('resize', ()=> {
+          const p2 = Math.round(header.getBoundingClientRect().height + 12);
+          document.body.style.paddingTop = p2 + 'px';
+        });
+      }
+    } catch(e){}
   })();
   </script>
 </body>
