@@ -104,61 +104,31 @@
     .btn-add { padding:8px 12px; border-radius:8px; border: none; cursor:pointer; background:linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; font-weight:700; }
     .btn-view { padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--text); cursor:pointer; }
 
-    /* ====== CONTACT: minimalista (añadido) ====== 
-       No borra nada, solo estilos nuevos para sección contacto */
-    .section.contact {
+    /* ===== added contact-specific minimal styles inline as fallback ===== */
+    .contact-min {
       max-width: 1100px;
       margin: 28px auto;
-      padding: 32px;
-      display: flex;
-      gap: 28px;
-      align-items: center;
-      justify-content: space-between;
-      border-radius: 12px;
+      padding: 30px;
+      display:flex;
+      gap:24px;
+      align-items:center;
+      justify-content:space-between;
+      border-radius:12px;
       background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
-      border: 1px solid rgba(255,255,255,0.03);
-      box-sizing: border-box;
-    }
-    .contact-left { flex: 1 1 48%; min-width: 220px; }
-    .contact-left h2 { font-size: 1.5rem; margin: 0 0 6px; }
-    .contact-left .lead { color: var(--muted); margin: 0; font-size: 1rem; line-height: 1.45; }
-
-    .contact-right { flex: 0 0 360px; min-width: 220px; }
-    .contact-form { display:flex; flex-direction:column; gap:10px; }
-    .contact-form input,
-    .contact-form textarea {
-      width:100%;
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,0.04);
-      background: rgba(255,255,255,0.015);
-      color: var(--text);
-      font-size:0.95rem;
+      border:1px solid rgba(255,255,255,0.03);
       box-sizing:border-box;
-      outline: none;
     }
-    .contact-form textarea { min-height:90px; resize:vertical; }
-
-    .contact-actions { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:4px; }
-    .contact-actions .btn { padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; border:0; }
-    .contact-actions .btn.primary { background: var(--accent); color:#00121a; }
-    .contact-actions .btn.ghost { background: transparent; border:1px solid rgba(255,255,255,0.04); color:var(--text); }
-
-    .contact-success {
-      display:none;
-      margin-top:10px;
-      font-size:0.95rem;
-      color: var(--accent);
-      font-weight:600;
+    .contact-min .left {flex:1}
+    .contact-min h2 { margin:0 0 6px; font-size:1.4rem; }
+    .contact-min p.lead { margin:0; color:var(--muted); font-size:1rem }
+    .contact-min .form { flex:0 0 360px; display:flex; flex-direction:column; gap:10px }
+    .contact-min input, .contact-min textarea {
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.015); color:var(--text); font-size:0.95rem; box-sizing:border-box;
     }
-
-    @media (max-width:900px){
-      .section.contact { flex-direction:column; padding:20px; }
-      .contact-right { width:100%; }
-      .contact-left { width:100%; margin-bottom:6px; }
-      .contact-actions { justify-content:flex-start; }
-    }
-    /* ====== fin CONTACT ====== */
+    .contact-min .actions { display:flex; gap:10px; justify-content:flex-end; align-items:center; margin-top:4px }
+    .contact-success { display:none; color:var(--accent); font-weight:600; margin-top:8px }
+    @media (max-width:900px){ .contact-min { flex-direction:column; } .contact-min .form{ width:100% } }
   </style>
 </head>
 <body>
@@ -284,27 +254,25 @@
       </div>
     </section>
 
-    <!-- CONTACTO (reemplazado por versión minimalista; no se ha borrado nada más) -->
-    <section id="contacto" class="section contact glass reveal" aria-labelledby="contact-title">
-      <div class="contact-left">
+    <!-- CONTACTO: minimalista y moderno (hecho sin borrar nada fuera de esta sección) -->
+    <section id="contacto" class="section contact-min glass reveal" aria-labelledby="contact-title">
+      <div class="left">
         <h2 id="contact-title">Contáctanos</h2>
         <p class="lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
       </div>
 
-      <div class="contact-right">
-        <form class="contact-form" id="contactForm" onsubmit="return false;">
-          <input type="text" id="contactName" name="name" placeholder="Nombre" autocomplete="name" required>
-          <input type="email" id="contactEmail" name="email" placeholder="Correo" autocomplete="email" required>
-          <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
+      <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;">
+        <input id="contactName" name="name" type="text" placeholder="Nombre" required autocomplete="name">
+        <input id="contactEmail" name="email" type="email" placeholder="Correo" required autocomplete="email">
+        <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
 
-          <div class="contact-actions">
-            <button type="button" class="btn ghost" onclick="document.getElementById('contactForm').reset();">Borrar</button>
-            <button type="submit" class="btn primary" id="contactSend">Enviar</button>
-          </div>
+        <div class="actions">
+          <button type="button" class="btn ghost" onclick="document.getElementById('contactForm').reset();">Borrar</button>
+          <button type="submit" id="contactSend" class="btn primary">Enviar</button>
+        </div>
 
-          <div id="contactSuccess" class="contact-success" role="status" aria-live="polite">Mensaje enviado. ¡Gracias! Te contestaremos pronto.</div>
-        </form>
-      </div>
+        <div id="contactSuccess" class="contact-success" role="status" aria-live="polite">Mensaje enviado. ¡Gracias! Te contestaremos pronto.</div>
+      </form>
     </section>
 
     <!-- CONÓCENOS -->
@@ -349,7 +317,7 @@
     JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
   </noscript>
 
-  <!-- pequeño script fallback: ajusta padding-top según header y abre/cierra panel si se pulsa "Ver carrito" -->
+  <!-- small fallback script (mantén como estaba) -->
   <script>
     (function(){
       function adjustPadding(){
@@ -459,7 +427,7 @@
     })();
   </script>
 
-  <!-- handler for contact form (added; does not remove anything) -->
+  <!-- handler for contact form (minimal, unobtrusive) -->
   <script>
     (function(){
       const form = document.getElementById('contactForm');
@@ -478,11 +446,13 @@
         }
         sendBtn.disabled = true;
         sendBtn.textContent = 'Enviando...';
+        // Simulación de envío: aquí puedes integrar Formspree/Netlify etc.
         setTimeout(() => {
           success.style.display = 'block';
           form.reset();
           sendBtn.disabled = false;
           sendBtn.textContent = 'Enviar';
+          // desaparece la notificación después de unos segundos
           setTimeout(()=> { success.style.display = 'none'; }, 6000);
         }, 800);
       });
@@ -491,6 +461,9 @@
 
   <!-- tu script principal (defer) -->
   <script src="script.js" defer></script>
-  <script>/* set current year if needed (keeps existing behavior) */ try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e) {}</script>
+
+  <script>
+    try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
+  </script>
 </body>
 </html>
