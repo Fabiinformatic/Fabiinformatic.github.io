@@ -5,137 +5,149 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LIXBY — Tecnología minimalista</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Fixes locales para evitar que el header “coma” la página -->
+  <!-- Overrides locales para header y comportamiento consistente -->
   <style>
-    /* En escritorio aseguramos que .nav-right esté en fila (no en columna) */
+    /* Header pegado al borde y contenedor centrado */
+    .nav { top:0; left:0; right:0; position:fixed; padding:12px 18px; z-index:120; }
+    .nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+
+    /* nav-right: vertical por defecto (evita que el header se vuelva gigantesco).
+       En pantallas >= 900px pasa a fila. */
+    .nav-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
     @media (min-width: 900px) {
-      .nav-right { flex-direction: row !important; align-items: center !important; }
-    }
-    /* En móvil está bien que se apile */
-    @media (max-width: 899px) {
-      .nav-right { flex-direction: row; } /* alternativa: row para que no ocupe tanto alto */
+      .nav-right { flex-direction:row; align-items:center; }
+      /* mantener navLinks en fila en escritorio */
+      #navLinks { display:flex; gap:18px; align-items:center; }
     }
 
-    /* Seguridad: limitar la altura del header para no cubrir la pantalla entera si hay algo raro */
-    .nav { max-height: 140px; overflow: visible; }
-
-    /* Asegurar que main empieza por debajo del header en caso de que JS falle */
-    main { padding-top: 90px; } /* valor por defecto, el script lo ajustará dinámicamente */
+    /* Asegura que main empieza debajo del header (en caso de que el script no se ejecute) */
+    main { padding-top: 92px; }
   </style>
 </head>
 <body>
   <!-- NAV -->
   <header class="nav glass" role="banner">
-    <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
+    <div class="nav-inner">
+      <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
 
-    <nav id="navLinks" role="navigation" aria-label="Principal">
-      <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
-      <a href="#productos" data-i18n="nav.productos">Productos</a>
-      <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
-      <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
-    </nav>
+      <nav id="navLinks" role="navigation" aria-label="Principal">
+        <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
+        <a href="#productos" data-i18n="nav.productos">Productos</a>
+        <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
+        <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
+      </nav>
 
-    <div class="nav-right" aria-hidden="false">
-      <!-- carrito -->
-      <div class="cart-wrapper">
-        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
+      <div class="nav-right" aria-hidden="false">
+        <!-- carrito -->
+        <div class="cart-wrapper">
+          <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
 
-        <div id="miniCart" class="mini-cart glass" aria-hidden="true">
-          <div class="mini-cart-header">
-            <strong data-i18n="cart.title">Carrito</strong>
-            <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
-          </div>
+          <div id="miniCart" class="mini-cart glass" aria-hidden="true">
+            <div class="mini-cart-header">
+              <strong data-i18n="cart.title">Carrito</strong>
+              <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
+            </div>
 
-          <div id="miniCartItems" class="mini-cart-items">
-            <!-- items dinámicos -->
-          </div>
+            <div id="miniCartItems" class="mini-cart-items">
+              <!-- items dinámicos -->
+            </div>
 
-          <div class="mini-cart-footer" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-            <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
-            <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button></div>
+            <div class="mini-cart-footer" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
+                <div>
+                  <button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button id="viewCartBtn" class="btn ghost">Ver carrito</button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- selector idioma -->
-      <div class="lang-wrapper">
-        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false">
-          🇪🇸 <span id="langLabel">Español</span> ▾
-        </button>
-        <div id="langMenu" class="lang-menu glass" aria-hidden="true">
-          <button class="lang-item" data-lang="es">🇪🇸 Español</button>
-          <button class="lang-item" data-lang="en">🇬🇧 English</button>
-          <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
+        <!-- selector idioma -->
+        <div class="lang-wrapper">
+          <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false">
+            🇪🇸 <span id="langLabel">Español</span> ▾
+          </button>
+          <div id="langMenu" class="lang-menu glass" aria-hidden="true">
+            <button class="lang-item" data-lang="es">🇪🇸 Español</button>
+            <button class="lang-item" data-lang="en">🇬🇧 English</button>
+            <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
+          </div>
         </div>
-      </div>
 
-      <!-- toggle tema -->
-      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+        <!-- toggle tema -->
+        <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+      </div>
     </div>
   </header>
 
-  <!-- HERO -->
-  <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
-    <div class="hero-content">
-      <h1 id="hero-title">La tecnología que te entiende</h1>
-      <p>Innovación minimalista para tu día a día</p>
-      <a href="#productos" class="btn primary" data-i18n="btn.explorar">Explorar</a>
-    </div>
-  </section>
+  <main>
+    <!-- HERO -->
+    <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
+      <div class="hero-content">
+        <h1 id="hero-title">La tecnología que te entiende</h1>
+        <p>Innovación minimalista para tu día a día</p>
+        <a href="#productos" class="btn primary" data-i18n="btn.explorar">Explorar</a>
+      </div>
+    </section>
 
-  <!-- PRODUCTOS -->
-  <section id="productos" class="section reveal" aria-labelledby="prod-title">
-    <h2 id="prod-title">Productos</h2>
-    <div class="grid">
-      <!-- Lixby One -->
-      <article class="card glass" data-product="lixby-one" role="button" tabindex="0" aria-label="Lixby One">
-        <div class="thumb">
-          <img src="https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg" alt="Lixby One">
-        </div>
-        <h3>Lixby One</h3>
-        <p>Ultraligero y potente.</p>
-        <span class="price">349€</span>
-      </article>
+    <!-- PRODUCTOS -->
+    <section id="productos" class="section reveal" aria-labelledby="prod-title">
+      <h2 id="prod-title">Productos</h2>
+      <div class="grid">
+        <!-- Lixby One -->
+        <article class="card glass" data-product="lixby-one" role="button" tabindex="0" aria-label="Lixby One">
+          <div class="thumb">
+            <img src="https://cdn.grupoelcorteingles.es/SGFM/dctm/MEDIA03/202409/10/00194612201288____11__1200x1200.jpg" alt="Lixby One">
+          </div>
+          <h3>Lixby One</h3>
+          <p>Ultraligero y potente.</p>
+          <span class="price">349€</span>
+        </article>
 
-      <!-- Lixby One Plus -->
-      <article class="card glass" data-product="lixby-one-plus" role="button" tabindex="0" aria-label="Lixby One Plus">
-        <div class="thumb">
-          <img src="https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg" alt="Lixby One Plus">
-        </div>
-        <h3>Lixby One Plus</h3>
-        <p>Teléfono de última generación.</p>
-        <span class="price">659€</span>
-      </article>
+        <!-- Lixby One Plus -->
+        <article class="card glass" data-product="lixby-one-plus" role="button" tabindex="0" aria-label="Lixby One Plus">
+          <div class="thumb">
+            <img src="https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg" alt="Lixby One Plus">
+          </div>
+          <h3>Lixby One Plus</h3>
+          <p>Teléfono de última generación.</p>
+          <span class="price">659€</span>
+        </article>
 
-      <!-- Lixby One Pro -->
-      <article class="card glass" data-product="lixby-one-pro" role="button" tabindex="0" aria-label="Lixby One Pro">
-        <div class="thumb">
-          <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro">
-        </div>
-        <h3>Lixby One Pro</h3>
-        <p>Audio de alta fidelidad.</p>
-        <span class="price">1099€</span>
-      </article>
-    </div>
-  </section>
+        <!-- Lixby One Pro -->
+        <article class="card glass" data-product="lixby-one-pro" role="button" tabindex="0" aria-label="Lixby One Pro">
+          <div class="thumb">
+            <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro">
+          </div>
+          <h3>Lixby One Pro</h3>
+          <p>Audio de alta fidelidad.</p>
+          <span class="price">1099€</span>
+        </article>
+      </div>
+    </section>
 
-  <!-- CONTACTO -->
-  <section id="contacto" class="section glass reveal" aria-labelledby="contact-title">
-    <h2 id="contact-title">Contáctanos</h2>
-    <p>Déjanos tu mensaje y te responderemos hoy mismo.</p>
-    <form class="contact-form" onsubmit="return false;">
-      <input type="text" placeholder="Nombre" required>
-      <input type="email" placeholder="Correo" required>
-      <textarea placeholder="Tu mensaje" required></textarea>
-      <button class="btn primary" data-i18n="btn.enviar">Enviar</button>
-    </form>
-  </section>
+    <!-- CONTACTO -->
+    <section id="contacto" class="section glass reveal" aria-labelledby="contact-title">
+      <h2 id="contact-title">Contáctanos</h2>
+      <p>Déjanos tu mensaje y te responderemos hoy mismo.</p>
+      <form class="contact-form" onsubmit="return false;">
+        <input type="text" placeholder="Nombre" required>
+        <input type="email" placeholder="Correo" required>
+        <textarea placeholder="Tu mensaje" required></textarea>
+        <button class="btn primary" data-i18n="btn.enviar">Enviar</button>
+      </form>
+    </section>
 
-  <!-- CONÓCENOS -->
-  <section id="conocenos" class="section reveal" aria-labelledby="about-title">
-    <h2 id="about-title">Conócenos</h2>
-    <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
-  </section>
+    <!-- CONÓCENOS -->
+    <section id="conocenos" class="section reveal" aria-labelledby="about-title">
+      <h2 id="about-title">Conócenos</h2>
+      <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
+    </section>
+  </main>
 
   <!-- FOOTER -->
   <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
@@ -145,29 +157,6 @@
   <noscript style="display:block;background:#fffb; padding:10px; text-align:center;">
     JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
   </noscript>
-
-  <!-- Ajuste dinámico: coloca el contenido bajo el header fijo -->
-  <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      try {
-        const header = document.querySelector('.nav');
-        if (header) {
-          // 18px extra para separación visual
-          const pad = Math.round(header.getBoundingClientRect().height + 18);
-          document.documentElement.style.setProperty('--lixby-header-height', pad + 'px');
-          document.body.style.paddingTop = pad + 'px';
-        }
-      } catch (e) { /* no romper si falla */ console.warn('Header padding script:', e); }
-    });
-    // también reajustar si se redimensiona (por si el header cambia de alto)
-    window.addEventListener('resize', () => {
-      const header = document.querySelector('.nav');
-      if (header) {
-        const pad = Math.round(header.getBoundingClientRect().height + 18);
-        document.body.style.paddingTop = pad + 'px';
-      }
-    });
-  </script>
 
   <!-- tu script principal (defer) -->
   <script src="script.js" defer></script>
