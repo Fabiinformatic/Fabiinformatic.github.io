@@ -1,5 +1,5 @@
 // =====================
-// script.js — LIXBY (robusto, con panel de carrito integrado) — CORREGIDO
+// script.js — LIXBY (robusto, con panel de carrito integrado) — VERSIÓN FINAL
 // =====================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const LANG_KEY = "lixby_lang";
     const THEME_KEY = "lixby_theme";
 
-    // traducciones mínimas (tu objeto original)
+    // traducciones
     const translations = {
       es: {
         "nav.inicio": "Inicio",
@@ -88,20 +88,14 @@ document.addEventListener("DOMContentLoaded", () => {
     function parsePriceToNumber(priceStr) {
       if (priceStr === 0) return 0;
       if (!priceStr) return 0;
-      // quita todo excepto dígitos, coma, punto y guión
       const num = String(priceStr).replace(/[^\d.,-]/g, "").replace(",", ".");
       return parseFloat(num) || 0;
     }
     function formatPriceNum(num) {
-      // formateo simple con € (mantengo tu estilo)
       return (Math.round(num * 100) / 100) + "€";
     }
-    function loadCart() {
-      try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e){ return []; }
-    }
-    function saveCart(cart) {
-      try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch(e){}
-    }
+    function loadCart() { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e) { return []; } }
+    function saveCart(cart) { try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch(e) {} }
 
     // ajustar padding-top para que main no quede debajo del header
     function adjustBodyPaddingUnderHeader(){
@@ -137,7 +131,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const key = el.getAttribute('data-i18n');
         if (key && map[key]) el.textContent = map[key];
       });
-      // actualizar botones dinámicos (si existen)
       document.querySelectorAll('.btn-add').forEach(btn => { btn.textContent = map['btn.add'] || btn.textContent; });
       const label = document.getElementById('langLabel');
       const names = { es: "Español", en: "English", fr: "Français" };
@@ -148,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
       currentLang = lang;
       try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
       applyTranslations(lang);
-      // si panel existe, actualizar sus textos
       updateCartPanelUI();
     }
     setLanguage(currentLang);
@@ -163,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearCartBtn = document.getElementById("clearCart");
     const checkoutBtn = document.getElementById("checkoutBtn");
 
-    // === panel de carrito dinámico (crea HTML si no existe) ===
+    // crea panel si no existe
     function ensureCartPanel(){
       if (document.getElementById('cartPanel')) return;
       const panel = document.createElement('aside');
@@ -193,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       document.body.appendChild(panel);
 
-      // estilos mínimos si no los tienes
+      // estilos mínimos si no hay (prevención)
       if (!document.getElementById('cart-panel-styles')){
         const s = document.createElement('style');
         s.id = 'cart-panel-styles';
@@ -202,10 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
           .cart-panel.open { transform: translateX(0); }
           .cart-panel .cart-panel-inner { width:100%; display:flex; flex-direction:column; box-sizing:border-box; height:100%; }
           @media(max-width:720px){ .cart-panel{ width:92%; } }
-          .cart-panel .mini-item { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
-          .cart-panel .mini-item img{ width:56px; height:56px; object-fit:cover; border-radius:8px; }
-          .cart-panel .text-btn { background:transparent; border:none; cursor:pointer; font-size:1rem; padding:6px; color:var(--muted); }
-          .cart-panel .qty-control { display:flex; gap:6px; align-items:center; }
           #cartPanelItems .cart-row { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
           #cartPanelItems .cart-row-img { width:72px; height:72px; object-fit:cover; border-radius:8px; flex:0 0 72px; }
           #cartPanelItems .cart-row-info { flex:1 1 auto; min-width:0; }
@@ -216,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.head.appendChild(s);
       }
 
-      // eventos básicos del panel
+      // listeners panel
       const closeBtn = panel.querySelector('#cartPanelClose');
       if (closeBtn) closeBtn.addEventListener('click', () => toggleCartPanel(false));
       const clearBtn = panel.querySelector('#cartPanelClear');
@@ -227,26 +215,25 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(`Simulación de checkout — artículos: ${cart.reduce((s,i)=>s+(i.qty||0),0)} — Total: ${panel.querySelector('#cartPanelTotal') ? panel.querySelector('#cartPanelTotal').textContent : ''}`);
       });
 
-      // cerrar con Escape
+      // Escape para cerrar
       document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') toggleCartPanel(false); });
     }
 
-    // toggle cart panel + backdrop
+    // abrir/cerrar panel y backdrop
     function toggleCartPanel(open){
       ensureCartPanel();
       const panel = document.getElementById('cartPanel');
-      const backdrop = document.getElementById('cartBackdrop');
       if (!panel) return;
+      const backdrop = document.getElementById('cartBackdrop');
       const show = (typeof open === 'boolean') ? open : !panel.classList.contains('open');
       panel.setAttribute('aria-hidden', String(!show));
       panel.classList.toggle('open', show);
 
-      // backdrop handling (if exists in DOM)
+      // backdrop existente o creación dinámica
       if (backdrop) {
         backdrop.classList.toggle('open', show);
         backdrop.setAttribute('aria-hidden', String(!show));
       } else {
-        // crear backdrop si no existe (para accesibilidad y bloqueo scroll)
         if (show) {
           const b = document.createElement('div');
           b.id = 'cartBackdrop';
@@ -264,13 +251,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // bloquear scroll cuando abierto
+      // bloquear scroll
       if (show) document.documentElement.style.overflow = 'hidden';
       else document.documentElement.style.overflow = '';
+
       if (show) updateCartPanelUI();
     }
 
-    // mini-cart render (pop)
+    // render mini-cart
     function updateMiniCartUI(){
       try {
         if (cartCount) cartCount.textContent = cart.reduce((s,i)=>s+(i.qty||0),0);
@@ -306,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch(e){ console.warn('updateMiniCartUI error', e); }
     }
 
-    // panel UI que renderiza filas + totales + IVA
+    // render panel
     function updateCartPanelUI(){
       ensureCartPanel();
       const panel = document.getElementById('cartPanel');
@@ -318,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const shippingEl = panel.querySelector('#cartPanelShipping');
       if (!list || !subtotalEl || !totalEl || !vatEl) return;
 
-      // actualizar textos traducibles del panel
       if (shippingEl) shippingEl.textContent = translations[currentLang]['shipping.free'] || shippingEl.textContent;
 
       list.innerHTML = '';
@@ -327,7 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
         subtotalEl.textContent = '0€';
         totalEl.textContent = '0€';
         vatEl.textContent = '0€';
-        // vat label
         const vatLabelSpan = panel.querySelector('[data-i18n="vat.label"]');
         if (vatLabelSpan) vatLabelSpan.textContent = translations[currentLang]['vat.label'].replace('{vat}', formatPriceNum(0));
         return;
@@ -356,18 +342,16 @@ document.addEventListener("DOMContentLoaded", () => {
       subtotalEl.textContent = formatPriceNum(subtotal);
       totalEl.textContent = formatPriceNum(total);
       vatEl.textContent = formatPriceNum(vatAmount);
-      // actualizar VAT label textual (ej: "Incluye 166,44 € de IVA (21%)")
       const vatLabelSpan = panel.querySelector('[data-i18n="vat.label"]');
       if (vatLabelSpan) {
         const tpl = translations[currentLang]['vat.label'] || translations['es']['vat.label'];
         vatLabelSpan.textContent = tpl.replace('{vat}', formatPriceNum(vatAmount));
       }
-      // mini-cart total y contador
       if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(subtotal);
       if (cartCount) cartCount.textContent = cart.reduce((s,i)=>s+(i.qty||0),0);
     }
 
-    // Exponer addToCart para que fichas / index usen
+    // exponer addToCart
     window.addToCart = function(product){
       if (!product || !product.id) return;
       const existing = cart.find(p => p.id === product.id);
@@ -376,11 +360,10 @@ document.addEventListener("DOMContentLoaded", () => {
       saveCart(cart);
       updateMiniCartUI();
       updateCartPanelUI();
-      // mostrar mini-cart brevemente
       if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
     };
 
-    // Robust cart button handling: toggle miniCart if present, otherwise open cartPanel
+    // manejo botón carrito
     function handleCartBtnClick(e) {
       try {
         if (miniCart) {
@@ -389,19 +372,14 @@ document.addEventListener("DOMContentLoaded", () => {
           if (e && e.stopPropagation) e.stopPropagation();
           return;
         }
-        // fallback: open cart panel drawer
         toggleCartPanel(true);
       } catch (err) {
         console.warn('handleCartBtnClick error', err);
         toggleCartPanel(true);
       }
     }
-
-    // If cartBtn exists now, attach directly
-    if (cartBtn) {
-      cartBtn.addEventListener('click', handleCartBtnClick);
-    } else {
-      // attach delegated handler in case the element is added later
+    if (cartBtn) cartBtn.addEventListener('click', handleCartBtnClick);
+    else {
       document.addEventListener('click', function delegatedCartClick(ev){
         const target = ev.target;
         if (!target) return;
@@ -410,21 +388,21 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Close miniCart when clicking outside (only if miniCart exists)
+    // cerrar miniCart si clic fuera
     document.addEventListener('click', (e) => {
       try {
         if (!miniCart) return;
         if (cartBtn && !cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
           miniCart.setAttribute('aria-hidden', 'true');
         }
-      } catch(e){ /* silent */ }
+      } catch(e){}
     });
 
-    // clear / checkout
+    // clear / checkout botones mini-cart
     if (clearCartBtn) clearCartBtn.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
     if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (cart.length===0) return alert(translations[currentLang]['cart.empty']); alert(`Simulación checkout — artículos: ${cart.reduce((s,i)=>s+(i.qty||0),0)}`); });
 
-    // viewCartBtn dentro del miniCart (puede no existir en todas las páginas)
+    // viewCartBtn dentro del miniCart
     document.addEventListener('click', (ev) => {
       const el = ev.target;
       if (!el) return;
@@ -433,12 +411,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // init cart UIs
+    // init UIs
     updateMiniCartUI();
     ensureCartPanel();
     updateCartPanelUI();
 
-    // tarjetas click (redirigen a ficha)
+    // tarjetas click -> ficha producto
     try {
       const cardEls = Array.from(document.querySelectorAll(".card[data-product]"));
       cardEls.forEach(card => {
@@ -463,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } catch(e){ console.warn("cards init error", e); }
 
-    // language menu interactions (if present)
+    // language menu interactions
     const langBtn = document.getElementById("langBtn");
     const langMenu = document.getElementById("langMenu");
     if (langBtn && langMenu) {
@@ -492,21 +470,14 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // aplicar traducciones globales (inicial)
+    // aplicar traducciones iniciales
     applyTranslations(currentLang);
 
-    // ---------------------------
-    // REVEAL / animaciones: si tienes .reveal en HTML, las hacemos visibles con IntersectionObserver
-    // Así evitamos que toda la página quede ocultada por CSS (.reveal {opacity:0})
-    // ---------------------------
+    // Reveal / IntersectionObserver para .reveal (fallback si no hay)
     (function initReveal(){
       const revealEls = Array.from(document.querySelectorAll('.reveal'));
       if (!revealEls.length) return;
-      // añadir visible inmediatamente para pantalla principal (suaviza con delay)
-      setTimeout(()=> {
-        revealEls.slice(0, 6).forEach(el => el.classList.add('visible'));
-      }, 40);
-      // observer para el resto
+      setTimeout(()=> { revealEls.slice(0,6).forEach(el => el.classList.add('visible')); }, 40);
       if ('IntersectionObserver' in window) {
         const obs = new IntersectionObserver((entries, o) => {
           entries.forEach(en => {
@@ -516,16 +487,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           });
         }, { root: null, rootMargin: '0px', threshold: 0.12 });
-        revealEls.forEach(el => {
-          if (!el.classList.contains('visible')) obs.observe(el);
-        });
+        revealEls.forEach(el => { if (!el.classList.contains('visible')) obs.observe(el); });
       } else {
-        // fallback: mostrar todo
         revealEls.forEach(el => el.classList.add('visible'));
       }
     })();
 
-    // sincronizar cambios cross-tab (ej. otra pestaña actualiza el carrito)
+    // sincronizar cambios entre pestañas
     window.addEventListener('storage', (ev) => {
       if (ev.key === CART_KEY) {
         cart = loadCart();
@@ -534,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // expone un evento por si otras partes de la app quieren forzar re-render
+    // evento público para re-render manual
     window.dispatchEvent(new Event('cartUpdated'));
 
   } catch (err) {
