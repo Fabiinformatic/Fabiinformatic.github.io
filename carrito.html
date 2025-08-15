@@ -3,27 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Carrito — LIXBY</title>
+  <title>Carrito - LIXBY</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- HEADER -->
   <header class="nav glass">
     <div class="nav-inner">
       <div class="nav-left">
-        <div class="brand" role="button" onclick="location.href='index.html'">LIXBY</div>
+        <div class="brand" onclick="location.href='index.html'" role="button">LIXBY</div>
       </div>
-      <div class="nav-right">
-        <a href="carrito.html" class="icon-btn" aria-label="Ver carrito">
-          🛒 <span id="cartCount" class="badge">0</span>
-        </a>
-      </div>
+      <nav id="navLinks">
+        <a href="index.html#inicio">Inicio</a>
+        <a href="index.html#productos">Productos</a>
+        <a href="index.html#contacto">Contáctanos</a>
+        <a href="index.html#conocenos">Conócenos</a>
+      </nav>
     </div>
   </header>
 
-  <main class="section">
+  <main style="padding:80px 20px;">
     <h1>Tu carrito</h1>
-    <table id="cartTable" border="1" cellpadding="8" style="width:100%;text-align:left;">
+    <table border="1" cellpadding="8" cellspacing="0" style="width:100%;max-width:800px;margin:auto;">
       <thead>
         <tr>
           <th>Producto</th>
@@ -32,43 +32,37 @@
           <th>Subtotal</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- Items dinámicos -->
+      <tbody id="cartTableBody">
+        <!-- Productos dinámicos -->
       </tbody>
     </table>
 
-    <div id="totales" style="margin-top:20px;text-align:right;">
+    <div style="max-width:800px;margin:20px auto;text-align:right;">
       <p>Subtotal: <span id="subtotal">0€</span></p>
       <p>IVA (21%): <span id="iva">0€</span></p>
-      <p><strong>Total: <span id="total">0€</span></strong></p>
-    </div>
-
-    <div style="margin-top:20px;text-align:right;">
-      <button onclick="finalizarCompra()" class="btn primary">Finalizar compra</button>
+      <h3>Total: <span id="total">0€</span></h3>
     </div>
   </main>
 
   <script>
-    // Simulación de datos guardados en localStorage
-    const carrito = JSON.parse(localStorage.getItem('carrito')) || [
-      { nombre: 'Lixby One', precio: 349, cantidad: 1 },
-      { nombre: 'Lixby One Plus', precio: 659, cantidad: 2 }
-    ];
+    // Simulación: cargar carrito desde localStorage
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const tbody = document.getElementById('cartTableBody');
 
-    const tbody = document.querySelector('#cartTable tbody');
     let subtotal = 0;
+    cart.forEach(item => {
+      const price = parseFloat(item.price);
+      const totalItem = price * item.quantity;
+      subtotal += totalItem;
 
-    carrito.forEach(item => {
-      const row = document.createElement('tr');
-      const sub = item.precio * item.cantidad;
-      subtotal += sub;
-      row.innerHTML = `
-        <td>${item.nombre}</td>
-        <td>${item.precio}€</td>
-        <td>${item.cantidad}</td>
-        <td>${sub.toFixed(2)}€</td>
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.name}</td>
+        <td>${price.toFixed(2)}€</td>
+        <td>${item.quantity}</td>
+        <td>${totalItem.toFixed(2)}€</td>
       `;
-      tbody.appendChild(row);
+      tbody.appendChild(tr);
     });
 
     const iva = subtotal * 0.21;
@@ -77,11 +71,6 @@
     document.getElementById('subtotal').textContent = subtotal.toFixed(2) + '€';
     document.getElementById('iva').textContent = iva.toFixed(2) + '€';
     document.getElementById('total').textContent = total.toFixed(2) + '€';
-
-    function finalizarCompra() {
-      alert('Gracias por tu compra.');
-      localStorage.removeItem('carrito');
-    }
   </script>
 </body>
 </html>
