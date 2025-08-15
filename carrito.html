@@ -1,55 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tu carrito - LIXBY</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrito — LIXBY</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    header { padding: 16px; background: #111; color: #fff; }
+    .cart-container { max-width: 900px; margin: 20px auto; padding: 16px; }
+    .cart-item { display: flex; align-items: center; gap: 20px; padding: 12px 0; border-bottom: 1px solid #ccc; }
+    .cart-item img { width: 120px; height: auto; border-radius: 8px; }
+    .cart-item .price { margin-left: auto; font-weight: bold; font-size: 1.2em; }
+    .totals { margin-top: 30px; font-size: 1.1em; }
+    .totals div { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .checkout-btn { margin-top: 20px; padding: 12px 20px; font-size: 1em; background: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+  </style>
 </head>
 <body>
 
-<header class="nav glass">
-    <div class="brand">LIXBY</div>
-    <div id="navLinks">
-        <a href="index.html">Inicio</a>
-        <a href="productos.html">Productos</a>
-    </div>
-    <div style="display: flex; gap: 12px;">
-        <a href="#" class="icon-btn">🌐</a>
-        <a href="carrito.html" class="icon-btn">🛒</a>
-    </div>
+<header>
+  <h1>Tu carrito</h1>
 </header>
 
-<main class="section" style="margin-top: 90px; max-width: 900px;">
-    <h1>Tu carrito</h1>
-
-    <div class="mini-cart-item" style="display: flex; justify-content: space-between; align-items: center;">
-        <img src="img/movil.jpg" alt="Teléfono" style="width: 80px; height: 80px; border-radius: 8px;">
-        <div style="flex: 1; margin-left: 12px;">
-            <h3>Smartphone LIXBY Pro</h3>
-        </div>
-        <div style="font-weight: bold;">959,00 €</div>
+<main>
+  <div class="cart-container">
+    <!-- Producto -->
+    <div class="cart-item">
+      <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro">
+      <div>
+        <h2>Lixby One Pro</h2>
+      </div>
+      <div class="price">959,00 €</div>
     </div>
 
-    <div style="margin-top: 30px; border-top: 1px solid var(--stroke); padding-top: 20px; font-size: 0.95rem;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span>Subtotal</span>
-            <span>959,00 €</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-            <span>Envío</span>
-            <span>GRATIS</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-bottom: 6px;">
-            <span>Tu total:</span>
-            <span>959,00 €</span>
-        </div>
-        <p style="color: var(--muted); font-size: 0.85rem;">
-            Incluye 166,44 € de IVA (21%)
-        </p>
+    <!-- Totales -->
+    <div class="totals">
+      <div><span>Subtotal</span><span>959,00 €</span></div>
+      <div><span>Envío</span><span>GRATIS</span></div>
+      <div style="font-weight:bold; font-size:1.2em;"><span>Tu total:</span><span>959,00 €</span></div>
+      <div style="font-size:0.9em; color:#666;">
+        Incluye 166,44 € de IVA
+      </div>
     </div>
 
-    <button class="btn primary" style="margin-top: 20px; width: 100%;">Continuar con el pago</button>
+    <button class="checkout-btn">Continuar con el pago</button>
+  </div>
 </main>
 
 </body>
