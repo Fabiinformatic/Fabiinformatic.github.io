@@ -103,6 +103,10 @@
       .product-image{ max-width:80%; max-height:80%; }
       .mini-cart, .lang-menu { right:8px; top:48px; }
     }
+
+    /* ligero hover animation para botones (no borra nada) */
+    .btn-add, .btn-fav, .icon-btn, .btn { transition: transform .16s cubic-bezier(.2,.9,.3,1), box-shadow .16s ease; }
+    .btn-add:hover, .btn-fav:hover, .icon-btn:hover, .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 22px rgba(2,6,12,0.12); }
   </style>
 </head>
 <body>
@@ -157,14 +161,15 @@
       <div style="flex:1;padding:24px;">Cargando producto…</div>
     </div>
 
-    <div class="product-list" id="quickLinks" style="display:none;margin-top:22px;">
+    <div class="product-list" id="quickLinks" style="display:none;margin-top:22px;flex-direction:column;gap:8px;">
+      <!-- Aseguro que los quicklinks usan ?id= -->
       <a href="producto.html?id=lixby-one">Ver Lixby One</a>
       <a href="producto.html?id=lixby-one-plus">Ver Lixby One Plus</a>
       <a href="producto.html?id=lixby-one-pro">Ver Lixby One Pro</a>
     </div>
   </main>
 
-  <div id="debug" class="debug" role="status" aria-live="polite"></div>
+  <div id="debug" class="debug" role="status" aria-live="polite" style="white-space:pre-wrap;display:none;padding:8px;margin:8px;max-width:1100px;color:var(--muted);"></div>
 
   <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
@@ -191,7 +196,7 @@
     // set year
     const yearEl = document.getElementById('year'); if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // Datos de productos
+    // Datos de productos (mantengo los que tenías)
     const products = {
       "lixby-one-air": {
         id: 'lixby-one-air',
@@ -260,7 +265,7 @@
       if (!miniCartItems) return;
       miniCartItems.innerHTML = '';
       if (cart.length === 0) {
-        miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
+        miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">' + (translations && translations[currentLang] && translations[currentLang]['cart.empty'] ? translations[currentLang]['cart.empty'] : 'Tu carrito está vacío.') + '</div>';
         if (miniCartTotal) miniCartTotal.textContent = '0€';
         return;
       }
@@ -370,25 +375,114 @@
     try {
       function proxiedUrl(originalUrl){ const stripped = originalUrl.replace(/^https?:\/\//,''); return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=1200`; }
 
-      const params = new URLSearchParams(window.location.search);
-      const raw = params.get('id');
-      const id = raw ? decodeURIComponent(raw) : null;
+      // Robust ID extraction:
+      function getProductIdFromUrl() {
+        // 1) query param ?id=
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const qid = params.get('id');
+          if (qid) return decodeURIComponent(qid);
+        } catch(e){ /* ignore */ }
+
+        // 2) hash like #id=lixby-one or #/producto/lixby-one or #lixby-one
+        try {
+          const h = window.location.hash || '';
+          if (h) {
+            if (h.indexOf('id=') !== -1) {
+              const m = h.match(/id=([^&]+)/);
+              if (m && m[1]) return decodeURIComponent(m[1]);
+            }
+            // #/producto/lixby-one or #producto/lixby-one or #lixby-one
+            const clean = h.replace(/^#\/?/, '');
+            const parts = clean.split('/');
+            if (parts.length) {
+              // try last segment if not empty
+              const last = parts[parts.length-1];
+              if (last) return decodeURIComponent(last);
+            }
+          }
+        } catch(e){}
+
+        // 3) pathname last segment: /producto/lixby-one or /producto.html/lixby-one or /lixby/producto/lixby-one
+        try {
+          const path = window.location.pathname || '';
+          const segs = path.split('/').filter(Boolean);
+          if (segs.length) {
+            // if last is 'producto.html' no id, else try last as id
+            const last = segs[segs.length-1];
+            if (last && !last.match(/\.html$/i) && last !== 'producto' && last !== 'producto.html') {
+              return decodeURIComponent(last);
+            }
+            // in case path like /producto/lixby-one, try second last
+            if (segs.length >= 2) {
+              const maybe = segs[segs.length-1];
+              if (maybe && !maybe.match(/\.html$/i)) return decodeURIComponent(maybe);
+            }
+          }
+        } catch(e){}
+
+        // 4) try referrer query (if user came from index with ?id=)
+        try {
+          const ref = document.referrer || '';
+          if (ref) {
+            const uq = ref.split('?')[1];
+            if (uq) {
+              const sp = new URLSearchParams(uq);
+              const rid = sp.get('id');
+              if (rid) return decodeURIComponent(rid);
+            }
+          }
+        } catch(e){}
+
+        return null;
+      }
+
+      const idRaw = getProductIdFromUrl();
       const container = document.getElementById('productDetail');
       const quickLinks = document.getElementById('quickLinks');
 
-      if (!id) {
-        container.innerHTML = '<div style="padding:20px;">No se recibió ID. Usa uno de estos enlaces:</div>';
+      if (!idRaw) {
+        // no id -> show friendly message and quicklinks
+        if (container) container.innerHTML = '<div style="padding:20px;"><h2>Producto no especificado</h2><p>Parece que no se recibió un identificador de producto. Usa uno de estos enlaces o vuelve a la tienda.</p></div>';
         if (quickLinks) quickLinks.style.display = 'flex';
-        showDebug('No id en URL — mostrando enlaces de prueba.');
+        showDebug('No se detectó id en la URL (ni query, ni hash, ni path).');
         return;
       }
-      if (!products[id]) {
-        container.innerHTML = '<div style="padding:20px;"><h2>Producto no encontrado</h2><p>Vuelve a la <a href="index.html">tienda</a>.</p></div>';
+
+      // Normalize an id: lowercase and replace spaces etc
+      const id = String(idRaw).trim();
+
+      // if exact match not found, try tolerant matches (case-insensitive, replace - / spaces)
+      function findProductByIdFlexible(k) {
+        if (products[k]) return k;
+        const key = k.toLowerCase();
+        // try direct lower
+        for (const pk in products) {
+          if (pk.toLowerCase() === key) return pk;
+        }
+        // try replacing spaces/underscores with hyphens
+        const alt = key.replace(/\s+/g,'-').replace(/_/g,'-');
+        for (const pk in products) {
+          if (pk.toLowerCase() === alt) return pk;
+        }
+        // try contains
+        for (const pk in products) {
+          if (pk.toLowerCase().indexOf(key) !== -1 || key.indexOf(pk.toLowerCase()) !== -1) return pk;
+        }
+        return null;
+      }
+
+      const matchedId = findProductByIdFlexible(id);
+      if (!matchedId) {
+        container.innerHTML = '<div style="padding:20px;"><h2>Producto no encontrado</h2><p>El identificador recibido fue: <code>' + id + '</code>. Vuelve a la <a href="index.html">tienda</a>.</p></div>';
         showDebug('ID no coincide con productos: ' + id);
         return;
       }
 
-      const p = products[id];
+      const p = products[matchedId];
+
+      // expose current product id globally for other modules (defensive)
+      try { window.currentProductId = matchedId; } catch(e){}
 
       // imagen (proxied -> original -> placeholder)
       const wrap = document.createElement('div'); wrap.className = 'image-wrap';
@@ -396,8 +490,8 @@
       img.src = proxiedUrl(p.image);
       let triedOriginal = false, triedPlaceholder = false;
       img.onerror = function(){
-        if (!triedOriginal) { triedOriginal = true; showDebug('proxied failed, trying original for ' + id); img.src = p.image; }
-        else if (!triedPlaceholder) { triedPlaceholder = true; showDebug('original failed, using placeholder for ' + id); img.onerror=null; img.src='https://via.placeholder.com/600x600?text=Sin+imagen'; }
+        if (!triedOriginal) { triedOriginal = true; showDebug('proxied failed, trying original for ' + matchedId); img.src = p.image; }
+        else if (!triedPlaceholder) { triedPlaceholder = true; showDebug('original failed, using placeholder for ' + matchedId); img.onerror=null; img.src='https://via.placeholder.com/600x600?text=Sin+imagen'; }
       };
       wrap.appendChild(img);
 
@@ -416,7 +510,7 @@
       favBtn.title = 'Guardar en favoritos';
       favBtn.addEventListener('click', () => {
         // dispatch toggle request for Firebase module
-        window.dispatchEvent(new CustomEvent('toggleFavorite', { detail: { id: p.id||id, name: p.name, price: p.price, image: p.image } }));
+        window.dispatchEvent(new CustomEvent('toggleFavorite', { detail: { id: p.id||matchedId, name: p.name, price: p.price, image: p.image } }));
       });
 
       // añadir botón (usa window.addToCart)
@@ -424,7 +518,7 @@
       addBtn.className = 'btn-add';
       addBtn.textContent = (translations[currentLang] && translations[currentLang]['btn.add']) || 'Añadir al carrito';
       addBtn.addEventListener('click', () => {
-        const productData = { id: p.id||id, name: p.name, price: p.price, image: p.image, priceNum: parsePriceToNumber(p.price) };
+        const productData = { id: p.id||matchedId, name: p.name, price: p.price, image: p.image, priceNum: parsePriceToNumber(p.price) };
         if (typeof window.addToCart === 'function') {
           window.addToCart(productData);
         } else {
@@ -453,7 +547,7 @@
       container.appendChild(info);
 
       // BOM (si aplica)
-      if (id === 'lixby-one' && Array.isArray(p.bom)) {
+      if (matchedId === 'lixby-one' && Array.isArray(p.bom)) {
         const tableWrap = document.createElement('div'); tableWrap.style.marginTop='18px';
         const note = document.createElement('div'); note.textContent = 'Lista de componentes (BOM)'; note.style.fontWeight='700'; note.style.marginBottom='8px'; note.style.color='var(--muted)';
         tableWrap.appendChild(note);
@@ -473,16 +567,16 @@
       }
 
       // descripción ampliada (solo Lixby One)
-      if (id === 'lixby-one') {
+      if (matchedId === 'lixby-one') {
         const detail = document.createElement('div'); detail.className = 'detail-block';
-        detail.innerHTML = `...`; // mantuve el contenido largo para brevedad en este snippet (usa tu bloque original)
+        detail.innerHTML = `<h3>Más sobre ${p.name}</h3><p>Detalles técnicos y características clave para usuarios avanzados.</p>`;
         info.appendChild(detail);
       }
 
       // Aviso al módulo Firebase: producto renderizado (para sincronizar estado favoritos)
-      window.dispatchEvent(new CustomEvent('productRendered', { detail: { id: p.id||id } }));
+      window.dispatchEvent(new CustomEvent('productRendered', { detail: { id: p.id||matchedId } }));
 
-      showDebug('Producto renderizado: ' + id);
+      showDebug('Producto renderizado: ' + matchedId);
     } catch(err) {
       showDebug('Error en script: ' + (err && err.message ? err.message : String(err)));
       const pd = document.getElementById('productDetail');
@@ -526,7 +620,7 @@
     const db = getFirestore(app);
 
     let currentUser = null;
-    let currentProductId = null;
+    let currentProductId = (window.currentProductId || null);
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
@@ -543,8 +637,9 @@
     async function refreshFavButton(){
       const btn = document.getElementById('favBtn');
       if (!btn) return;
+      // ensure we get currentProductId from global if available
+      if (!currentProductId && window.currentProductId) currentProductId = window.currentProductId;
       if (!currentProductId){
-        // nothing to do yet
         btn.innerHTML = '♡ Favorito';
         return;
       }
@@ -576,6 +671,8 @@
     // Listen productRendered to know current product id
     window.addEventListener('productRendered', (ev) => {
       currentProductId = ev.detail && ev.detail.id ? ev.detail.id : null;
+      // also store globally
+      try { window.currentProductId = currentProductId; } catch(e){}
       refreshFavButton();
     });
 
