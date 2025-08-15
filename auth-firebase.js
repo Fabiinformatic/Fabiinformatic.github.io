@@ -1,5 +1,5 @@
 // auth-firebase.js  (pegar en /auth-firebase.js o insertar como <script type="module">)
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
 import {
   getAuth,
   signInWithPopup,
@@ -7,20 +7,20 @@ import {
   GithubAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut as fbSignOut,
+  signOut as firebaseSignOut,
   onAuthStateChanged
-} from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
+} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 
 /*
-  REEMPLAZA ESTE OBJETO CON TU CONFIG DE FIREBASE (lo copias desde Project settings -> General -> Your apps -> SDK snippet)
-  Ejemplo de campos: apiKey, authDomain, projectId, appId, etc.
+  REEMPLAZA ESTE OBJETO CON TU CONFIG DE FIREBASE (Project settings -> General -> Your apps -> SDK snippet)
+  Ejemplo de campos: apiKey, authDomain, projectId, appId, measurementId, etc.
 */
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
   authDomain: "TU_PROJECT.firebaseapp.com",
   projectId: "TU_PROJECT_ID",
   appId: "TU_APP_ID",
-  // ... otros campos si existieran
+  // ... otros campos si los tienes
 };
 
 const app = initializeApp(firebaseConfig);
@@ -28,32 +28,47 @@ const auth = getAuth(app);
 const providerGoogle = new GoogleAuthProvider();
 const providerGitHub = new GithubAuthProvider();
 
-// Helper: store minimal user snapshot in localStorage (no tokens)
+// Helper: guarda snapshot público y mínimo en localStorage (no guardes tokens)
 function saveLocalUser(user) {
-  if (!user) { localStorage.removeItem('lixby_user'); return; }
+  if (!user) {
+    localStorage.removeItem('lixby_user');
+    return;
+  }
   const u = {
     uid: user.uid,
-    name: user.displayName || user.email?.split('@')[0] || 'Usuario',
+    name: user.displayName || (user.email ? user.email.split('@')[0] : 'Usuario'),
     email: user.email || '',
-    photoURL: user.photoURL || '',
+    photoURL: user.photoURL || ''
   };
-  localStorage.setItem('lixby_user', JSON.stringify(u));
+  try {
+    localStorage.setItem('lixby_user', JSON.stringify(u));
+  } catch (e) {
+    console.warn('No se pudo guardar local user', e);
+  }
 }
 
-// Expose appAuth API (usado por el modal y la página de cuenta)
+// Cerrar modal welcome si existe
+function closeWelcomeOverlay() {
+  const w = document.getElementById('welcomeOverlay');
+  if (w) {
+    w.classList.remove('show');
+    w.setAttribute('aria-hidden', 'true');
+  }
+}
+
+// Expose appAuth API (usado por modal y cuenta.html)
 window.appAuth = {
   signInWithGoogle: async () => {
     try {
       const result = await signInWithPopup(auth, providerGoogle);
       saveLocalUser(result.user);
-      // close modal if exists
-      const w = document.getElementById('welcomeOverlay');
-      if (w) { w.classList.remove('show'); w.setAttribute('aria-hidden','true'); }
-      // redirect to account page
+      closeWelcomeOverlay();
       window.location.href = 'cuenta.html';
+      return true;
     } catch (err) {
       console.error('Google sign-in error', err);
-      alert('Error al iniciar sesión con Google: ' + (err.message || err));
+      alert('Error al iniciar sesión con Google: ' + (err?.message || err));
+      return false;
     }
   },
 
@@ -61,71 +76,104 @@ window.appAuth = {
     try {
       const result = await signInWithPopup(auth, providerGitHub);
       saveLocalUser(result.user);
-      const w = document.getElementById('welcomeOverlay');
-      if (w) { w.classList.remove('show'); w.setAttribute('aria-hidden','true'); }
+      closeWelcomeOverlay();
       window.location.href = 'cuenta.html';
+      return true;
     } catch (err) {
       console.error('GitHub sign-in error', err);
-      alert('Error al iniciar sesión con GitHub: ' + (err.message || err));
+      alert('Error al iniciar sesión con GitHub: ' + (err?.message || err));
+      return false;
     }
   },
 
+  /**
+   * signInWithEmail(email, password)
+   * - intenta iniciar sesión
+   * - si user-not-found => crea nueva cuenta automáticamente
+   * - si wrong-password => informa al usuario
+   */
   signInWithEmail: async (email, password) => {
+    if (!email || !password) {
+      alert('Introduce correo y contraseña.');
+      return false;
+    }
+
     try {
       // intenta iniciar sesión
       await signInWithEmailAndPassword(auth, email, password);
       const u = auth.currentUser;
-      saveLocalUser(u);
-      const w = document.getElementById('welcomeOverlay');
-      if (w) { w.classList.remove('show'); w.setAttribute('aria-hidden','true'); }
+      if (u) saveLocalUser(u);
+      closeWelcomeOverlay();
       window.location.href = 'cuenta.html';
+      return true;
     } catch (err) {
-      // si no existe, intentamos crear cuenta (UX simple)
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+      console.warn('signInWithEmail error', err);
+      const code = err?.code || '';
+
+      if (code === 'auth/user-not-found') {
+        // Opcional: confirmar al usuario si quiere crear cuenta
+        const crear = confirm('No existe una cuenta con ese correo. ¿Deseas crear una cuenta con esas credenciales?');
+        if (!crear) return false;
         try {
           const cred = await createUserWithEmailAndPassword(auth, email, password);
           saveLocalUser(cred.user);
-          const w = document.getElementById('welcomeOverlay');
-          if (w) { w.classList.remove('show'); w.setAttribute('aria-hidden','true'); }
+          closeWelcomeOverlay();
           window.location.href = 'cuenta.html';
+          return true;
         } catch (err2) {
           console.error('Registro falló', err2);
-          alert('No se pudo registrar: ' + (err2.message || err2));
+          alert('No se pudo registrar: ' + (err2?.message || err2));
+          return false;
         }
+      } else if (code === 'auth/wrong-password') {
+        alert('Contraseña incorrecta. Si no recuerdas tu contraseña, utiliza "Olvidé mi contraseña".');
+        return false;
+      } else if (code === 'auth/invalid-email') {
+        alert('Correo no válido. Revisa el formato.');
+        return false;
       } else {
-        console.error('Email sign-in error', err);
-        alert('Error al iniciar sesión: ' + (err.message || err));
+        alert('Error al iniciar sesión: ' + (err?.message || err));
+        return false;
       }
     }
   },
 
   signOut: async () => {
     try {
-      await fbSignOut(auth);
-    } catch(e) {
+      await firebaseSignOut(auth);
+    } catch (e) {
       console.warn('Firebase signOut error', e);
     }
     localStorage.removeItem('lixby_user');
-    // optionally clean other session keys
+    // limpia llaves adicionales si las usas
+    // localStorage.removeItem('otra_llave');
     window.location.href = 'index.html';
   },
 
   onAuthState: (cb) => {
+    // cb recibe usuario normalizado o null
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        const u = { uid: user.uid, name: user.displayName || user.email.split('@')[0], email: user.email, photoURL: user.photoURL };
+        const u = {
+          uid: user.uid,
+          name: user.displayName || (user.email ? user.email.split('@')[0] : ''),
+          email: user.email || '',
+          photoURL: user.photoURL || ''
+        };
         saveLocalUser(user);
-        cb(u);
+        try { cb(u); } catch (e) { console.error('onAuthState cb error', e); }
       } else {
         localStorage.removeItem('lixby_user');
-        cb(null);
+        try { cb(null); } catch (e) { console.error('onAuthState cb error', e); }
       }
     });
   },
 
-  // for debugging
+  // debugging / advanced
   _rawAuth: auth
 };
 
-// Sync: si el usuario ya tiene sesión en Firebase guarda el snapshot local
-onAuthStateChanged(auth, (user) => { if (user) saveLocalUser(user); });
+// Si ya hay sesión al cargar la página sincronizamos snapshot local
+onAuthStateChanged(auth, (user) => {
+  if (user) saveLocalUser(user);
+});
