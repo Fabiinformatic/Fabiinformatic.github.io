@@ -39,12 +39,32 @@
     .btn-add, .btn-fav, .icon-btn, .btn { transition: transform .16s cubic-bezier(.2,.9,.3,1), box-shadow .16s ease; }
     .btn-add:hover, .btn-fav:hover, .icon-btn:hover, .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 22px rgba(2,6,12,0.12); }
 
+    /* skip link visible cuando tiene foco */
+    .skip-link {
+      position: absolute;
+      left: 12px;
+      top: 8px;
+      padding: 8px 12px;
+      background: #07101a;
+      color: #fff;
+      border-radius: 6px;
+      z-index: 99999;
+      transform: translateY(-120%);
+      transition: transform .18s ease;
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    /* pantalla oculta para lectores */
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
     @media (max-width:900px){
       .contact-min { flex-direction:column; } .contact-min .form{ width:100% }
     }
   </style>
 </head>
 <body>
+  <!-- skip link para accesibilidad -->
+  <a class="skip-link" href="#maincontent">Saltar al contenido</a>
+
 <!-- NAV -->
 <header class="nav glass" role="banner">
   <div class="nav-inner">
@@ -62,13 +82,14 @@
     <!-- RIGHT: controles en fila -->
     <div class="nav-right" aria-hidden="false">
       <div class="cart-wrapper" style="position:relative;">
-        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito">🛒 <span id="cartCount" class="badge">0</span></button>
-        <div id="miniCart" class="mini-cart glass" aria-hidden="true">
+        <!-- Añadido aria-controls y aria-expanded para accesibilidad -->
+        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito" aria-controls="miniCart" aria-expanded="false">🛒 <span id="cartCount" class="badge">0</span></button>
+        <div id="miniCart" class="mini-cart glass" aria-hidden="true" role="region" aria-label="Mini carrito">
           <div class="mini-cart-header">
             <strong data-i18n="cart.title">Carrito</strong>
             <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
           </div>
-          <div id="miniCartItems" class="mini-cart-items">
+          <div id="miniCartItems" class="mini-cart-items" tabindex="0" aria-live="polite">
             <!-- items dinámicos -->
           </div>
           <div class="mini-cart-footer" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
@@ -130,7 +151,7 @@
 </div>
 <!-- END AUTH -->
 
-<main>
+<main id="maincontent">
   <!-- HERO -->
   <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
     <div class="hero-content">
@@ -147,6 +168,7 @@
       <!-- Lixby One Air -->
       <article class="card glass" data-product="lixby-one-air" role="button" tabindex="0" aria-label="Lixby One Air">
         <div class="thumb">
+          <!-- mantuvimos loading lazy y dimensiones -->
           <img src="https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg" alt="Lixby One Air"
                loading="lazy" decoding="async" width="600" height="600">
         </div>
@@ -243,6 +265,9 @@
   </div>
 </aside>
 
+<!-- Live region for screen-reader announcements (used when adding to cart, etc.) -->
+<div id="announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
 <noscript style="display:block;background:#fffb; padding:10px; text-align:center;">
   JavaScript está desactivado o ha ocurrido un error. Si la página no carga correctamente, abre la consola (F12 → Console).
 </noscript>
@@ -288,6 +313,7 @@
   const cartCount = document.getElementById('cartCount');
   const clearCartBtn = document.getElementById('clearCart');
   const checkoutBtn = document.getElementById('checkoutBtn');
+  const announcements = document.getElementById('announcements');
 
   function updateMiniCartUI(){
     if (!cartCount) return;
@@ -301,6 +327,8 @@
       return;
     }
     let total = 0;
+    // fragment para menor reflow
+    const frag = document.createDocumentFragment();
     cart.forEach((it, idx) => {
       const item = document.createElement('div');
       item.className = 'mini-cart-item';
@@ -311,9 +339,10 @@
       const remove = document.createElement('button'); remove.className='remove'; remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
       remove.addEventListener('click', ()=>{ cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
       item.appendChild(img); item.appendChild(meta); item.appendChild(remove);
-      miniCartItems.appendChild(item);
+      frag.appendChild(item);
       total += (it.priceNum || parsePrice(it.price)) * (it.qty||1);
     });
+    miniCartItems.appendChild(frag);
     if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(total);
   }
 
@@ -321,9 +350,13 @@
     cartBtn.addEventListener('click', (e) => {
       const shown = miniCart.getAttribute('aria-hidden') === 'false';
       miniCart.setAttribute('aria-hidden', String(!shown));
+      try { cartBtn.setAttribute('aria-expanded', String(!shown)); } catch(e){}
     });
     document.addEventListener('click', (e) => {
-      if (!cartBtn.contains(e.target) && !miniCart.contains(e.target)) miniCart.setAttribute('aria-hidden','true');
+      if (!cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
+        miniCart.setAttribute('aria-hidden','true');
+        try { cartBtn.setAttribute('aria-expanded', 'false'); } catch(e){}
+      }
     });
   }
   if (clearCartBtn) clearCartBtn.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); });
@@ -335,7 +368,9 @@
     else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: parsePrice(product.price) || product.priceNum || 0, qty:1, image: product.image });
     saveCart(cart);
     updateMiniCartUI();
-    if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
+    if (miniCart) { miniCart.setAttribute('aria-hidden','false'); try { cartBtn.setAttribute('aria-expanded','true'); } catch(e){} setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
+    // announce for screen readers
+    try { if (announcements) announcements.textContent = `${product.name} añadido al carrito.`; } catch(e){}
   };
 
   updateMiniCartUI();
@@ -345,7 +380,7 @@
   const translations = {
     es: { "nav.inicio":"Inicio","nav.productos":"Productos","nav.contacto":"Contáctanos","nav.conocenos":"Conócenos","cart.title":"Carrito","cart.clear":"Vaciar","cart.total":"Total:","cart.checkout":"Pagar","btn.add":"Añadir al carrito","btn.added":"Añadido","btn.explorar":"Explorar","btn.enviar":"Enviar","theme.toggle":"Cambiar tema","cart.empty":"Tu carrito está vacío." },
     en: { "nav.inicio":"Home","nav.productos":"Products","nav.contacto":"Contact","nav.conocenos":"About","cart.title":"Cart","cart.clear":"Clear","cart.total":"Total:","cart.checkout":"Checkout","btn.add":"Add to cart","btn.added":"Added","btn.explorar":"Explore","btn.enviar":"Send","theme.toggle":"Toggle theme","cart.empty":"Your cart is empty." },
-    fr: { "nav.inicio":"Accueil","nav.productos":"Produits","nav.contacto":"Contact","nav.conocenos":"À propos","cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer","btn.add":"Ajouter au panier","btn.added":"Ajouté","btn.explorar":"Explorer","btn.enviar":"Envoyer","theme.toggle":"Changer le thème","cart.empty":"Votre panier est vide." }
+    fr: { "nav.inicio":"Accueil","nav.productos":"Produits","nav.contacto":"Contact","nav.conocenos":"À propos","cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer","btn.add":"Ajouter au panier","btn.added":"Ajouté","btn.explorar":"Explorer","btn.enviar":"Envoyer","theme.toggle":"Changer el thème","cart.empty":"Votre panier est vide." }
   };
   let currentLang = localStorage.getItem('lixby_lang') || 'es';
   function applyTranslations(lang){
@@ -392,13 +427,12 @@
     if (typeof window.addToCart === 'function' && window.addToCart !== undefined) {
       window.addToCart(payload);
     } else {
-      // fallback local
       const existing = cart.find(i => i.id === payload.id);
       if (existing) existing.qty = (existing.qty||1) + 1;
       else cart.push({ id: payload.id, name: payload.name || 'Producto', price: payload.price || '0€', priceNum: payload.priceNum || 0, qty:1, image: payload.image || '' });
       saveCart(cart); updateMiniCartUI();
+      try { if (announcements) announcements.textContent = `${payload.name} añadido al carrito.`; } catch(e){}
     }
-    // feedback
     const original = btn.textContent;
     btn.textContent = (translations[currentLang] && translations[currentLang]['btn.added']) || 'Añadido';
     setTimeout(()=> btn.textContent = original, 900);
@@ -408,7 +442,6 @@
   document.addEventListener('click', function(e){
     const card = e.target.closest && e.target.closest('.card');
     if (!card) return;
-    // si el clic fue dentro de un botón o enlace, no hacemos la navegación (dejamos que actúen)
     if (e.target.closest('button, a')) return;
     const pid = card.dataset && card.dataset.product;
     if (!pid) return;
