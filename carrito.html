@@ -16,6 +16,7 @@
       --accent-dark:#000;
       --shadow: 0 10px 30px rgba(0,0,0,0.6);
       --radius:12px;
+      --toast-bg: rgba(0,0,0,0.72);
     }
     html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
     .wrap{max-width:1200px;margin:28px auto;padding:24px;}
@@ -29,6 +30,7 @@
     .top-actions .right{display:flex;gap:12px}
 
     .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
     .btn-apple{background:#000;color:#fff}
     .btn-primary{background:var(--accent);color:#00121a}
 
@@ -42,8 +44,10 @@
     .meta{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
     .qty{display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
     .qty button{background:transparent;border:0;padding:6px 10px;cursor:pointer;color:var(--text)}
+    .qty button:focus{outline:2px solid var(--accent); outline-offset:2px}
     .qty span{padding:6px 10px;min-width:36px;text-align:center}
     .remove{background:transparent;border:0;color:#ff6b6b;cursor:pointer}
+    .remove:focus{outline:2px solid #ff6b6b; outline-offset:2px}
 
     .price{flex:0 0 160px;text-align:right;font-weight:700}
 
@@ -54,14 +58,37 @@
     .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
     .applecare{display:flex;gap:10px;align-items:flex-start;margin-top:10px;color:var(--muted);font-size:0.95rem;border-left:3px solid rgba(255,255,255,0.02);padding-left:10px}
 
+    /* toast (undo) */
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--toast-bg);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      font-weight:600;
+    }
+    .toast button { background:transparent;border:1px solid rgba(255,255,255,0.12); color:#fff; padding:6px 8px; border-radius:8px; cursor:pointer; }
+
     @media (max-width:960px){
       .layout{flex-direction:column}
       .summary{width:100%;margin-left:0}
       .thumb img{width:100%;height:auto;aspect-ratio:1/1}
     }
+
+    /* small visually-hidden helper */
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   </style>
 </head>
 <body>
+  <a class="sr-only" href="#bag" id="skip">Saltar al contenido</a>
+
   <div class="wrap">
     <header class="simple">
       <div class="brand" onclick="location.href='index.html'">LIXBY</div>
@@ -75,24 +102,25 @@
     <h1>Tu carrito</h1>
 
     <div class="top-actions" style="margin-bottom:12px">
-      <div class="left" id="topText">Aquí tienes lo que hay en tu bolsa.</div>
+      <div class="left" id="topText" aria-live="polite">Aquí tienes lo que hay en tu bolsa.</div>
       <div class="right">
         <button class="btn btn-apple" id="applePayTop">Pagar con Apple Pay</button>
         <button class="btn btn-primary" id="continueTop">Continuar con el pago</button>
+        <button class="btn" id="clearCart">Vaciar carrito</button>
       </div>
     </div>
 
     <div class="layout">
       <div style="flex:1">
-        <div id="bag" class="bag-list"></div>
-        <div id="emptyMsg" class="empty" style="display:none;margin-top:12px">
+        <div id="bag" class="bag-list" role="list" aria-label="Elementos de la bolsa"></div>
+        <div id="emptyMsg" class="empty" style="display:none;margin-top:12px" aria-hidden="true">
           <strong>Tu bolsa está vacía</strong>
           <p style="color:var(--muted)">Añade productos desde la tienda.</p>
           <p><a href="index.html" class="btn btn-primary">Volver a la tienda</a></p>
         </div>
       </div>
 
-      <aside class="summary" id="summaryAside" style="display:none">
+      <aside class="summary" id="summaryAside" style="display:none" aria-live="polite">
         <div style="font-weight:700;margin-bottom:6px">Resumen</div>
         <div class="summary-row"><div>Subtotal</div><div id="sub">0,00 €</div></div>
         <div class="summary-row"><div>Envío</div><div id="ship">GRATIS</div></div>
@@ -106,8 +134,18 @@
     </div>
   </div>
 
+  <!-- toast undo -->
+  <div id="undoToast" class="toast" style="display:none" role="status" aria-live="assertive">
+    <div id="undoText">Artículo eliminado</div>
+    <div style="display:flex;gap:8px">
+      <button id="undoBtn">Deshacer</button>
+      <button id="dismissToast" aria-label="Cerrar">✕</button>
+    </div>
+  </div>
+
   <script>
     (function(){
+      'use strict';
       const KEY = 'lixby_cart_v1'; // misma clave que tu script.js
       const APPLECARE = 169.00;
       const bag = document.getElementById('bag');
@@ -117,27 +155,107 @@
       const summaryAside = document.getElementById('summaryAside');
       const emptyMsg = document.getElementById('emptyMsg');
       const topText = document.getElementById('topText');
+      const applePayTop = document.getElementById('applePayTop');
+      const applePayBottom = document.getElementById('applePayBottom');
+      const continueTop = document.getElementById('continueTop');
+      const continueBottom = document.getElementById('continueBottom');
+      const clearCartBtn = document.getElementById('clearCart');
 
-      function parse(v){ if (typeof v === 'number') return v; if (!v) return 0; const s = String(v).replace(/[^\d.,-]/g,'').replace(',','.'); return parseFloat(s)||0; }
-      function fmt(n){ return n.toFixed(2).replace('.', ',') + ' €'; }
+      const undoToast = document.getElementById('undoToast');
+      const undoText = document.getElementById('undoText');
+      const undoBtn = document.getElementById('undoBtn');
+      const dismissToast = document.getElementById('dismissToast');
 
+      const nf = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
+      function parseValue(v){
+        if (typeof v === 'number') return v;
+        if (!v) return 0;
+        // accept "1234.5" or "1.234,56 €"
+        try {
+          if (typeof v === 'string' && v.includes(',')) {
+            // remove currency symbol, spaces, thousand separators
+            const cleaned = v.replace(/\s/g,'').replace('€','').replace(/\./g,'').replace(',', '.').trim();
+            return parseFloat(cleaned) || 0;
+          }
+          return parseFloat(String(v).replace(/[^\d.-]/g,'')) || 0;
+        } catch(e) { return 0; }
+      }
+
+      function fmt(n){ return nf.format(n); }
+
+      // load cart safely
       let cart = [];
       try { cart = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ cart = []; }
+
+      // Undo state
+      let lastRemoved = null;
+      let undoTimer = null;
+
+      function openToast(text){
+        if (!undoToast) return;
+        undoText.textContent = text || 'Artículo eliminado';
+        undoToast.style.display = 'flex';
+        // reset timer
+        if (undoTimer) clearTimeout(undoTimer);
+        undoTimer = setTimeout(() => hideToast(), 6000);
+      }
+      function hideToast(){
+        if (!undoToast) return;
+        undoToast.style.display = 'none';
+        lastRemoved = null;
+        if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
+      }
+
+      dismissToast?.addEventListener('click', hideToast);
+      undoBtn?.addEventListener('click', () => {
+        if (!lastRemoved) { hideToast(); return; }
+        // reinsert at index
+        const { item, idx } = lastRemoved;
+        cart.splice(Math.min(idx, cart.length), 0, item);
+        persist();
+        hideToast();
+        lastRemoved = null;
+        render();
+        focusFirstQtyButton();
+      });
+
+      function persist(){
+        try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e){}
+        // also emit storage event for same-tab listeners
+        try { window.dispatchEvent(new Event('cartUpdated')); } catch(e){}
+      }
+
+      function saveAndRerender(){
+        persist();
+        render();
+      }
+
+      function focusFirstQtyButton(){
+        const btn = bag.querySelector('.qty button');
+        if (btn) btn.focus();
+      }
 
       function render(){
         bag.innerHTML = '';
         if (!cart || cart.length === 0) {
           summaryAside.style.display = 'none';
           emptyMsg.style.display = 'block';
+          emptyMsg.setAttribute('aria-hidden','false');
           topText.textContent = 'Tu bolsa está vacía.';
+          disablePaymentButtons(true);
           return;
         }
         emptyMsg.style.display = 'none';
+        emptyMsg.setAttribute('aria-hidden','true');
         summaryAside.style.display = 'block';
+        disablePaymentButtons(false);
+
         let subtotal = 0;
+        const frag = document.createDocumentFragment();
 
         cart.forEach((it, idx) => {
-          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parse(it.price);
+          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseValue(it.price);
           const qty = Number(it.qty || 1);
           const hasAC = !!it.appleCare;
           const addon = hasAC ? APPLECARE : 0;
@@ -146,15 +264,16 @@
 
           const item = document.createElement('div');
           item.className = 'item';
+          item.setAttribute('role','listitem');
           item.innerHTML = `
-            <div class="thumb"><img src="${it.image || 'https://via.placeholder.com/400'}" alt="${(it.name||'Producto').replace(/"/g,'') }"></div>
+            <div class="thumb"><img src="${escapeHtml(it.image || 'https://via.placeholder.com/400')}" alt="${escapeHtml((it.name||'Producto'))}"></div>
             <div class="info">
-              <div class="title">${it.name || 'Producto'}</div>
-              <div class="mini">${it.description || ''}</div>
+              <div class="title">${escapeHtml(it.name || 'Producto')}</div>
+              <div class="mini">${escapeHtml(it.description || '')}</div>
 
               <div class="applecare">
                 <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
-                  <input type="checkbox" data-idx="${idx}" class="acbox" ${hasAC ? 'checked' : ''}>
+                  <input type="checkbox" data-idx="${idx}" class="acbox" ${hasAC ? 'checked' : ''} aria-label="Añadir AppleCare para ${escapeHtml(it.name || 'este producto')}">
                   <div>
                     <div style="font-weight:700">Añadir AppleCare+ — ${fmt(APPLECARE)}</div>
                     <div style="color:var(--muted);margin-top:6px;font-size:0.95rem">Protección por daños accidentales y prioridad en reparación.</div>
@@ -163,23 +282,24 @@
               </div>
 
               <div class="meta">
-                <div class="qty" data-idx="${idx}">
-                  <button data-action="dec">−</button>
-                  <span class="qval">${qty}</span>
-                  <button data-action="inc">+</button>
+                <div class="qty" data-idx="${idx}" role="group" aria-label="Control de cantidad para ${escapeHtml(it.name || 'producto')}">
+                  <button aria-label="Disminuir cantidad" data-action="dec">−</button>
+                  <span class="qval" aria-live="polite">${qty}</span>
+                  <button aria-label="Aumentar cantidad" data-action="inc">+</button>
                 </div>
-                <button class="remove" data-idx="${idx}">Eliminar</button>
+                <button class="remove" data-idx="${idx}" aria-label="Eliminar ${escapeHtml(it.name || 'producto')}">Eliminar</button>
               </div>
             </div>
             <div class="price">${fmt(line)}</div>
           `;
-          bag.appendChild(item);
+          frag.appendChild(item);
         });
+
+        bag.appendChild(frag);
 
         const shipping = 0;
         const total = subtotal + shipping;
         const vatRate = 0.21;
-        // IVA incluido = total - total/(1+vatRate)
         const vatAmount = Math.round((total - total / (1 + vatRate)) * 100) / 100;
 
         subEl.textContent = fmt(subtotal);
@@ -187,51 +307,123 @@
         vatEl.textContent = fmt(vatAmount);
         topText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
 
-        // attach events
+        // attach events (delegated would be another option)
         bag.querySelectorAll('.qty').forEach(q => {
           const idx = Number(q.getAttribute('data-idx'));
-          q.querySelector('[data-action="inc"]').onclick = () => { cart[idx].qty = (Number(cart[idx].qty || 1) + 1); saveAndRerender(); };
-          q.querySelector('[data-action="dec"]').onclick = () => { cart[idx].qty = Math.max(1, Number(cart[idx].qty || 1) - 1); saveAndRerender(); };
+          const inc = q.querySelector('[data-action="inc"]');
+          const dec = q.querySelector('[data-action="dec"]');
+          const qval = q.querySelector('.qval');
+
+          inc.onclick = () => {
+            cart[idx].qty = (Number(cart[idx].qty || 1) + 1);
+            qval.textContent = cart[idx].qty;
+            saveAndRerender();
+          };
+          dec.onclick = () => {
+            const current = Math.max(1, Number(cart[idx].qty || 1) - 1);
+            cart[idx].qty = current;
+            qval.textContent = current;
+            saveAndRerender();
+          };
+          // keyboard accessibility: Enter on buttons already works; allow arrow up/down on qval span to adjust
+          qval.addEventListener('keydown', (ev) => {
+            if (ev.key === 'ArrowUp') { inc.click(); ev.preventDefault(); }
+            if (ev.key === 'ArrowDown') { dec.click(); ev.preventDefault(); }
+          });
         });
+
         bag.querySelectorAll('.remove').forEach(b => {
-          const idx = Number(b.getAttribute('data-idx'));
-          b.onclick = () => { if (!confirm('Eliminar este artículo?')) return; cart.splice(idx,1); saveAndRerender(); };
+          b.onclick = () => {
+            const idx = Number(b.getAttribute('data-idx'));
+            // save for undo
+            lastRemoved = { item: cart[idx], idx };
+            cart.splice(idx,1);
+            persist();
+            render();
+            openToast(`Eliminado: ${lastRemoved.item.name || 'Artículo'}`);
+          };
         });
+
         bag.querySelectorAll('.acbox').forEach(cb => {
-          const idx = Number(cb.getAttribute('data-idx'));
-          cb.onchange = (e) => { cart[idx].appleCare = !!e.target.checked; saveAndRerender(); };
+          cb.onchange = (e) => {
+            const idx = Number(cb.getAttribute('data-idx'));
+            cart[idx].appleCare = !!e.target.checked;
+            saveAndRerender();
+          };
         });
       }
 
-      function saveAndRerender(){
-        try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e){}
-        render();
+      // Escape HTML for attributes/content inserted
+      function escapeHtml(str){
+        if (!str && str !== 0) return '';
+        return String(str).replace(/[&<>"]/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
       }
-
-      // initial render
-      render();
 
       // payment simulation
       function paySim(method){
         if (!cart || cart.length === 0) { alert('Tu carrito está vacío'); return; }
         let total = 0;
         cart.forEach(it => {
-          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parse(it.price);
+          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseValue(it.price);
           const qty = Number(it.qty || 1);
           const add = it.appleCare ? APPLECARE : 0;
           total += (price + add) * qty;
         });
         alert(method + ' — Simulación. Total: ' + fmt(total));
       }
-      document.getElementById('applePayTop').addEventListener('click', ()=> paySim('Apple Pay'));
-      document.getElementById('continueTop').addEventListener('click', ()=> paySim('Continuar con el pago'));
-      document.getElementById('applePayBottom').addEventListener('click', ()=> paySim('Apple Pay'));
-      document.getElementById('continueBottom').addEventListener('click', ()=> paySim('Continuar con el pago'));
+      applePayTop.addEventListener('click', ()=> paySim('Apple Pay'));
+      applePayBottom.addEventListener('click', ()=> paySim('Apple Pay'));
+      continueTop.addEventListener('click', ()=> paySim('Continuar con el pago'));
+      continueBottom.addEventListener('click', ()=> paySim('Continuar con el pago'));
 
-      // keep in sync if user changes cart elsewhere (other tab)
-      window.addEventListener('storage', (ev)=>{
-        if (ev.key === KEY) { try { cart = JSON.parse(ev.newValue) || []; } catch(e){ cart = []; } render(); }
+      // Clear cart with confirmation
+      clearCartBtn.addEventListener('click', () => {
+        if (!cart || cart.length === 0) return;
+        if (!confirm('Vaciar el carrito? Esta acción no se puede deshacer.')) return;
+        cart = [];
+        persist();
+        render();
+        setTimeout(()=> setStatus('Carrito vaciado'), 200);
       });
+
+      // disable/enable payment buttons
+      function disablePaymentButtons(disabled){
+        [applePayTop, applePayBottom, continueTop, continueBottom].forEach(b => { if (b) b.disabled = !!disabled; });
+      }
+
+      // storage sync: if another tab updates cart
+      window.addEventListener('storage', (ev)=>{
+        if (ev.key === KEY) {
+          try { cart = JSON.parse(ev.newValue) || []; } catch(e){ cart = []; }
+          render();
+        }
+      });
+
+      // small helper to show short status
+      function setStatus(msg){
+        // use aria-live element (topText) to communicate quickly
+        try {
+          topText.textContent = msg;
+          setTimeout(()=> {
+            if (cart && cart.length === 0) topText.textContent = 'Tu bolsa está vacía.';
+            else {
+              const total = cart.reduce((s,it)=> s + ((parseValue(it.priceNum||it.price) + (it.appleCare? APPLECARE:0)) * (it.qty||1)), 0);
+              topText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
+            }
+          }, 2500);
+        } catch(e){}
+      }
+
+      // initial render and accessibility focus hint
+      render();
+      focusFirstQtyButton();
+
+      // expose simple API for debugging
+      window.__LIXBY_CART = {
+        get: () => JSON.parse(JSON.stringify(cart || [])),
+        clear: () => { cart = []; persist(); render(); }
+      };
+
     })();
   </script>
 </body>
