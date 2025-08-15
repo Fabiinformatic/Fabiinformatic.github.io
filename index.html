@@ -7,57 +7,73 @@
   <link rel="stylesheet" href="style.css" />
   <!-- Overrides locales para header y comportamiento consistente -->
   <style>
-    /* header pegado al borde, layout 3 columnas: logo | nav centrado | controles a la derecha (vertical) */
+    /* Header compacto, línea recta, minimal */
     .nav {
+      position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      position: fixed;
-      padding: 10px 18px;
       z-index: 120;
-      background: transparent;
+      padding: 10px 24px;
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(8px) saturate(120%);
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      border-radius: 0;
+      box-shadow: none;
     }
+
     .nav-inner {
       max-width: 1200px;
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 16px;
+      min-height: 64px;
+      padding: 0 6px;
     }
 
     /* logo a la izquierda */
-    .nav-left { justify-self: start; display:flex; align-items:center; gap:8px; }
+    .nav-left { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
 
     /* nav links centrados */
-    #navLinks { justify-self: center; display:flex; gap:18px; align-items:center; }
-
-    /* controles a la derecha - SIEMPRE vertical (apilados) */
-    .nav-right {
-      justify-self: end;
+    #navLinks {
       display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      gap:8px;
+      gap:18px;
+      align-items:center;
+      justify-content:center;
+      flex: 1 1 auto;
+      padding: 8px 12px;
+      white-space: nowrap;
     }
 
-    /* pequeño ajuste en móvil para mantener enlaces legibles */
-    @media (max-width:640px) {
-      #navLinks { gap: 10px; font-size:0.95rem; }
-      .nav-inner { padding: 6px; grid-template-columns: auto 1fr auto; }
+    /* controles a la derecha en UNA FILA */
+    .nav-right {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+      flex: 0 0 auto;
+      flex-direction: row !important; /* evita columnas impuestas por inline */
     }
+
+    /* Mini-cart / lang positioning (no se apilen) */
+    .cart-wrapper { position:relative; }
+    .mini-cart { right:18px; top:56px; width:320px; box-sizing:border-box; z-index:140; }
+    .lang-menu { right:18px; top:56px; box-sizing:border-box; z-index:140; }
 
     /* asegurar que main empieza debajo del header (fallback si JS no se ejecuta) */
-    main { padding-top: 84px; }
+    main { padding-top: calc(64px + 12px); }
 
-    /* Cart panel styles (basics - controlado por script.js si lo tienes actualizado) */
+    /* Cart panel styles (basics) */
     .cart-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 210; display: none; }
     .cart-backdrop.open { display: block; }
     .cart-panel {
       position: fixed;
       top: 0;
       right: 0;
-      height: 100vh;
+      bottom: 0;
       width: 360px;
       transform: translateX(112%);
       transition: transform .28s ease, box-shadow .28s ease;
@@ -101,7 +117,7 @@
         <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
       </nav>
 
-      <!-- RIGHT: vertical controls -->
+      <!-- RIGHT: controles en fila -->
       <div class="nav-right" aria-hidden="false">
         <!-- carrito (mini) -->
         <div class="cart-wrapper" style="position:relative;">
