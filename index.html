@@ -512,6 +512,30 @@
     if (cartPanelClose) cartPanelClose.addEventListener('click', ()=> setPanel(false));
   })();
 
+  // ---- AÑADIDO: hacer que "Ver carrito" lleve a carrito.html sin borrar el botón original ----
+  // Clonamos y reemplazamos el botón original para eliminar listeners anteriores y añadir navegación explícita.
+  (function enableViewCartNavigation(){
+    try {
+      const orig = document.getElementById('viewCartBtn');
+      if (!orig) return;
+      // Si ya es un enlace <a>, no tocar
+      if (orig.tagName.toLowerCase() === 'a') return;
+      // clonamos sin listeners
+      const clone = orig.cloneNode(true);
+      // aseguramos que sea tipo="button" para accesibilidad
+      if (!clone.hasAttribute('type')) clone.setAttribute('type','button');
+      // añadimos navegación limpia (reemplaza comportamiento de abrir panel)
+      clone.addEventListener('click', (e) => {
+        // prevenir cualquier otro listener en el elemento original (ya perdido por el clone)
+        // navegamos a la página del carrito
+        window.location.href = 'carrito.html';
+      });
+      orig.parentNode.replaceChild(clone, orig);
+    } catch (err) {
+      console.warn('No se pudo habilitar navegación a carrito:', err);
+    }
+  })();
+
   // export for other modules if needed
   window.lixby = window.lixby || {};
   window.lixby.cart = { load: loadCart, save: saveCart, getAll: () => cart };
