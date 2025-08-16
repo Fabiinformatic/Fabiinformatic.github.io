@@ -1,4 +1,6 @@
 // auth-ui.js  (cargar después de auth-firebase.js)
+// Versión corregida y robusta: preview mini-cart on hover, click abre panel,
+// fallback de cuenta usando localStorage (foto invitado), y suscripciones seguras.
 (function(){
   'use strict';
 
@@ -17,8 +19,13 @@
     try { return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
   }
 
+  // constantes
+  const GUEST_IMG = 'https://ohsobserver.com/wp-content/uploads/2022/12/Guest-user.png';
+  const CART_KEY = 'lixby_cart_v1';
+  const ACCOUNT_KEY = 'lixby_user';
+
   // selectores (pueden no existir en todas las páginas)
-  const accountBtn = byId('accountBtn');
+  let accountBtn = byId('accountBtn'); // may be replaced dynamically
   const brand = document.querySelector('.brand');
   const navRight = document.querySelector('.nav-right');
 
@@ -48,6 +55,7 @@
     avatarBtn.style.background = 'transparent';
     avatarBtn.style.border = 'none';
     avatarBtn.style.cursor = 'pointer';
+    avatarBtn.type = 'button';
 
     const avatarImg = document.createElement('img');
     avatarImg.id = 'headerAvatar';
@@ -86,12 +94,14 @@
     viewAccount.className = 'btn ghost';
     viewAccount.textContent = 'Mi cuenta';
     viewAccount.setAttribute('role','menuitem');
+    viewAccount.type = 'button';
 
     const signOutBtn = document.createElement('button');
     signOutBtn.id = 'headerSignOut';
     signOutBtn.className = 'btn ghost';
     signOutBtn.textContent = 'Cerrar sesión';
     signOutBtn.setAttribute('role','menuitem');
+    signOutBtn.type = 'button';
 
     // append
     menu.appendChild(viewAccount);
@@ -143,18 +153,25 @@
       e.preventDefault();
       hideAccountMenu();
       try {
+        // prefer appAuth signOut if provided
         if (window.appAuth && typeof window.appAuth.signOut === 'function') {
           await window.appAuth.signOut();
+          // appAuth.onAuthState should update header via subscribeAuth
         } else if (window.appAuth && window.appAuth._rawAuth && typeof window.appAuth._rawAuth.signOut === 'function') {
           await window.appAuth._rawAuth.signOut();
         } else {
-          // last resort: reload and clear local
-          localStorage.removeItem('lixby_user');
-          location.href = 'index.html';
+          // fallback: clear localStorage snapshot and dispatch change event
+          try { localStorage.removeItem(ACCOUNT_KEY); } catch(e){}
+          // notify other parts
+          try { window.dispatchEvent(new Event('authChanged')); } catch(e){}
+          // refresh UI
+          renderHeaderUser(null);
+          // optionally navigate to home
+          try { window.location.href = 'index.html'; } catch(e){}
         }
       } catch (err) {
         console.warn('Sign-out failed', err);
-        alert('Error cerrando sesión. Revisa la consola.');
+        try { alert('Error cerrando sesión. Revisa la consola.'); } catch(e){}
       }
     });
 
@@ -186,14 +203,33 @@
 
   // Render header UI (avatar + menu). userObj puede ser null
   function renderHeaderUser(userObj) {
-    // si no hay nav, no hacer nada
     try {
       // if null -> restore accountBtn
       if (!userObj) {
         // remove holder if present
         const holder = byId('accountHolder');
         if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
-        if (accountBtn) { accountBtn.style.display = ''; accountBtn.textContent = 'Cuenta'; accountBtn.setAttribute('aria-haspopup','true'); }
+        // restore original accountBtn if exists or recreate fallback
+        if (!accountBtn) {
+          // try to find a button in nav-right with label Cuenta
+          accountBtn = byId('accountBtn') || (navRight && navRight.querySelector('button[aria-label="Mi cuenta"], .btn.ghost'));
+        }
+        if (accountBtn) {
+          accountBtn.style.display = '';
+          try { accountBtn.textContent = 'Cuenta'; accountBtn.setAttribute('aria-haspopup','true'); } catch(e){}
+          // ensure accountBtn opens cuenta.html as fallback
+          accountBtn.onclick = function(e){ e.preventDefault(); window.location.href = 'cuenta.html'; };
+        } else if (navRight) {
+          // create fallback account button
+          const fallback = document.createElement('button');
+          fallback.id = 'accountBtn';
+          fallback.className = 'btn ghost';
+          fallback.type = 'button';
+          fallback.textContent = 'Cuenta';
+          fallback.addEventListener('click', () => window.location.href = 'cuenta.html');
+          navRight.insertBefore(fallback, navRight.firstChild);
+          accountBtn = fallback;
+        }
         if (brand) brand.textContent = 'LIXBY';
         return;
       }
@@ -206,7 +242,8 @@
       const nameSpan = byId('headerName');
 
       const displayName = userObj.name || (userObj.email ? userObj.email.split('@')[0] : 'Usuario');
-      const photo = userObj.photoURL || (`https://via.placeholder.com/64x64?text=${encodeURIComponent((displayName||'U').charAt(0))}`);
+      // if userObj explicitly anonymous OR lacks photoURL use guest image
+      const photo = (userObj.isAnonymous || !userObj.photoURL) ? (userObj.photoURL || GUEST_IMG) : userObj.photoURL;
 
       if (avatarImg) {
         avatarImg.src = photo;
@@ -215,7 +252,10 @@
       if (nameSpan) {
         nameSpan.textContent = displayName;
       }
-      if (brand) brand.textContent = (userObj.name ? (userObj.name.split(' ')[0]) : 'LIXBY');
+      if (brand) {
+        // brand shows first name if available
+        brand.textContent = (userObj.name ? (userObj.name.split(' ')[0]) : 'LIXBY');
+      }
     } catch (e) {
       console.warn('renderHeaderUser error', e);
     }
@@ -244,7 +284,7 @@
     container.innerHTML = `
       <div class="account-profile glass" style="max-width:980px;margin:28px auto;padding:18px;border-radius:12px;display:flex;gap:16px;align-items:flex-start;">
         <div style="flex:0 0 84px;">
-          <div class="avatar" style="width:84px;height:84px;border-radius:12px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)">${(fn||'U').charAt(0).toUpperCase()}</div>
+          <div class="avatar" id="profileAvatar" style="width:84px;height:84px;border-radius:12px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)">${(fn||'U').charAt(0).toUpperCase()}</div>
         </div>
         <div style="flex:1">
           <h2>Mi cuenta</h2>
@@ -282,11 +322,11 @@
           await window.appAuth.updateProfileExtra({ firstName, lastName, dob: dobVal });
           profileMsg.textContent = 'Guardado ✔';
           // update header name locally
-          const local = safeJSONParse(localStorage.getItem('lixby_user')) || {};
+          const local = safeJSONParse(localStorage.getItem(ACCOUNT_KEY)) || {};
           local.firstName = firstName || local.firstName;
           local.lastName = lastName || local.lastName;
           local.dob = dobVal || local.dob;
-          try { localStorage.setItem('lixby_user', JSON.stringify(local)); } catch(e){/*ignore*/}
+          try { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(local)); } catch(e){/*ignore*/}
 
           // try to update header immediately
           renderHeaderUser({ uid: (local.uid||''), name: (firstName ? (firstName + (lastName ? ' ' + lastName : '')) : local.name || local.firstName), email: local.email, photoURL: local.photoURL });
@@ -305,11 +345,12 @@
 
   // Read minimal local snapshot
   function getLocalUserSnapshot() {
-    return safeJSONParse(localStorage.getItem('lixby_user'));
+    return safeJSONParse(localStorage.getItem(ACCOUNT_KEY));
   }
 
-  // Subscribe to auth state; prefer appAuth.onAuthState but fallback to localStorage
+  // Subscribe to auth state; prefer appAuth.onAuthState but fallback to localStorage + events
   function subscribeAuth() {
+    // primary: appAuth API
     if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
       try {
         window.appAuth.onAuthState((u) => {
@@ -324,10 +365,27 @@
         console.warn('appAuth.onAuthState failed, using fallback', e);
       }
     }
-    // fallback to reading local snapshot once
+
+    // fallback: use localStorage snapshot and listen for authChanged/storage events
     const local = getLocalUserSnapshot();
     renderHeaderUser(local);
     renderAccountPanel(local || {});
+
+    // listen for storage changes from other tabs
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === ACCOUNT_KEY) {
+        const newUser = safeJSONParse(ev.newValue);
+        renderHeaderUser(newUser);
+        renderAccountPanel(newUser || {});
+      }
+    });
+
+    // custom event to notify changes within same tab
+    window.addEventListener('authChanged', () => {
+      const u = getLocalUserSnapshot();
+      renderHeaderUser(u);
+      renderAccountPanel(u || {});
+    });
   }
 
   // inicializar en DOMContentLoaded
@@ -338,44 +396,50 @@
   }
 
   /* ============================================================
-     NUEVAS FUNCIONALIDADES GLOBALES: Hover mini-preview carrito,
-     click abre panel (o navega), y fallback del botón Cuenta.
-     Estas se aplican en todas las páginas que incluyan este script.
+     Mini-cart hover preview + click-open panel (global fallback)
+     - Safe: no errors if elements missing
+     - Renders using localStorage 'lixby_cart_v1' when no global handlers
      ============================================================ */
 
   function readCartFromStorage() {
-    try { return JSON.parse(localStorage.getItem('lixby_cart_v1')) || []; } catch(e){ return []; }
+    try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e){ return []; }
   }
 
-  function computeCartTotals(cart) {
-    let total = 0;
-    let qty = 0;
-    cart.forEach(it => {
-      const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : (typeof it.price === 'string' ? parseFloat(String(it.price).replace(/[^\d.,]/g,'').replace(',','.')) : Number(it.price)||0);
-      const q = Number(it.qty || 1);
-      total += price * q;
-      qty += q;
-    });
-    return { total, qty };
+  function formatPriceLocale(n) {
+    try {
+      const v = Math.round((Number(n)||0)*100)/100;
+      // use Intl if available for consistency
+      if (window.Intl && typeof Intl.NumberFormat === 'function') {
+        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(v);
+      }
+      return v.toFixed(2).replace('.',',') + '€';
+    } catch(e){ return String(n); }
   }
 
   function renderMiniCartPreviewInto(miniCartEl) {
-    // if the page already defines updateMiniCartUI, use it
+    if (!miniCartEl) return;
+    // if page already provides updateMiniCartUI, call it and exit
     if (typeof window.updateMiniCartUI === 'function') {
       try { window.updateMiniCartUI(); return; } catch(e){ /* continue */ }
     }
-    // Otherwise build content here
-    if (!miniCartEl) return;
+
     const itemsContainer = miniCartEl.querySelector('#miniCartItems') || miniCartEl.querySelector('.mini-cart-items') || miniCartEl;
+    const totalEl = miniCartEl.querySelector('#miniCartTotal') || miniCartEl.querySelector('.mini-cart-total');
+
     if (!itemsContainer) return;
     const cart = readCartFromStorage();
     itemsContainer.innerHTML = '';
-    if (cart.length === 0) {
-      itemsContainer.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
-      const totalEl = miniCartEl.querySelector('#miniCartTotal') || miniCartEl.querySelector('.mini-cart-total');
-      if (totalEl) totalEl.textContent = '0€';
+
+    if (!cart || cart.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.padding = '8px';
+      empty.style.color = 'var(--muted)';
+      empty.textContent = 'Tu carrito está vacío.';
+      itemsContainer.appendChild(empty);
+      if (totalEl) totalEl.textContent = formatPriceLocale(0);
       return;
     }
+
     const frag = document.createDocumentFragment();
     let total = 0;
     cart.forEach((it, idx) => {
@@ -386,6 +450,7 @@
       row.style.alignItems = 'center';
       row.style.padding = '8px';
       row.style.borderRadius = '8px';
+
       const img = document.createElement('img');
       img.src = it.image || 'https://via.placeholder.com/80x80?text=Img';
       img.alt = it.name || 'Producto';
@@ -395,6 +460,7 @@
       img.style.borderRadius = '6px';
       img.loading = 'lazy';
       img.decoding = 'async';
+
       const meta = document.createElement('div');
       meta.className = 'meta';
       meta.style.flex = '1';
@@ -403,9 +469,11 @@
       name.textContent = it.name || 'Producto';
       const sub = document.createElement('div');
       sub.style.color = 'var(--muted)';
-      sub.textContent = (it.price || '') + ' ×' + (it.qty || 1);
+      const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : (typeof it.price === 'string' ? parseFloat(String(it.price).replace(/[^\d.,]/g,'').replace(',','.')) : Number(it.price)||0);
+      sub.textContent = `${formatPriceLocale(priceNum)} × ${it.qty || 1}`;
       meta.appendChild(name);
       meta.appendChild(sub);
+
       const rem = document.createElement('button');
       rem.className = 'remove';
       rem.textContent = '✕';
@@ -413,78 +481,71 @@
       rem.style.border = 'none';
       rem.style.cursor = 'pointer';
       rem.style.color = 'var(--muted)';
+      rem.type = 'button';
       rem.addEventListener('click', (ev) => {
         ev.stopPropagation();
         const c = readCartFromStorage();
         c.splice(idx,1);
-        try { localStorage.setItem('lixby_cart_v1', JSON.stringify(c)); } catch(e){}
+        try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){}
         // re-render
         renderMiniCartPreviewInto(miniCartEl);
-        // emit storage event locally
+        // notify other listeners
         try { window.dispatchEvent(new Event('cartUpdated')); } catch(e){}
       });
+
       row.appendChild(img);
       row.appendChild(meta);
       row.appendChild(rem);
       frag.appendChild(row);
-      const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : (typeof it.price === 'string' ? parseFloat(String(it.price).replace(/[^\d.,]/g,'').replace(',','.')) : Number(it.price)||0);
+
       total += priceNum * Number(it.qty||1);
     });
+
     itemsContainer.appendChild(frag);
-    const totalEl = miniCartEl.querySelector('#miniCartTotal') || miniCartEl.querySelector('.mini-cart-total');
-    if (totalEl) totalEl.textContent = formatPrice(total);
+    if (totalEl) totalEl.textContent = formatPriceLocale(total);
   }
 
-  function formatPrice(n) {
-    try {
-      const v = Math.round((Number(n)||0)*100)/100;
-      // Spanish format with comma
-      return v.toFixed(2).replace('.',',') + '€';
-    } catch(e){ return String(n); }
-  }
-
-  let miniHideTimer = null;
+  // inicializa listeners de hover/click para mini-cart y panel
   function initCartHoverAndAccountListeners() {
-    // Cart hover preview & click behavior
-    const cartBtnEl = byId('cartBtn') || document.querySelector('.cart-wrapper button') || document.querySelector('.cart-wrapper .icon-btn');
+    const cartBtnEl = byId('cartBtn') || document.querySelector('.cart-wrapper .icon-btn');
     const cartWrapper = document.querySelector('.cart-wrapper') || (cartBtnEl && cartBtnEl.parentElement);
-    const miniCartEl = document.getElementById('miniCart') || document.querySelector('.mini-cart');
-    const cartPanel = document.getElementById('cartPanel') || document.querySelector('.cart-panel');
-    const cartBackdrop = document.getElementById('cartBackdrop') || document.querySelector('.cart-backdrop');
+    const miniCartEl = byId('miniCart') || document.querySelector('.mini-cart');
+    const cartPanel = byId('cartPanel') || document.querySelector('.cart-panel');
+    const cartBackdrop = byId('cartBackdrop') || document.querySelector('.cart-backdrop');
+
+    let hideTimer = null;
 
     function showMini() {
       if (!miniCartEl) return;
-      // render content
       renderMiniCartPreviewInto(miniCartEl);
       try { miniCartEl.setAttribute('aria-hidden','false'); } catch(e){}
       miniCartEl.style.display = 'flex';
-      if (miniHideTimer) { clearTimeout(miniHideTimer); miniHideTimer = null; }
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
     }
-    function hideMiniDeferred(delay = 350) {
+    function hideMiniSoon(delay = 250) {
       if (!miniCartEl) return;
-      if (miniHideTimer) clearTimeout(miniHideTimer);
-      miniHideTimer = setTimeout(()=> {
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => {
         try { miniCartEl.setAttribute('aria-hidden','true'); } catch(e){}
-        // only hide if not pinned open by click/panel
-        if (miniCartEl !== null) miniCartEl.style.display = '';
+        miniCartEl.style.display = '';
       }, delay);
     }
 
     if (cartWrapper) {
-      cartWrapper.addEventListener('mouseenter', (ev) => {
-        showMini();
-      });
-      cartWrapper.addEventListener('mouseleave', (ev) => {
-        hideMiniDeferred(300);
-      });
-      // also keyboard focus/blur
-      cartWrapper.addEventListener('focusin', () => showMini());
-      cartWrapper.addEventListener('focusout', () => hideMiniDeferred(250));
+      cartWrapper.addEventListener('mouseenter', showMini);
+      cartWrapper.addEventListener('mouseleave', () => hideMiniSoon(220));
+      cartWrapper.addEventListener('focusin', showMini);
+      cartWrapper.addEventListener('focusout', () => hideMiniSoon(220));
     } else if (cartBtnEl) {
       cartBtnEl.addEventListener('mouseenter', showMini);
-      cartBtnEl.addEventListener('mouseleave', () => hideMiniDeferred(300));
+      cartBtnEl.addEventListener('mouseleave', () => hideMiniSoon(220));
       cartBtnEl.addEventListener('focus', showMini);
-      cartBtnEl.addEventListener('blur', () => hideMiniDeferred(250));
+      cartBtnEl.addEventListener('blur', () => hideMiniSoon(220));
+    }
+
+    if (miniCartEl) {
+      miniCartEl.addEventListener('mouseenter', () => { if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } });
+      miniCartEl.addEventListener('mouseleave', () => hideMiniSoon(220));
     }
 
     if (cartBtnEl) {
@@ -492,15 +553,16 @@
         ev.preventDefault();
         // If page has cart panel element -> open it
         if (cartPanel) {
-          cartPanel.classList.toggle('open', true);
+          // open panel
+          cartPanel.classList.add('open');
           if (cartBackdrop) cartBackdrop.classList.add('open');
-          try { cartPanel.setAttribute('aria-hidden','false'); cartBackdrop.setAttribute('aria-hidden','false'); } catch(e){}
-          // also ensure mini preview hidden (we want the panel)
+          try { cartPanel.setAttribute('aria-hidden','false'); if (cartBackdrop) cartBackdrop.setAttribute('aria-hidden','false'); } catch(e){}
+          // hide mini preview
           if (miniCartEl) { miniCartEl.setAttribute('aria-hidden','true'); miniCartEl.style.display = ''; }
         } else {
-          // If we're already on carrito.html, scroll to #bag; otherwise navigate to carrito.html
-          const path = (location.pathname || '').split('/').pop();
-          if (path && path.indexOf('carrito') !== -1) {
+          // navigate to carrito.html as fallback
+          const p = (location.pathname || '').split('/').pop();
+          if (p && p.indexOf('carrito') !== -1) {
             const bag = document.getElementById('bag') || document.querySelector('.bag-list');
             if (bag) bag.scrollIntoView({ behavior: 'smooth' });
           } else {
@@ -510,41 +572,42 @@
       });
     }
 
-    // Close cart panel when backdrop or close button clicked
-    if (cartBackdrop) {
+    if (cartBackdrop && cartPanel) {
       cartBackdrop.addEventListener('click', () => {
-        if (cartPanel) {
-          cartPanel.classList.remove('open');
-          cartBackdrop.classList.remove('open');
-          try { cartPanel.setAttribute('aria-hidden','true'); cartBackdrop.setAttribute('aria-hidden','true'); } catch(e){}
-        }
+        cartPanel.classList.remove('open');
+        cartBackdrop.classList.remove('open');
+        try { cartPanel.setAttribute('aria-hidden','true'); cartBackdrop.setAttribute('aria-hidden','true'); } catch(e){}
       });
     }
-    const cartPanelClose = document.getElementById('cartPanelClose');
-    if (cartPanelClose && cartPanel) {
-      cartPanelClose.addEventListener('click', () => {
+
+    const cClose = byId('cartPanelClose');
+    if (cClose && cartPanel) {
+      cClose.addEventListener('click', () => {
         cartPanel.classList.remove('open');
         if (cartBackdrop) cartBackdrop.classList.remove('open');
         try { cartPanel.setAttribute('aria-hidden','true'); if (cartBackdrop) cartBackdrop.setAttribute('aria-hidden','true'); } catch(e){}
       });
     }
 
-    // Keep preview in sync: update when storage changes
+    // keep preview up-to-date across tabs
     window.addEventListener('storage', (ev) => {
-      if (ev.key === 'lixby_cart_v1') {
-        if (document.activeElement && (document.activeElement === cartBtnEl || cartWrapper && cartWrapper.contains(document.activeElement))) {
-          // If preview shown, re-render
-          if (miniCartEl && miniCartEl.getAttribute('aria-hidden') === 'false') renderMiniCartPreviewInto(miniCartEl);
-        } else {
-          // If panel open, also re-render panel content if a function exists
-          if (typeof window.updateMiniCartUI === 'function') {
-            try { window.updateMiniCartUI(); } catch(e) {}
-          }
+      if (ev.key === CART_KEY) {
+        if (miniCartEl && miniCartEl.getAttribute('aria-hidden') === 'false') renderMiniCartPreviewInto(miniCartEl);
+        if (typeof window.updateMiniCartUI === 'function') {
+          try { window.updateMiniCartUI(); } catch(e){}
         }
+      }
+      if (ev.key === ACCOUNT_KEY) {
+        if (typeof window.updateMiniCartUI === 'function') {
+          try { window.updateMiniCartUI(); } catch(e){}
+        }
+        // auth change: update header
+        const u = safeJSONParse(ev.newValue);
+        renderHeaderUser(u);
       }
     });
 
-    // Also when event 'cartUpdated' emitted by other scripts
+    // custom event
     window.addEventListener('cartUpdated', () => {
       if (miniCartEl && miniCartEl.getAttribute('aria-hidden') === 'false') renderMiniCartPreviewInto(miniCartEl);
       if (typeof window.updateMiniCartUI === 'function') {
@@ -552,19 +615,33 @@
       }
     });
 
-    // Fix fallback for account button: if no auth module, navigate to account page
-    if (accountBtn) {
+    // fallback for account button click: if not handled by auth module, go to cuenta.html
+    // (re-query because accountBtn may be replaced)
+    function wireFallbackAccountBtn() {
+      accountBtn = byId('accountBtn') || accountBtn;
+      if (!accountBtn) return;
+      // remove any previous fallback to avoid duplicating handlers
       accountBtn.addEventListener('click', (e) => {
-        // If existing behavior prevented by other handlers, we still navigate as fallback
-        try {
-          const handled = e.defaultPrevented;
-          if (!handled) window.location.href = 'cuenta.html';
-        } catch(e) { window.location.href = 'cuenta.html'; }
-      });
-      accountBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter') accountBtn.click(); });
+        // if appAuth exists and likely handles sign-in, do nothing and let it handle.
+        const local = getLocalUserSnapshot();
+        if (!local && !window.appAuth) {
+          // open auth overlay if present
+          const authOverlay = document.getElementById('authOverlay');
+          if (authOverlay) {
+            try { authOverlay.style.display = 'block'; authOverlay.setAttribute('aria-hidden','false'); } catch(e){}
+            return;
+          }
+          // otherwise navigate to cuenta.html (login page)
+          window.location.href = 'cuenta.html';
+        } else {
+          // if local user exists, try to render header to ensure consistent UI
+          if (local) renderHeaderUser(local);
+        }
+      }, { passive: true });
     }
+    wireFallbackAccountBtn();
 
-    // Keyboard: allow Esc to close panel/preview
+    // Esc key closes both
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (cartPanel && cartPanel.classList.contains('open')) {
@@ -572,18 +649,27 @@
           if (cartBackdrop) cartBackdrop.classList.remove('open');
         }
         if (miniCartEl) {
-          miniCartEl.setAttribute('aria-hidden','true');
+          try { miniCartEl.setAttribute('aria-hidden','true'); } catch(e){}
           miniCartEl.style.display = '';
         }
       }
     });
   }
 
-  // run init on DOMContentLoaded
+  // correr init cuando el DOM esté listo
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCartHoverAndAccountListeners);
   } else {
     initCartHoverAndAccountListeners();
   }
+
+  // expone algunas utilidades para otras partes de la app
+  window.__LIXBY_AUTH_UI = {
+    renderHeaderUser,
+    renderAccountPanel,
+    ensureAccountHolder,
+    formatPriceLocale: formatPriceLocale,
+    renderMiniCartPreviewInto
+  };
 
 })();
