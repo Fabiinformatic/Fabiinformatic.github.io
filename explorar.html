@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Explorar — LIXBY</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .explore-wrap { max-width:1200px; margin:28px auto; padding:20px; }
+    .explore-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .search { display:flex; gap:8px; align-items:center; }
+    .search input { padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.01); color:var(--text); min-width:240px; }
+    .filters { display:flex; gap:8px; align-items:center; }
+    .grid-explore { display:grid; gap:18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card-square { border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px; align-items:flex-start; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+    .card-square .thumb { width:100%; aspect-ratio:1/1; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#0f1113; }
+    .card-square img { width:100%; height:100%; object-fit:contain; display:block; }
+    .card-meta { width:100%; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .price { font-weight:800; color:var(--accent); }
+    .tag { font-size:0.85rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <header class="nav glass">
+    <div class="nav-inner">
+      <div class="brand" onclick="location.href='index.html'">LIXBY</div>
+      <div style="flex:1"></div>
+      <div class="nav-right">
+        <button id="accountBtn" class="btn ghost">Cuenta</button>
+        <button id="cartBtn" class="icon-btn">🛒 <span id="cartCount" class="badge">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="explore-wrap" style="padding-top:calc(var(--header-height) + 12px);">
+    <div class="explore-head">
+      <h1>Explorar productos</h1>
+      <div class="search">
+        <input id="searchInput" placeholder="Buscar producto..." aria-label="Buscar productos">
+        <select id="filterSelect" aria-label="Filtrar por">
+          <option value="">Todos</option>
+          <option value="lixby-one-air">Lixby One Air</option>
+          <option value="lixby-one">Lixby One</option>
+          <option value="lixby-one-pro">Lixby One Pro</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="results" class="grid-explore" role="list" aria-live="polite">
+      <!-- items rendered by JS -->
+    </div>
+  </main>
+
+  <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
+    <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
+  </footer>
+
+  <script>
+    const PRODUCTS = [
+      { id: 'lixby-one-air', name: 'Lixby One Air', priceNum: 249, price: '249€', image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg', tag: 'Ligero' },
+      { id: 'lixby-one', name: 'Lixby One', priceNum: 349, price: '349€', image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg', tag: 'Potente' },
+      { id: 'lixby-one-pro', name: 'Lixby One Pro', priceNum: 899, price: '899€', image: 'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg', tag: 'Pro' }
+    ];
+
+    function renderResults(list) {
+      const el = document.getElementById('results');
+      el.innerHTML = '';
+      if (!list || list.length === 0) {
+        el.innerHTML = '<div style="color:var(--muted)">No se encontraron productos.</div>';
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      list.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'card-square glass clickable';
+        card.setAttribute('role','listitem');
+        card.innerHTML = `
+          <div class="thumb"><img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async"></div>
+          <div style="width:100%"><div style="font-weight:700">${p.name}</div><div class="tag">${p.tag}</div></div>
+          <div class="card-meta"><div class="price">${p.price}</div><button class="btn-view btn ghost">Ver</button></div>
+        `;
+        card.querySelector('.btn-view').addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          window.location.href = 'producto.html?id=' + encodeURIComponent(p.id);
+        });
+        card.addEventListener('click', () => window.location.href = 'producto.html?id=' + encodeURIComponent(p.id));
+        frag.appendChild(card);
+      });
+      el.appendChild(frag);
+    }
+
+    // initial render
+    renderResults(PRODUCTS);
+
+    // search/filter
+    const searchInput = document.getElementById('searchInput');
+    const filterSelect = document.getElementById('filterSelect');
+
+    function applyFilters() {
+      const q = (searchInput.value || '').toLowerCase().trim();
+      const f = filterSelect.value || '';
+      let res = PRODUCTS.slice();
+      if (f) res = res.filter(p => p.id === f);
+      if (q) res = res.filter(p => p.name.toLowerCase().includes(q) || (p.tag || '').toLowerCase().includes(q));
+      renderResults(res);
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    filterSelect.addEventListener('change', applyFilters);
+
+    // header interactions: account fallback + cart behavior (script.js also initializará hover)
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      const accountBtn = document.getElementById('accountBtn');
+      accountBtn && accountBtn.addEventListener('click', () => location.href = 'cuenta.html');
+    });
+  </script>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
