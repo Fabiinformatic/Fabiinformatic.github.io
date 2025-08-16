@@ -31,6 +31,7 @@
 
     /* file dropzone */
     .dropzone { border: 2px dashed rgba(255,255,255,0.04); padding:12px; border-radius:10px; display:flex; align-items:center; gap:12px; justify-content:space-between; cursor:pointer; background: rgba(255,255,255,0.005); }
+    .dropzone:focus { outline:3px solid rgba(10,132,255,0.12); }
     .dz-info { color:var(--muted); font-size:0.95rem; }
     .attachments { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
     .attach-item { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px; border-radius:8px; background: rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.03); }
@@ -49,6 +50,9 @@
 
     .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--text); padding:8px 10px; border-radius:8px; cursor:pointer; }
     .muted { color:var(--muted); font-size:0.95rem; }
+
+    /* small responsive tweaks */
+    @media (max-width:520px){ .support-hero { flex-direction:column; align-items:flex-start; } .support-hero > div:last-child{ text-align:left; } }
   </style>
 </head>
 <body>
@@ -69,7 +73,7 @@
   </header>
 
   <main id="maincontent" class="reveal">
-    <div class="support-hero glass">
+    <div class="support-hero glass" role="region" aria-label="Hero soporte">
       <div>
         <h1>Soporte técnico</h1>
         <p style="margin:6px 0 0;color:var(--muted)">Abrir un ticket con logs y archivos adjuntos ayuda a diagnosticar más rápido. Adjunta capturas, registros (.txt, .log) o un ZIP.</p>
@@ -168,6 +172,8 @@
             </div>
           </div>
 
+          <input id="ticketIdInput" type="hidden" name="ticket_id" value="" />
+
           <div id="ticketInfo" class="ticket-meta" aria-live="polite"></div>
           <div id="ticketSuccess" class="ticket-success" role="status" aria-live="polite">Ticket creado — ID: <span id="ticketId"></span></div>
         </form>
@@ -184,13 +190,25 @@
 
   <script>
   (function(){
-    // Config
+    'use strict';
+
+    // ---------- CONFIG ----------
     const UPLOAD_ENDPOINT = '/api/tickets'; // Cambia a la URL real de tu backend
     const MAX_FILES = 5;
     const MAX_TOTAL_BYTES = 10 * 1024 * 1024; // 10 MB
-    const ALLOWED = ['image/png','image/jpeg','image/webp','text/plain','application/zip','application/pdf','text/log','application/octet-stream'];
+    const ALLOWED = [
+      'image/png', 'image/jpeg', 'image/webp',
+      'text/plain', 'application/zip', 'application/pdf',
+      'application/octet-stream'
+    ];
 
-    // Elementos
+    // If you want EmailJS fallback, put your credentials here. (Optional)
+    // Example (you previously provided these): 
+    const EMAILJS_USERID = 'xsKpaFjbRsS95AK3i';
+    const EMAILJS_SERVICE = 'service_tagcpgm';
+    const EMAILJS_TEMPLATE = 'template_l1e0go2';
+
+    // ---------- ELEMENTS ----------
     const fileInput = document.getElementById('fileInput');
     const dropzone = document.getElementById('dropzone');
     const attachmentsEl = document.getElementById('attachments');
@@ -200,19 +218,27 @@
     const infoEl = document.getElementById('ticketInfo');
     const successEl = document.getElementById('ticketSuccess');
     const ticketIdSpan = document.getElementById('ticketId');
+    const ticketIdInput = document.getElementById('ticketIdInput');
     const progressWrap = document.getElementById('uploadProgressWrap');
     const progressBar = document.getElementById('uploadProgressBar');
     const ticketsList = document.getElementById('ticketsList');
 
-    // State: files array of File
+    // State
     let attachedFiles = [];
 
-    // Utilities
+    // ---------- HELPERS ----------
     function fmtBytes(n){ if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(2)+' MB'; }
     function genTicketId(){ const d = new Date(); const y = String(d.getFullYear()).slice(2); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const rnd = Math.random().toString(36).slice(2,6).toUpperCase(); return `LXB-${y}${mm}${dd}-${rnd}`; }
-    function sanitizeFilename(name){ return name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,120); }
+    function sanitizeFilename(name){
+      // keep extension, sanitize base
+      const parts = String(name || '').split('.');
+      if (parts.length === 1) return parts[0].replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,120);
+      const ext = parts.pop().slice(0,10);
+      const base = parts.join('.').replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,110);
+      return (base + '.' + ext).slice(0,120);
+    }
 
-    // Render attachments list
+    // ---------- ATTACHMENTS UI ----------
     function renderAttachments(){
       attachmentsEl.innerHTML = '';
       if (attachedFiles.length === 0) return;
@@ -222,21 +248,30 @@
         const meta = document.createElement('div');
         meta.className = 'attach-meta';
         // thumb for images
-        if (f.type.startsWith('image/')) {
+        if ((f.type || '').startsWith('image/')) {
           const img = document.createElement('img'); img.className = 'attach-thumb'; img.alt = f.name;
-          img.src = URL.createObjectURL(f);
+          img.src = f.objectURL || URL.createObjectURL(f);
+          // keep objectURL reference to revoke later
+          if (!f.objectURL) f.objectURL = img.src;
           meta.appendChild(img);
         } else {
           const placeholder = document.createElement('div'); placeholder.className = 'attach-thumb'; placeholder.style.display='flex'; placeholder.style.alignItems='center'; placeholder.style.justifyContent='center'; placeholder.textContent = '📄';
           meta.appendChild(placeholder);
         }
         const txt = document.createElement('div');
-        txt.innerHTML = `<div style="font-weight:700">${sanitizeFilename(f.name)}</div><div class="muted">${fmtBytes(f.size)} • ${f.type||'—'}</div>`;
+        const nameDiv = document.createElement('div');
+        nameDiv.style.fontWeight = '700';
+        nameDiv.textContent = sanitizeFilename(f.name);
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'muted';
+        infoDiv.textContent = `${fmtBytes(f.size)} • ${f.type || '—'}`;
+        txt.appendChild(nameDiv);
+        txt.appendChild(infoDiv);
         meta.appendChild(txt);
 
         const right = document.createElement('div');
         const remove = document.createElement('button'); remove.className='btn-outline'; remove.type='button'; remove.textContent='Eliminar';
-        remove.addEventListener('click', ()=>{ URL.revokeObjectURL(f.objectURL); attachedFiles.splice(idx,1); renderAttachments(); });
+        remove.addEventListener('click', ()=>{ if (f.objectURL) try { URL.revokeObjectURL(f.objectURL); } catch(e){}; attachedFiles.splice(idx,1); renderAttachments(); });
         right.appendChild(remove);
 
         item.appendChild(meta);
@@ -252,8 +287,9 @@
       attachmentsEl.appendChild(totalNote);
     }
 
-    // Add files (validate)
+    // ---------- VALIDATION & ADD ----------
     function addFiles(files){
+      if (!files || !files.length) return;
       let arr = Array.from(files);
       // enforce limits
       const totalNow = attachedFiles.reduce((s,f)=> s + (f.size||0), 0);
@@ -267,23 +303,26 @@
         return;
       }
       // filter allowed types (some browsers report octet-stream; allow by extension fallback)
-      arr = arr.filter(f => {
+      const extAllowed = ['png','jpg','jpeg','webp','txt','log','zip','pdf'];
+      const accepted = arr.filter(f => {
         if (ALLOWED.includes(f.type)) return true;
-        // fallback by extension
-        const ext = f.name.split('.').pop().toLowerCase();
-        const extAllowed = ['png','jpg','jpeg','webp','txt','log','zip','pdf'];
+        const ext = String(f.name || '').split('.').pop().toLowerCase();
         if (extAllowed.includes(ext)) return true;
         return false;
       });
-      arr.forEach(f => {
-        // attach objectURL to revoke it later
-        f.objectURL = URL.createObjectURL(f);
+      if (accepted.length === 0) {
+        alert('Ningún archivo válido para adjuntar (tipos permitidos: png,jpg,jpeg,webp,txt,log,zip,pdf).');
+        return;
+      }
+      accepted.forEach(f => {
+        // attach objectURL to revoke it later (useful for previews)
+        if (!f.objectURL) try { f.objectURL = URL.createObjectURL(f); } catch(e){}
         attachedFiles.push(f);
       });
       renderAttachments();
     }
 
-    // Dropzone handlers
+    // ---------- DROPZONE ----------
     dropzone.addEventListener('click', ()=> fileInput.click());
     dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
 
@@ -295,22 +334,27 @@
       addFiles(e.dataTransfer.files);
     });
 
-    fileInput.addEventListener('change', (e)=> addFiles(e.target.files));
+    fileInput.addEventListener('change', (e)=> {
+      addFiles(e.target.files);
+      // reset input so same file can be added again if needed
+      fileInput.value = '';
+    });
 
-    // Attach demo log (creates a small .txt file)
+    // demo attach log
     attachLogBtn.addEventListener('click', () => {
       const now = new Date().toISOString();
       const content = `Log demo LIXBY\nFecha: ${now}\nNivel: INFO\nMensaje: Ejemplo de registro para diagnóstico.\n`;
       const blob = new Blob([content], { type:'text/plain' });
       const f = new File([blob], `lixby-log-${Date.now()}.txt`, { type:'text/plain' });
-      f.objectURL = URL.createObjectURL(f);
+      try { f.objectURL = URL.createObjectURL(f); } catch(e){}
       attachedFiles.push(f);
       renderAttachments();
       infoEl.textContent = 'Registro de diagnóstico adjuntado (demo).';
     });
 
+    // clear form
     clearBtn.addEventListener('click', () => {
-      attachedFiles.forEach(f => f.objectURL && URL.revokeObjectURL(f));
+      attachedFiles.forEach(f => f.objectURL && URL.revokeObjectURL(f.objectURL));
       attachedFiles = [];
       document.getElementById('t-desc').value = '';
       document.getElementById('t-product').value = '';
@@ -320,19 +364,20 @@
       infoEl.textContent = '';
     });
 
-    // Show saved tickets (localStorage)
+    // ---------- LOCAL TICKETS (fallback/persist) ----------
     const STORAGE_KEY = 'lixby_support_tickets_v2';
     function loadTickets(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch(e){ return []; } }
     function saveTickets(arr){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch(e){} }
     function renderTickets(){
       ticketsList.innerHTML = '';
-      const arr = loadTickets().slice(0,10);
+      const arr = loadTickets().slice(0,50);
       if (!arr.length) { ticketsList.innerHTML = '<div class="muted">No hay tickets recientes.</div>'; return; }
       arr.forEach(t => {
         const card = document.createElement('div'); card.className = 'ticket-card';
         const left = document.createElement('div');
-        left.innerHTML = `<div style="font-weight:700">${t.title || sanitizeFilename(t.description?.slice(0,40) || t.product || 'Ticket')}</div>
-                          <div class="ticket-meta-compact">ID: ${t.id} • ${t.status} • ${new Date(t.createdAt).toLocaleString()}</div>`;
+        const titleText = t.title || (t.description ? (t.description.slice(0,60) + (t.description.length>60?'…':'')) : (t.product || 'Ticket'));
+        left.innerHTML = `<div style="font-weight:700">${escapeHtml(titleText)}</div>
+                          <div class="ticket-meta-compact">ID: ${escapeHtml(t.id)} • ${escapeHtml(t.status)} • ${new Date(t.createdAt).toLocaleString()}</div>`;
         const right = document.createElement('div');
         const view = document.createElement('button'); view.className='btn-outline'; view.textContent='Ver';
         view.addEventListener('click', ()=> showTicketDetail(t.id));
@@ -362,13 +407,14 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
       alert(detail);
     }
 
-    // Upload with progress (XMLHttpRequest for upload progress)
+    // escape helper for innerHTML safety in ticket list
+    function escapeHtml(str){ return String(str||'').replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    // ---------- UPLOAD ----------
     function uploadToServer(formData, onProgress){
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', UPLOAD_ENDPOINT, true);
-        // OPTIONAL: Authorization header if you have API key/token
-        // xhr.setRequestHeader('Authorization', 'Bearer <TOKEN>');
         xhr.responseType = 'json';
         xhr.upload.onprogress = function(e){
           if (e.lengthComputable && typeof onProgress === 'function') {
@@ -383,11 +429,40 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
           }
         };
         xhr.onerror = function(){ reject(new Error('Error de red al subir')); };
-        xhr.send(formData);
+        try {
+          xhr.send(formData);
+        } catch (err) {
+          reject(err);
+        }
       });
     }
 
-    // Submit handler
+    // ---------- EmailJS fallback (optional) ----------
+    async function ensureEmailJs(){
+      if (window.emailjs && typeof window.emailjs.send === 'function') return;
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js';
+        s.crossOrigin = 'anonymous';
+        s.onload = res;
+        s.onerror = () => rej(new Error('EmailJS load failed'));
+        document.head.appendChild(s);
+      });
+      try { if (window.emailjs && typeof emailjs.init === 'function') emailjs.init(EMAILJS_USERID); } catch(e){ console.warn('EmailJS init failed', e); }
+    }
+    async function sendViaEmailJS(params){
+      if (!EMAILJS_USERID || !EMAILJS_SERVICE || !EMAILJS_TEMPLATE) return { success:false, error:'EmailJS no configurado' };
+      try {
+        await ensureEmailJs();
+        if (!window.emailjs || typeof emailjs.send !== 'function') throw new Error('EmailJS no disponible');
+        const resp = await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params);
+        return { success:true, resp };
+      } catch (e) {
+        return { success:false, error: String(e) };
+      }
+    }
+
+    // ---------- SUBMIT ----------
     submitBtn.addEventListener('click', async () => {
       infoEl.textContent = '';
       successEl.style.display = 'none';
@@ -402,7 +477,7 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
         return;
       }
 
-      // form validation passed
+      // UI
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enviando...';
       progressWrap.style.display = 'none';
@@ -410,20 +485,20 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
 
       // prepare FormData
       const fd = new FormData();
+      const ticketId = genTicketId();
+      fd.append('ticket_id', ticketId);
       fd.append('name', name);
       fd.append('email', email);
       fd.append('product', product || '');
       fd.append('description', description);
       // attachments
       attachedFiles.forEach((f, idx) => {
-        // remove objectURL before sending
-        const file = f;
-        fd.append('attachments', file, sanitizeFilename(file.name));
+        fd.append('attachments', f, sanitizeFilename(f.name));
       });
 
       // Save a "local copy" as fallback
       const localTicket = {
-        id: genTicketId(),
+        id: ticketId,
         name, email, product, description,
         attachments: attachedFiles.map(f => ({ name: sanitizeFilename(f.name), size: f.size, type: f.type })),
         createdAt: new Date().toISOString(),
@@ -439,8 +514,8 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
           progressBar.style.width = pct + '%';
         });
 
-        // Assume server returns JSON { success: true, ticketId: '...' }
-        const serverId = (resp && resp.ticketId) ? resp.ticketId : genTicketId();
+        // server returned success
+        const serverId = (resp && resp.ticketId) ? resp.ticketId : ticketId;
         const ticketSaved = {
           ...localTicket,
           id: serverId,
@@ -455,38 +530,61 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
         renderTickets();
 
         ticketIdSpan.textContent = ticketSaved.id;
+        ticketIdInput.value = ticketSaved.id || '';
         successEl.style.display = 'block';
         infoEl.style.color = 'var(--muted)';
-        infoEl.textContent = 'Ticket enviado correctamente. Recibirás email con el seguimiento (simulado).';
+        infoEl.textContent = 'Ticket enviado correctamente. Recibirás email con el seguimiento (si tu backend lo notifica).';
       } catch (err) {
-        // fallback: store locally and inform user
-        const arr = loadTickets();
-        arr.unshift(localTicket);
-        saveTickets(arr);
-        renderTickets();
-        ticketIdSpan.textContent = localTicket.id;
-        successEl.style.display = 'block';
-        infoEl.style.color = '#ffb4b4';
-        infoEl.textContent = 'No se pudo enviar al servidor. Ticket guardado localmente y se intentará reintentar cuando haya conexión.';
+        // fallback: try EmailJS if configured (without attachments)
+        try {
+          const emailParams = { from_name: name, from_email: email, message: description, ticket_id: ticketId, product: product || '—' };
+          const emailResp = await sendViaEmailJS(emailParams);
+          if (emailResp && emailResp.success) {
+            const ticketSaved = { ...localTicket, status: 'recibido-via-email', serverResponse: emailResp };
+            const arr = loadTickets(); arr.unshift(ticketSaved); saveTickets(arr); renderTickets();
+            ticketIdSpan.textContent = ticketSaved.id;
+            ticketIdInput.value = ticketSaved.id || '';
+            successEl.style.display = 'block';
+            infoEl.style.color = 'var(--muted)';
+            infoEl.textContent = 'No se pudo subir al backend; se envió una copia por Email (fallback).';
+          } else {
+            // no EmailJS or failed: store locally
+            const arr = loadTickets();
+            arr.unshift(localTicket);
+            saveTickets(arr);
+            renderTickets();
+            ticketIdSpan.textContent = localTicket.id;
+            ticketIdInput.value = localTicket.id || '';
+            successEl.style.display = 'block';
+            infoEl.style.color = '#ffb4b4';
+            infoEl.textContent = 'No se pudo enviar al servidor. Ticket guardado localmente y se intentará reintentar cuando haya conexión.';
+          }
+        } catch (ee) {
+          const arr = loadTickets();
+          arr.unshift(localTicket);
+          saveTickets(arr);
+          renderTickets();
+          ticketIdSpan.textContent = localTicket.id;
+          ticketIdInput.value = localTicket.id || '';
+          successEl.style.display = 'block';
+          infoEl.style.color = '#ffb4b4';
+          infoEl.textContent = 'No se pudo enviar al servidor. Ticket guardado localmente y se intentará reintentar cuando haya conexión.';
+        }
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Enviar ticket';
         progressWrap.style.display = 'none';
-        // revoke object URLs
-        attachedFiles.forEach(f => f.objectURL && URL.revokeObjectURL(f));
+        // revoke object URLs and reset attachments
+        attachedFiles.forEach(f => f.objectURL && URL.revokeObjectURL(f.objectURL));
         attachedFiles = [];
         renderAttachments();
-        // limpia descripción pero mantiene email por conveniencia
         document.getElementById('t-desc').value = '';
-        setTimeout(()=> { successEl.style.display = 'none'; ticketIdSpan.textContent = ''; }, 7000);
+        // hide success after a while
+        setTimeout(()=> { successEl.style.display = 'none'; ticketIdSpan.textContent = ''; ticketIdInput.value = ''; }, 7000);
       }
     });
 
-    // Inicialización
-    document.getElementById('yearSupport').textContent = new Date().getFullYear();
-    renderTickets();
-
-    // Try to auto-retry pending local tickets when online
+    // ---------- AUTO-RETRY PENDING TICKETS WHEN ONLINE ----------
     window.addEventListener('online', async () => {
       const arr = loadTickets();
       const pending = arr.filter(t => t.status && t.status.startsWith('pendiente'));
@@ -495,18 +593,18 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
       infoEl.textContent = `Hay ${pending.length} ticket(s) pendientes. Reintentando envío...`;
       for (const t of pending) {
         try {
-          // Build minimal FormData from stored ticket (attachments not available offline)
           const fd = new FormData();
+          fd.append('ticket_id', t.id || genTicketId());
           fd.append('name', t.name || '');
           fd.append('email', t.email || '');
           fd.append('product', t.product || '');
           fd.append('description', t.description || '');
-          // NOTE: attachments can't be retried from localStorage unless you store binary data (out of scope demo)
+          // NOTE: attachments can't be retried from localStorage in this demo
           const resp = await uploadToServer(fd, () => {});
           t.status = (resp && resp.success) ? 'recibido' : t.status;
           t.serverResponse = resp;
         } catch(e) {
-          // leave as pendiente-offline
+          // leave as pendiente
         }
       }
       saveTickets(arr);
@@ -514,11 +612,18 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
       infoEl.textContent = 'Reintento completado (demo).';
     });
 
+    // ---------- INIT ----------
+    document.getElementById('yearSupport').textContent = new Date().getFullYear();
+    renderTickets();
+
     // theme toggle
     document.getElementById('themeToggleSmall')?.addEventListener('click', () => {
       const isLight = document.documentElement.classList.toggle('light');
       try { localStorage.setItem('lixby_theme', isLight ? 'light' : 'dark'); }catch(e){}
     });
+
+    // accessibility: keyboard support for dropzone
+    dropzone.addEventListener('keyup', (e) => { if (e.key === 'Enter') fileInput.click(); });
 
   })();
   </script>
