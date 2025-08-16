@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LIXBY — Soporte técnico</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Ajustes de página (mantener estilo minimalista) */
+    main { padding-top: calc(var(--header-height,72px) + 18px); max-width:1100px; margin:0 auto; }
+    .support-hero { padding:28px; border-radius:12px; display:flex; gap:20px; align-items:center; justify-content:space-between; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
+    .support-hero h1 { margin:0; font-size:1.4rem; }
+    .support-columns { display:grid; grid-template-columns: 1fr 380px; gap:22px; margin-top:28px; }
+    @media(max-width:900px){ .support-columns { grid-template-columns: 1fr; } }
+
+    /* KB */
+    .kb { display:flex; flex-direction:column; gap:12px; }
+    .kb-item { border-radius:10px; padding:12px; background: rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.03); }
+    .kb-item summary { cursor:pointer; font-weight:700; list-style:none; }
+    .kb-item summary::after { content:" ▾"; font-weight:400; color:var(--muted); margin-left:6px; }
+    .kb-item[open] summary::after { content:" ▴"; }
+
+    /* ticket form */
+    .ticket-form { display:flex; flex-direction:column; gap:10px; padding:14px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.03); }
+    .ticket-form input, .ticket-form textarea, .ticket-form select { padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--text); }
+    .ticket-meta { font-size:0.9rem; color:var(--muted); margin-top:6px; }
+
+    /* file dropzone */
+    .dropzone { border: 2px dashed rgba(255,255,255,0.04); padding:12px; border-radius:10px; display:flex; align-items:center; gap:12px; justify-content:space-between; cursor:pointer; background: rgba(255,255,255,0.005); }
+    .dz-info { color:var(--muted); font-size:0.95rem; }
+    .attachments { display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .attach-item { display:flex; gap:8px; align-items:center; justify-content:space-between; padding:8px; border-radius:8px; background: rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.03); }
+    .attach-meta { display:flex; gap:8px; align-items:center; }
+    .attach-thumb { width:44px; height:44px; border-radius:6px; object-fit:cover; background:rgba(255,255,255,0.02); display:inline-block; }
+
+    /* progress */
+    .progress-wrap { width:100%; background: rgba(255,255,255,0.02); border-radius:8px; overflow:hidden; height:10px; margin-top:6px; }
+    .progress-bar { height:100%; width:0%; background:linear-gradient(90deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); transition: width .18s ease; }
+
+    .ticket-success { display:none; padding:10px; border-radius:8px; background: rgba(10,132,255,0.08); color:var(--accent); font-weight:700; }
+
+    .tickets-list { margin-top:18px; display:flex; flex-direction:column; gap:10px; }
+    .ticket-card { padding:12px; border-radius:10px; background: rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.03); display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .ticket-meta-compact { color:var(--muted); font-size:0.92rem; }
+
+    .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--text); padding:8px 10px; border-radius:8px; cursor:pointer; }
+    .muted { color:var(--muted); font-size:0.95rem; }
+  </style>
+</head>
+<body>
+  <!-- header minimal (compatible con index) -->
+  <header class="nav glass" role="banner">
+    <div class="nav-inner">
+      <div class="nav-left"><div class="brand" role="button" onclick="location.href='index.html'">LIXBY</div></div>
+      <nav id="navLinks" role="navigation" aria-label="Principal">
+        <a href="index.html#inicio">Inicio</a>
+        <a href="index.html#productos">Productos</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <div class="nav-right">
+        <button class="btn ghost" onclick="location.href='cuenta.html'">Cuenta</button>
+        <button class="btn ghost" id="themeToggleSmall">◐</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="maincontent" class="reveal">
+    <div class="support-hero glass">
+      <div>
+        <h1>Soporte técnico</h1>
+        <p style="margin:6px 0 0;color:var(--muted)">Abrir un ticket con logs y archivos adjuntos ayuda a diagnosticar más rápido. Adjunta capturas, registros (.txt, .log) o un ZIP.</p>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700;color:var(--accent)">Horario de soporte</div>
+        <div class="ticket-meta">Lun – Vie • 09:00 – 18:00 (CEST)</div>
+      </div>
+    </div>
+
+    <div class="support-columns" role="region" aria-label="Sección de soporte">
+      <!-- Left: Knowledge base -->
+      <section aria-labelledby="kb-title">
+        <h2 id="kb-title">Resolución rápida & base de conocimientos</h2>
+        <div class="kb" role="list">
+          <details class="kb-item" role="listitem" open>
+            <summary>Mi dispositivo no enciende</summary>
+            <div>
+              <ol style="margin:8px 0 0 18px;color:var(--muted)">
+                <li>Comprueba el cargador y el conector.</li>
+                <li>Mantén pulsado el botón de encendido 12s.</li>
+                <li>Prueba reinicio por hardware (consulta manual).</li>
+              </ol>
+              <p style="margin-top:8px;color:var(--muted)">Si no funciona, abre un ticket y adjunta fotos del puerto y el LED.</p>
+            </div>
+          </details>
+
+          <details class="kb-item" role="listitem">
+            <summary>Problemas de red</summary>
+            <div>
+              <ul style="margin:8px 0 0 18px;color:var(--muted)">
+                <li>Reinicia router + dispositivo.</li>
+                <li>Comprueba otras redes / hotspots.</li>
+                <li>Incluye logs de red si abres un ticket.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="kb-item" role="listitem">
+            <summary>Audio o micrófono con ruido</summary>
+            <div>
+              <p style="color:var(--muted)">Deshabilita Bluetooth de otros dispositivos y prueba con accesorio cableado. Adjunta grabación de prueba si es posible.</p>
+            </div>
+          </details>
+        </div>
+
+        <hr style="margin:18px 0;border:none;height:1px;background:rgba(255,255,255,0.03)" />
+
+        <div class="muted">Enlaces rápidos</div>
+        <div style="display:flex;gap:12px;margin-top:8px;">
+          <a class="btn-outline" href="faq.html">FAQ</a>
+          <a class="btn-outline" href="envios.html">Envíos</a>
+          <a class="btn-outline" href="contacto.html">Contacto</a>
+        </div>
+
+        <!-- Listado local de tickets (persistente) -->
+        <div style="margin-top:18px">
+          <h3>Tus tickets recientes</h3>
+          <div id="ticketsList" class="tickets-list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- Right: Ticket form -->
+      <aside aria-labelledby="ticket-title">
+        <h2 id="ticket-title">Abrir un ticket</h2>
+
+        <form id="ticketForm" class="ticket-form" aria-label="Formulario para abrir ticket" enctype="multipart/form-data" onsubmit="return false;">
+          <input id="t-name" name="name" type="text" placeholder="Tu nombre" required autocomplete="name" />
+          <input id="t-email" name="email" type="email" placeholder="tu@correo.com" required autocomplete="email" />
+          <select id="t-product" name="product" aria-label="Selecciona producto">
+            <option value="">Producto (opcional)</option>
+            <option value="lixby-one-air">Lixby One Air</option>
+            <option value="lixby-one">Lixby One</option>
+            <option value="lixby-one-pro">Lixby One Pro</option>
+          </select>
+          <textarea id="t-desc" name="description" rows="6" placeholder="Describe el problema con la mayor brevedad posible" required></textarea>
+
+          <!-- Attachments: drag & drop + file input -->
+          <label for="fileInput" class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Area para adjuntar archivos">
+            <div class="dz-info">Arrastra archivos aquí o haz clic para añadir (máx 5 archivos, 10MB total)</div>
+            <div class="muted">Adjuntos</div>
+            <input id="fileInput" type="file" accept=".png,.jpg,.jpeg,.webp,.txt,.log,.zip,.pdf" multiple style="display:none" />
+          </label>
+
+          <div id="attachments" class="attachments" aria-live="polite"></div>
+
+          <div class="progress-wrap" style="display:none" id="uploadProgressWrap" aria-hidden="true">
+            <div class="progress-bar" id="uploadProgressBar"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <button id="submitTicket" class="btn primary" type="button">Enviar ticket</button>
+            <div style="display:flex;gap:8px">
+              <button id="attachLog" class="btn ghost" type="button" title="Adjuntar registro (demo)">Adjuntar registro</button>
+              <button id="clearForm" class="btn ghost" type="button">Limpiar</button>
+            </div>
+          </div>
+
+          <div id="ticketInfo" class="ticket-meta" aria-live="polite"></div>
+          <div id="ticketSuccess" class="ticket-success" role="status" aria-live="polite">Ticket creado — ID: <span id="ticketId"></span></div>
+        </form>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="footer glass" role="contentinfo" style="text-align:center;padding:20px;margin-top:36px;">
+    <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div><strong class="footer-brand">LIXBY</strong> <div class="muted">Soporte técnico — © <span id="yearSupport"></span></div></div>
+      <div style="display:flex;gap:12px;align-items:center"><a href="faq.html">FAQ</a><a href="contacto.html">Contacto</a></div>
+    </div>
+  </footer>
+
+  <script>
+  (function(){
+    // Config
+    const UPLOAD_ENDPOINT = '/api/tickets'; // Cambia a la URL real de tu backend
+    const MAX_FILES = 5;
+    const MAX_TOTAL_BYTES = 10 * 1024 * 1024; // 10 MB
+    const ALLOWED = ['image/png','image/jpeg','image/webp','text/plain','application/zip','application/pdf','text/log','application/octet-stream'];
+
+    // Elementos
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const attachmentsEl = document.getElementById('attachments');
+    const submitBtn = document.getElementById('submitTicket');
+    const attachLogBtn = document.getElementById('attachLog');
+    const clearBtn = document.getElementById('clearForm');
+    const infoEl = document.getElementById('ticketInfo');
+    const successEl = document.getElementById('ticketSuccess');
+    const ticketIdSpan = document.getElementById('ticketId');
+    const progressWrap = document.getElementById('uploadProgressWrap');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const ticketsList = document.getElementById('ticketsList');
+
+    // State: files array of File
+    let attachedFiles = [];
+
+    // Utilities
+    function fmtBytes(n){ if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(2)+' MB'; }
+    function genTicketId(){ const d = new Date(); const y = String(d.getFullYear()).slice(2); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const rnd = Math.random().toString(36).slice(2,6).toUpperCase(); return `LXB-${y}${mm}${dd}-${rnd}`; }
+    function sanitizeFilename(name){ return name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,120); }
+
+    // Render attachments list
+    function renderAttachments(){
+      attachmentsEl.innerHTML = '';
+      if (attachedFiles.length === 0) return;
+      attachedFiles.forEach((f, idx) => {
+        const item = document.createElement('div');
+        item.className = 'attach-item';
+        const meta = document.createElement('div');
+        meta.className = 'attach-meta';
+        // thumb for images
+        if (f.type.startsWith('image/')) {
+          const img = document.createElement('img'); img.className = 'attach-thumb'; img.alt = f.name;
+          img.src = URL.createObjectURL(f);
+          meta.appendChild(img);
+        } else {
+          const placeholder = document.createElement('div'); placeholder.className = 'attach-thumb'; placeholder.style.display='flex'; placeholder.style.alignItems='center'; placeholder.style.justifyContent='center'; placeholder.textContent = '📄';
+          meta.appendChild(placeholder);
+        }
+        const txt = document.createElement('div');
+        txt.innerHTML = `<div style="font-weight:700">${sanitizeFilename(f.name)}</div><div class="muted">${fmtBytes(f.size)} • ${f.type||'—'}</div>`;
+        meta.appendChild(txt);
+
+        const right = document.createElement('div');
+        const remove = document.createElement('button'); remove.className='btn-outline'; remove.type='button'; remove.textContent='Eliminar';
+        remove.addEventListener('click', ()=>{ URL.revokeObjectURL(f.objectURL); attachedFiles.splice(idx,1); renderAttachments(); });
+        right.appendChild(remove);
+
+        item.appendChild(meta);
+        item.appendChild(right);
+        attachmentsEl.appendChild(item);
+      });
+
+      // show totals
+      const totalBytes = attachedFiles.reduce((s,f)=> s + (f.size || 0), 0);
+      const totalNote = document.createElement('div');
+      totalNote.className = 'muted';
+      totalNote.textContent = `Archivos: ${attachedFiles.length} — Total: ${fmtBytes(totalBytes)}`;
+      attachmentsEl.appendChild(totalNote);
+    }
+
+    // Add files (validate)
+    function addFiles(files){
+      let arr = Array.from(files);
+      // enforce limits
+      const totalNow = attachedFiles.reduce((s,f)=> s + (f.size||0), 0);
+      const totalIncoming = arr.reduce((s,f)=> s + (f.size||0), 0);
+      if (attachedFiles.length + arr.length > MAX_FILES) {
+        alert(`Máximo ${MAX_FILES} archivos.`);
+        return;
+      }
+      if (totalNow + totalIncoming > MAX_TOTAL_BYTES) {
+        alert(`Tamaño total excede ${fmtBytes(MAX_TOTAL_BYTES)}.`);
+        return;
+      }
+      // filter allowed types (some browsers report octet-stream; allow by extension fallback)
+      arr = arr.filter(f => {
+        if (ALLOWED.includes(f.type)) return true;
+        // fallback by extension
+        const ext = f.name.split('.').pop().toLowerCase();
+        const extAllowed = ['png','jpg','jpeg','webp','txt','log','zip','pdf'];
+        if (extAllowed.includes(ext)) return true;
+        return false;
+      });
+      arr.forEach(f => {
+        // attach objectURL to revoke it later
+        f.objectURL = URL.createObjectURL(f);
+        attachedFiles.push(f);
+      });
+      renderAttachments();
+    }
+
+    // Dropzone handlers
+    dropzone.addEventListener('click', ()=> fileInput.click());
+    dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+
+    dropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; });
+    dropzone.addEventListener('dragleave', (e)=>{ dropzone.style.borderColor = ''; });
+    dropzone.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      dropzone.style.borderColor = '';
+      addFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e)=> addFiles(e.target.files));
+
+    // Attach demo log (creates a small .txt file)
+    attachLogBtn.addEventListener('click', () => {
+      const now = new Date().toISOString();
+      const content = `Log demo LIXBY\nFecha: ${now}\nNivel: INFO\nMensaje: Ejemplo de registro para diagnóstico.\n`;
+      const blob = new Blob([content], { type:'text/plain' });
+      const f = new File([blob], `lixby-log-${Date.now()}.txt`, { type:'text/plain' });
+      f.objectURL = URL.createObjectURL(f);
+      attachedFiles.push(f);
+      renderAttachments();
+      infoEl.textContent = 'Registro de diagnóstico adjuntado (demo).';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      attachedFiles.forEach(f => f.objectURL && URL.revokeObjectURL(f));
+      attachedFiles = [];
+      document.getElementById('t-desc').value = '';
+      document.getElementById('t-product').value = '';
+      document.getElementById('t-name').value = '';
+      document.getElementById('t-email').value = '';
+      renderAttachments();
+      infoEl.textContent = '';
+    });
+
+    // Show saved tickets (localStorage)
+    const STORAGE_KEY = 'lixby_support_tickets_v2';
+    function loadTickets(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch(e){ return []; } }
+    function saveTickets(arr){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch(e){} }
+    function renderTickets(){
+      ticketsList.innerHTML = '';
+      const arr = loadTickets().slice(0,10);
+      if (!arr.length) { ticketsList.innerHTML = '<div class="muted">No hay tickets recientes.</div>'; return; }
+      arr.forEach(t => {
+        const card = document.createElement('div'); card.className = 'ticket-card';
+        const left = document.createElement('div');
+        left.innerHTML = `<div style="font-weight:700">${t.title || sanitizeFilename(t.description?.slice(0,40) || t.product || 'Ticket')}</div>
+                          <div class="ticket-meta-compact">ID: ${t.id} • ${t.status} • ${new Date(t.createdAt).toLocaleString()}</div>`;
+        const right = document.createElement('div');
+        const view = document.createElement('button'); view.className='btn-outline'; view.textContent='Ver';
+        view.addEventListener('click', ()=> showTicketDetail(t.id));
+        right.appendChild(view);
+        card.appendChild(left); card.appendChild(right);
+        ticketsList.appendChild(card);
+      });
+    }
+
+    function showTicketDetail(id){
+      const arr = loadTickets();
+      const t = arr.find(x=>x.id===id);
+      if (!t) return alert('Ticket no encontrado (demo).');
+      const detail = `
+ID: ${t.id}
+Nombre: ${t.name || '—'}
+Email: ${t.email || '—'}
+Producto: ${t.product || '—'}
+Estado: ${t.status}
+Creado: ${new Date(t.createdAt).toLocaleString()}
+
+Descripción:
+${t.description}
+
+Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
+`;
+      alert(detail);
+    }
+
+    // Upload with progress (XMLHttpRequest for upload progress)
+    function uploadToServer(formData, onProgress){
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', UPLOAD_ENDPOINT, true);
+        // OPTIONAL: Authorization header if you have API key/token
+        // xhr.setRequestHeader('Authorization', 'Bearer <TOKEN>');
+        xhr.responseType = 'json';
+        xhr.upload.onprogress = function(e){
+          if (e.lengthComputable && typeof onProgress === 'function') {
+            onProgress(e.loaded / e.total * 100);
+          }
+        };
+        xhr.onload = function(){
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(xhr.response || { success:true, ticketId: xhr.statusText || genTicketId() });
+          } else {
+            reject(new Error('Error servidor: ' + xhr.status));
+          }
+        };
+        xhr.onerror = function(){ reject(new Error('Error de red al subir')); };
+        xhr.send(formData);
+      });
+    }
+
+    // Submit handler
+    submitBtn.addEventListener('click', async () => {
+      infoEl.textContent = '';
+      successEl.style.display = 'none';
+      const name = document.getElementById('t-name').value.trim();
+      const email = document.getElementById('t-email').value.trim();
+      const product = document.getElementById('t-product').value;
+      const description = document.getElementById('t-desc').value.trim();
+
+      if (!name || !email || !description) {
+        infoEl.style.color = '#ffb4b4';
+        infoEl.textContent = 'Completa nombre, correo y descripción.';
+        return;
+      }
+
+      // form validation passed
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+      progressWrap.style.display = 'none';
+      progressBar.style.width = '0%';
+
+      // prepare FormData
+      const fd = new FormData();
+      fd.append('name', name);
+      fd.append('email', email);
+      fd.append('product', product || '');
+      fd.append('description', description);
+      // attachments
+      attachedFiles.forEach((f, idx) => {
+        // remove objectURL before sending
+        const file = f;
+        fd.append('attachments', file, sanitizeFilename(file.name));
+      });
+
+      // Save a "local copy" as fallback
+      const localTicket = {
+        id: genTicketId(),
+        name, email, product, description,
+        attachments: attachedFiles.map(f => ({ name: sanitizeFilename(f.name), size: f.size, type: f.type })),
+        createdAt: new Date().toISOString(),
+        status: 'pendiente-offline'
+      };
+
+      // Attempt server upload
+      try {
+        progressWrap.style.display = 'block';
+        progressWrap.setAttribute('aria-hidden','false');
+
+        const resp = await uploadToServer(fd, (pct) => {
+          progressBar.style.width = pct + '%';
+        });
+
+        // Assume server returns JSON { success: true, ticketId: '...' }
+        const serverId = (resp && resp.ticketId) ? resp.ticketId : genTicketId();
+        const ticketSaved = {
+          ...localTicket,
+          id: serverId,
+          status: (resp && resp.success) ? 'recibido' : 'pendiente',
+          serverResponse: resp
+        };
+
+        // persist locally too
+        const arr = loadTickets();
+        arr.unshift(ticketSaved);
+        saveTickets(arr);
+        renderTickets();
+
+        ticketIdSpan.textContent = ticketSaved.id;
+        successEl.style.display = 'block';
+        infoEl.style.color = 'var(--muted)';
+        infoEl.textContent = 'Ticket enviado correctamente. Recibirás email con el seguimiento (simulado).';
+      } catch (err) {
+        // fallback: store locally and inform user
+        const arr = loadTickets();
+        arr.unshift(localTicket);
+        saveTickets(arr);
+        renderTickets();
+        ticketIdSpan.textContent = localTicket.id;
+        successEl.style.display = 'block';
+        infoEl.style.color = '#ffb4b4';
+        infoEl.textContent = 'No se pudo enviar al servidor. Ticket guardado localmente y se intentará reintentar cuando haya conexión.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Enviar ticket';
+        progressWrap.style.display = 'none';
+        // revoke object URLs
+        attachedFiles.forEach(f => f.objectURL && URL.revokeObjectURL(f));
+        attachedFiles = [];
+        renderAttachments();
+        // limpia descripción pero mantiene email por conveniencia
+        document.getElementById('t-desc').value = '';
+        setTimeout(()=> { successEl.style.display = 'none'; ticketIdSpan.textContent = ''; }, 7000);
+      }
+    });
+
+    // Inicialización
+    document.getElementById('yearSupport').textContent = new Date().getFullYear();
+    renderTickets();
+
+    // Try to auto-retry pending local tickets when online
+    window.addEventListener('online', async () => {
+      const arr = loadTickets();
+      const pending = arr.filter(t => t.status && t.status.startsWith('pendiente'));
+      if (!pending.length) return;
+      infoEl.style.color = 'var(--muted)';
+      infoEl.textContent = `Hay ${pending.length} ticket(s) pendientes. Reintentando envío...`;
+      for (const t of pending) {
+        try {
+          // Build minimal FormData from stored ticket (attachments not available offline)
+          const fd = new FormData();
+          fd.append('name', t.name || '');
+          fd.append('email', t.email || '');
+          fd.append('product', t.product || '');
+          fd.append('description', t.description || '');
+          // NOTE: attachments can't be retried from localStorage unless you store binary data (out of scope demo)
+          const resp = await uploadToServer(fd, () => {});
+          t.status = (resp && resp.success) ? 'recibido' : t.status;
+          t.serverResponse = resp;
+        } catch(e) {
+          // leave as pendiente-offline
+        }
+      }
+      saveTickets(arr);
+      renderTickets();
+      infoEl.textContent = 'Reintento completado (demo).';
+    });
+
+    // theme toggle
+    document.getElementById('themeToggleSmall')?.addEventListener('click', () => {
+      const isLight = document.documentElement.classList.toggle('light');
+      try { localStorage.setItem('lixby_theme', isLight ? 'light' : 'dark'); }catch(e){}
+    });
+
+  })();
+  </script>
+</body>
+</html>
