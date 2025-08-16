@@ -1,16 +1,7 @@
 /* auth-firebase-minimal.js
    Single-file minimal Firebase auth + minimal Apple-like glass UI
-   - ES module; load in page with: <script type="module" src="/auth-firebase-minimal.js"></script>
-   - Keeps Firebase imports from gstatic (client-side config still public)
-   - Exposes window.appAuth (same API) and renders a compact, accessible header + glass overlay
-   - Security/quality fixes applied: escaping injected HTML, consistent try/catch, no innerHTML from untrusted data
-   - Injects compact CSS for "liquid glass" look. 
-
-   Notes:
-   - This file intentionally inlines minimal CSS and UI markup to keep integration single-file.
-   - For production, extract CSS to a stylesheet, limit authorized domains in Firebase console, and enforce Firestore rules.
+   (modificado: incluye iconos SVG en botones Google / GitHub)
 */
-
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
 import {
   getAuth,
@@ -61,64 +52,75 @@ function escapeHtml(str){ if (str === undefined || str === null) return ''; retu
 function saveLocalUser(userObj){
   try{
     if (!userObj) { localStorage.removeItem('lixby_user'); return; }
-    const u = { uid: userObj.uid, name: userObj.displayName || (userObj.email ? userObj.email.split('@')[0] : null), email: userObj.email || null, photoURL: userObj.photoURL || null };
+    const u = { uid: userObj.uid, name: userObj.displayName || (userObj.email ? userObj.email.split('@')[0] : null), email: userObj.email || null, photoURL: userObj.photoURL || null, isAnonymous: !!userObj.isAnonymous };
     localStorage.setItem('lixby_user', JSON.stringify(u));
   }catch(e){ console.warn('saveLocalUser', e); }
 }
 function clearLocalUser(){ try{ localStorage.removeItem('lixby_user'); }catch(e){} }
 
 /* ========================
-   Minimal glass CSS + small layout
+   Minimal glass CSS + small layout (incluye reglas para iconos)
    ======================== */
 const MINIMAL_CSS = `
-:root{ --glass-bg: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.08); --muted: rgba(255,255,255,0.85); --accent: rgba(255,255,255,0.95); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+:root{ --glass-bg: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.08); --muted: rgba(255,255,255,0.95); --accent: rgba(10,132,255,0.95); font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
 .lixby-glass{ background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); backdrop-filter: blur(10px) saturate(120%); border: 1px solid var(--glass-border); border-radius: 12px; color:var(--muted); }
 .lixby-header{ display:flex; align-items:center; gap:12px; padding:8px 12px; }
 .lixby-avatar{ width:40px; height:40px; border-radius:10px; object-fit:cover; flex:0 0 40px; }
 .lixby-name{ font-weight:600; font-size:0.95rem; }
-.lixby-btn{ background:transparent; border:1px solid transparent; padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600; }
+.lixby-btn{ background:transparent; border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:8px; }
 .lixby-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; }
 .lixby-panel{ width:360px; max-width:92vw; padding:18px; }
 .lixby-row{ display:flex; gap:8px; margin-top:10px; }
 .lixby-input{ width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--muted); }
 .lixby-small{ font-size:0.9rem; color:rgba(255,255,255,0.7); margin-top:8px; }
+
+/* icons inside buttons */
+.lixby-btn svg.icon, .lixby-btn img.icon { width:18px; height:18px; flex:0 0 18px; display:inline-block; vertical-align:middle; }
+.lixby-btn .label { display:inline-block; line-height:1; }
 `;
 
+/* inject css once */
 function injectCSS(){
   if (document.getElementById('lixby-minimal-css')) return;
   const s = document.createElement('style'); s.id = 'lixby-minimal-css'; s.textContent = MINIMAL_CSS; document.head.appendChild(s);
 }
 
 /* ========================
-   UI creation (minimal)
+   UI creation (minimal) with SVG icons in buttons
    ======================== */
 function createAuthOverlay(){
   if ($id('lixbyAuthOverlay')) return;
   injectCSS();
   const overlay = document.createElement('div'); overlay.id = 'lixbyAuthOverlay'; overlay.className = 'lixby-overlay'; overlay.setAttribute('aria-hidden','true'); overlay.style.display='none';
+
+  // Inline SVG icons (keeps everything self-contained; small and crisp)
+  const googleSVG = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M21.6 12.227c0-.74-.066-1.449-.191-2.136H12v4.048h5.4c-.233 1.254-1.01 2.316-2.155 3.03v2.52h3.48c2.036-1.876 3.23-4.64 3.23-7.462z"/><path fill="#34A853" d="M12 22c2.43 0 4.467-.8 5.956-2.17l-3.48-2.52c-.968.647-2.208 1.03-3.476 1.03-2.673 0-4.935-1.802-5.744-4.22H2.664v2.64C4.137 19.95 7.78 22 12 22z"/><path fill="#4A90E2" d="M6.256 13.12A6.997 6.997 0 0 1 6 12c0-.414.042-.817.122-1.2V8.16H2.664A9.997 9.997 0 0 0 2 12c0 1.66.397 3.226 1.096 4.64l3.16-3.52z"/><path fill="#FBBC05" d="M12 6.0c1.318 0 2.5.452 3.43 1.34l2.57-2.57C16.47 2.98 14.43 2 12 2 7.78 2 4.137 4.05 2.664 8.16L6 9.36C6.865 7.16 9.327 6 12 6z"/></svg>`;
+  const githubSVG = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 2C6.48 2 2 6.58 2 12.18c0 4.5 2.87 8.32 6.84 9.66.5.1.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.64-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05A9.24 9.24 0 0 1 12 6.8c.85.004 1.71.115 2.5.34 1.9-1.32 2.74-1.05 2.74-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.64 1.03 2.76 0 3.94-2.34 4.81-4.57 5.07.36.3.68.9.68 1.82 0 1.31-.01 2.36-.01 2.68 0 .26.18.59.69.49A10.2 10.2 0 0 0 22 12.18C22 6.58 17.52 2 12 2z"/></svg>`;
+
   overlay.innerHTML = `
     <div class="lixby-panel lixby-glass" role="dialog" aria-modal="true" aria-labelledby="lixbyAuthTitle">
       <h3 id="lixbyAuthTitle">Iniciar sesión</h3>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-        <button id="lixbyGoogle" class="lixby-btn">Iniciar con Google</button>
-        <button id="lixbyGithub" class="lixby-btn">Iniciar con GitHub</button>
+        <button id="lixbyGoogle" class="lixby-btn" type="button">${googleSVG}<span class="label">Iniciar con Google</span></button>
+        <button id="lixbyGithub" class="lixby-btn" type="button">${githubSVG}<span class="label">Iniciar con GitHub</span></button>
         <div class="lixby-row" style="flex-direction:column;">
           <input id="lixbyEmail" class="lixby-input" placeholder="Email" type="email" autocomplete="email">
           <input id="lixbyPass" class="lixby-input" placeholder="Contraseña" type="password" autocomplete="current-password">
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
-            <button id="lixbySignIn" class="lixby-btn">Entrar</button>
-            <button id="lixbySignUp" class="lixby-btn">Crear</button>
+            <button id="lixbySignIn" class="lixby-btn" type="button">Entrar</button>
+            <button id="lixbySignUp" class="lixby-btn" type="button">Crear</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;">
-          <button id="lixbyAnon" class="lixby-btn">Entrar como invitado</button>
-          <button id="lixbyClose" class="lixby-btn">Cerrar</button>
+          <button id="lixbyAnon" class="lixby-btn" type="button">Entrar como invitado</button>
+          <button id="lixbyClose" class="lixby-btn" type="button">Cerrar</button>
         </div>
-        <div id="lixbyAuthMsg" class="lixby-small"></div>
+        <div id="lixbyAuthMsg" class="lixby-small" role="status" aria-live="polite"></div>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
+
   // attach handlers
   $id('lixbyClose').addEventListener('click', ()=> hideAuthOverlay());
   $id('lixbyGoogle').addEventListener('click', ()=> doPopupSignIn(googleProvider,'Google').catch(()=>{}));
@@ -132,13 +134,13 @@ function createAuthOverlay(){
       handleSignIn(res.user);
     }catch(err){
       if (err && err.code === 'auth/user-not-found'){
-        if (confirm('Cuenta no encontrada. ¿Crear nueva?')){
-          try{ const reg = await createUserWithEmailAndPassword(auth,email,pass); handleSignIn(reg.user); }catch(e){ showMsg(e.message||String(e)); }
+        if (confirm('Cuenta no encontrada. ¿Crear nueva?')) {
+          try { const reg = await createUserWithEmailAndPassword(auth,email,pass); handleSignIn(reg.user); } catch(e) { showMsg(e.message||String(e)); }
         }
       } else showMsg(err.message||String(err));
     }
   });
-  $id('lixbySignUp').addEventListener('click', async ()=>{
+  $id('lixbySignUp').addEventListener('click', async ()=> {
     const email = ($id('lixbyEmail')||{}).value.trim();
     const pass = ($id('lixbyPass')||{}).value;
     if (!email || !pass){ showMsg('Introduce email y contraseña'); return; }
@@ -189,7 +191,7 @@ function ensureHeader(){
       <div style="font-weight:700;font-size:1.05rem;">LIXBY</div>
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-      <button id="lixbyAccountBtn" class="lixby-btn">Cuenta</button>
+      <button id="lixbyAccountBtn" class="lixby-btn" type="button">Cuenta</button>
     </div>
   `;
   document.body.prepend(header);
@@ -210,8 +212,8 @@ function updateHeaderSafe(user){
     <div style="display:flex;flex-direction:column;align-items:flex-end;">
       <div class="lixby-name">${name}</div>
       <div style="display:flex;gap:8px;margin-top:6px;">
-        <button id="lixbyViewAccount" class="lixby-btn">Mi cuenta</button>
-        <button id="lixbySignOut" class="lixby-btn">Cerrar sesión</button>
+        <button id="lixbyViewAccount" class="lixby-btn" type="button">Mi cuenta</button>
+        <button id="lixbySignOut" class="lixby-btn" type="button">Cerrar sesión</button>
       </div>
     </div>
   `;
@@ -248,20 +250,19 @@ async function renderAccountPageIfNeeded(user){
         <h2>Mi cuenta</h2>
         <div style="display:flex;gap:10px;margin-top:6px;"><input id="pf_firstName" placeholder="Nombre" class="lixby-input" value="${fn}"><input id="pf_lastName" placeholder="Apellidos" class="lixby-input" value="${ln}"></div>
         <div style="margin-top:10px;"><input id="pf_dob" type="date" class="lixby-input" value="${dob}"></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button id="btnSaveProfile" class="lixby-btn">Guardar</button><button id="btnCancelProfile" class="lixby-btn">Cancelar</button></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button id="btnSaveProfile" class="lixby-btn" type="button">Guardar</button><button id="btnCancelProfile" class="lixby-btn" type="button">Cancelar</button></div>
         <div id="profileMsg" class="lixby-small"></div>
       </div>
     </div>
   `;
   target.appendChild(panel);
   $id('btnCancelProfile').addEventListener('click', ()=> location.reload());
-  $id('btnSaveProfile').addEventListener('click', async ()=>{
+  $id('btnSaveProfile').addEventListener('click', async ()=>{ 
     const firstName = ($id('pf_firstName')||{}).value || '';
     const lastName = ($id('pf_lastName')||{}).value || '';
     const dobVal = ($id('pf_dob')||{}).value || '';
     const msg = $id('profileMsg'); if (msg) msg.textContent='Guardando...';
     try{ if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') throw new Error('updateProfileExtra no disponible'); await window.appAuth.updateProfileExtra({ firstName, lastName, dob: dobVal }); if (msg) msg.textContent='Guardado ✔';
-      // update local header
       const local = safeJSONParse(localStorage.getItem('lixby_user')) || {}; local.firstName = firstName || local.firstName; local.lastName = lastName || local.lastName; local.dob = dobVal || local.dob; try{ localStorage.setItem('lixby_user', JSON.stringify(local)); }catch(e){}
       updateHeaderSafe({ displayName: (firstName ? (firstName + (lastName? ' '+lastName:'')) : local.name), email: local.email, photoURL: local.photoURL });
     }catch(e){ console.error('save profile', e); if (msg) msg.textContent='Error al guardar. Revisa consola.'; }
@@ -297,7 +298,7 @@ window.appAuth = {
    Sync / init UI
    ======================== */
 function init(){ createAuthOverlay(); ensureHeader(); // subscribe
-  onAuthStateChanged(auth, async (user)=>{
+  onAuthStateChanged(auth, async (user)=> {
     if (user){ try{ saveLocalUser(user); updateHeaderSafe(user); await renderAccountPageIfNeeded(user); window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ uid:user.uid, signedIn:true } })); }catch(e){ console.warn(e); } }
     else{ clearLocalUser(); updateHeaderSafe(null); const shouldShow = !localStorage.getItem('lixby_seen_welcome'); if (shouldShow) setTimeout(()=> showAuthOverlay(), 300); window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ signedIn:false } })); }
   });
