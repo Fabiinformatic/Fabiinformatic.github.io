@@ -80,9 +80,28 @@
     /* small helpers */
     .visually-hidden { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
+    /* modal styles for payment months chooser */
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:1000; }
+    .modal-backdrop.open { display:flex; }
+    .modal { background:var(--surface, #0b1220); border-radius:12px; padding:18px; width:320px; max-width:92%; box-shadow:0 20px 50px rgba(2,6,12,0.6); color:var(--text); }
+    .modal h3 { margin:0 0 12px 0; font-size:1.05rem; }
+    .months { display:flex; gap:8px; flex-wrap:wrap; }
+    .month-btn { padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); cursor:pointer; min-width:70px; text-align:center; }
+    .month-btn.active { border-color:var(--accent); box-shadow:0 8px 22px rgba(2,6,12,0.08); transform:translateY(-3px); }
+
     @media (max-width:700px) {
       .cap-card { min-width:140px; }
       .pay-card, .care-card { min-width: 48%; }
+    }
+
+    /* product image wrapper */
+    .image-wrap { width:420px; max-width:48%; display:block; border-radius:12px; overflow:hidden; background:linear-gradient(180deg,#111,#0b0b0b); display:flex; align-items:center; justify-content:center; }
+    .product-image { width:100%; height:auto; display:block; object-fit:cover; }
+
+    /* small adjustments to keep layout stable if image taller */
+    @media (max-width:900px) {
+      .image-wrap { max-width:100%; width:100%; margin-bottom:14px; }
+      .product-detail { flex-direction:column; padding:16px; }
     }
   </style>
 </head>
@@ -133,7 +152,7 @@
 
   <main>
     <!-- aria-live para notificar cambios importantes (ej. "Añadido al carrito") -->
-    <div id="productDetail" class="product-detail glass" aria-live="polite">
+    <div id="productDetail" class="product-detail glass" aria-live="polite" style="display:flex;gap:24px;max-width:1100px;margin:24px auto;padding:24px;">
       <div style="flex:1;padding:24px;">Cargando producto…</div>
     </div>
 
@@ -268,8 +287,8 @@
       }
     };
 
-    // payment terms allowed
-    const TERMS = [1,6,12,18,24,30,36]; // 1 = pago único
+    // payment terms allowed (we'll offer months in modal)
+    const TERMS = [6, 12, 18, 24];
 
     // care monthly base rates
     const CARE_BASE = {
@@ -469,26 +488,55 @@
       const img = document.createElement('img'); img.className = 'product-image'; img.alt = p.name; img.src = placeholder; img.loading='lazy'; img.decoding='async';
       try {
         const orig = p.image;
-        img.dataset.src = proxiedUrl(orig);
-        if ('IntersectionObserver' in window) {
-          const io = new IntersectionObserver((entries,obs)=> {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                const el = entry.target;
-                if (el.dataset && el.dataset.src) el.src = el.dataset.src;
-                obs.unobserve(el);
-              }
-            });
-          }, { rootMargin:'200px 0px' });
-          io.observe(img);
-        } else {
-          img.src = img.dataset.src;
+        try {
+          // use proxied URL but keep original as fallback
+          img.dataset.src = proxiedUrl(orig);
+          // On product detail we want the main image to attempt loading immediately
+          img.loading = 'eager';
+          img.decoding = 'async';
+
+          if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries, obs) => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                  const el = entry.target;
+                  if (el.dataset && el.dataset.src) el.src = el.dataset.src;
+                  try { obs.unobserve(el); } catch(e){}
+                }
+              });
+            }, { rootMargin: '200px 0px' });
+            io.observe(img);
+
+            // Safety: if IO doesn't fire for some reason, force a load shortly after
+            setTimeout(() => {
+              try {
+                if (img && (img.src === placeholder || !img.src) && img.dataset && img.dataset.src) {
+                  img.src = img.dataset.src;
+                }
+              } catch(e){}
+            }, 300);
+          } else {
+            // no IO -> load immediately
+            img.src = img.dataset.src || orig;
+          }
+        } catch(e){
+          try { img.src = orig || placeholder; } catch(e2){ img.src = placeholder; }
         }
-        img.addEventListener('error', function () {
-          if (this.src && this.src.indexOf('images.weserv.nl') !== -1) this.src = orig;
-          else this.src = placeholder;
-        });
       } catch(e){}
+      // Improved error handler: if proxy fails, try original image once; otherwise keep placeholder
+      img.addEventListener('error', function () {
+        try {
+          const current = this.src || '';
+          if (current.indexOf('images.weserv.nl') !== -1 && orig && current !== orig) {
+            // proxy failed — try original image directly
+            this.src = orig;
+            return;
+          }
+        } catch(e){}
+        // last resort
+        try { this.src = placeholder; } catch(e){}
+      });
+
       wrap.appendChild(img);
 
       const info = document.createElement('div'); info.className = 'product-info';
@@ -568,29 +616,79 @@
       capWrap.appendChild(capHidden);
       options.appendChild(capWrap);
 
-      // ------ PAGOS ------
+      // ------ PAGOS: ahora solo "Pago único" y "A plazo" ------
       const payWrap = document.createElement('div');
       const payTitle = document.createElement('div'); payTitle.className='option-title'; payTitle.textContent = 'Opciones de pago. Elige lo que más te convenga.';
       payWrap.appendChild(payTitle);
       const payRow = document.createElement('div'); payRow.className='payments';
       const payHidden = document.createElement('input'); payHidden.type='hidden'; payHidden.id='selTerm';
-      const savedTermKey = 'lixby_sel_term_' + matchedId;
-      const savedTerm = localStorage.getItem(savedTermKey);
-      TERMS.forEach((m, idx) => {
-        const card = document.createElement('div'); card.className='pay-card';
-        card.setAttribute('data-term', String(m));
-        if ((savedTerm && Number(savedTerm) === m) || (!savedTerm && m===1)) card.classList.add('active');
-        if (m===1) card.innerHTML = `<div style="font-weight:700">Pago único</div><div class="muted">Paga todo ahora</div>`;
-        else card.innerHTML = `<div style="font-weight:700">${m} meses</div><div class="muted">0% TAE</div>`;
-        card.addEventListener('click', function(){
-          payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
-          this.classList.add('active');
-          payHidden.value = this.dataset.term;
-          try { localStorage.setItem(savedTermKey, this.dataset.term); } catch(e){}
-          updateSummary();
+      // Payment choices: 'single' or 'plazo'
+      const paySingle = document.createElement('div'); paySingle.className='pay-card'; paySingle.setAttribute('data-pay','single'); paySingle.innerHTML = `<div style="font-weight:700">Pago único</div><div class="muted">Paga todo ahora</div>`;
+      const payPlazo = document.createElement('div'); payPlazo.className='pay-card'; payPlazo.setAttribute('data-pay','plazo'); payPlazo.innerHTML = `<div style="font-weight:700">A plazo</div><div class="muted">Elegir meses</div>`;
+      // default: Pago único
+      paySingle.classList.add('active');
+      payHidden.value = '1'; // term 1 = pago único
+      // function to open modal
+      function createMonthsModal(){
+        if (document.getElementById('monthsModal')) return;
+        const bd = document.createElement('div');
+        bd.id = 'monthsModal';
+        bd.className = 'modal-backdrop';
+        bd.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="monthsTitle">
+            <h3 id="monthsTitle">Elige la duración del pago a plazo</h3>
+            <div class="months">
+              ${TERMS.map(m => `<button type="button" class="month-btn" data-month="${m}">${m} meses</button>`).join('')}
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+              <button id="monthsCancel" class="text-btn">Cancelar</button>
+            </div>
+          </div>`;
+        document.body.appendChild(bd);
+        // attach listeners
+        bd.addEventListener('click', (ev) => {
+          if (ev.target === bd) closeMonthsModal();
         });
-        payRow.appendChild(card);
+        const cancel = bd.querySelector('#monthsCancel');
+        if (cancel) cancel.addEventListener('click', closeMonthsModal);
+        bd.querySelectorAll('.month-btn').forEach(btn => {
+          btn.addEventListener('click', function(){
+            const months = Number(this.dataset.month) || TERMS[0];
+            // set hidden value and mark payRow UI
+            payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
+            payPlazo.classList.add('active');
+            payHidden.value = String(months);
+            updateSummary();
+            closeMonthsModal();
+          });
+        });
+      }
+      function openMonthsModal(){
+        createMonthsModal();
+        const bd = document.getElementById('monthsModal');
+        if (bd) bd.classList.add('open');
+      }
+      function closeMonthsModal(){
+        const bd = document.getElementById('monthsModal');
+        if (bd) bd.classList.remove('open');
+      }
+
+      paySingle.addEventListener('click', function(){
+        payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
+        this.classList.add('active');
+        payHidden.value = '1';
+        updateSummary();
       });
+      payPlazo.addEventListener('click', function(){
+        // open modal to choose months
+        // temporarily mark as active visually
+        payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
+        this.classList.add('active');
+        // open months chooser
+        openMonthsModal();
+      });
+
+      payRow.appendChild(paySingle);
+      payRow.appendChild(payPlazo);
       payWrap.appendChild(payRow);
       payWrap.appendChild(payHidden);
       options.appendChild(payWrap);
@@ -640,9 +738,10 @@
         const selPrice = Number(p.storage[selectedCap] || 0);
         const selTerm = Number(document.getElementById('selTerm').value || 1);
         const selCare = document.getElementById('selCare').value || 'none';
+        const displayStorage = (selectedCap === '1024' ? '1 TB' : selectedCap + ' GB');
         const productData = {
           id: p.id || matchedId,
-          name: p.name + ' — ' + (selectedCap==='1024' ? '1 TB' : selectedCap + ' GB') + ' / ' + selectedColor,
+          name: p.name + ' — ' + displayStorage + ' / ' + selectedColor + (selTerm>1 ? ` (${selTerm} meses)` : ''),
           price: formatPrice(selPrice),
           priceNum: selPrice,
           image: p.image,
@@ -688,13 +787,7 @@
         if (b.dataset.cap === defaultCap) { b.classList.add('active'); document.getElementById('selCap').value = b.dataset.cap; }
         else b.classList.remove('active');
       });
-      // term
-      const defaultTerm = Number(localStorage.getItem(savedTermKey) || 1);
-      const termButtons = container.querySelectorAll('.pay-card');
-      termButtons.forEach(b => {
-        if (Number(b.dataset.term) === defaultTerm) { b.classList.add('active'); document.getElementById('selTerm').value = b.dataset.term; }
-        else b.classList.remove('active');
-      });
+      // term: default already set to 1 (Pago único)
       // care
       const defaultCare = localStorage.getItem(savedCareKey) || 'none';
       const careButtons = container.querySelectorAll('.care-card');
