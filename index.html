@@ -22,7 +22,7 @@
     #navLinks { display:flex; gap:18px; align-items:center; justify-content:center; flex: 1 1 auto; padding: 8px 12px; white-space: nowrap; }
     .nav-right { display:flex; gap:10px; align-items:center; justify-content:flex-end; flex: 0 0 auto; flex-direction: row !important; }
     .cart-wrapper { position:relative; }
-    .mini-cart { right:18px; top:56px; width:320px; box-sizing:border-box; z-index:140; }
+    .mini-cart { right:18px; top:56px; width:320px; box-sizing:border-box; z-index:140; display:none; flex-direction:column; }
     .lang-menu { right:18px; top:56px; box-sizing:border-box; z-index:140; }
     main { padding-top: calc(64px + 12px); }
     .card .actions { display:flex; gap:8px; align-items:center; margin-top:8px; }
@@ -100,36 +100,36 @@
     <div class="nav-right" aria-hidden="false">
       <div class="cart-wrapper" style="position:relative;">
         <!-- Añadido aria-controls y aria-expanded para accesibilidad -->
-        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito" aria-controls="miniCart" aria-expanded="false">🛒 <span id="cartCount" class="badge">0</span></button>
+        <button id="cartBtn" class="icon-btn" aria-label="Ver carrito" aria-controls="miniCart" aria-expanded="false" type="button">🛒 <span id="cartCount" class="badge">0</span></button>
         <div id="miniCart" class="mini-cart glass" aria-hidden="true" role="region" aria-label="Mini carrito">
-          <div class="mini-cart-header">
+          <div class="mini-cart-header" style="display:flex;justify-content:space-between;align-items:center;">
             <strong data-i18n="cart.title">Carrito</strong>
-            <button id="clearCart" class="text-btn" data-i18n="cart.clear">Vaciar</button>
+            <button id="clearCart" class="text-btn" data-i18n="cart.clear" type="button">Vaciar</button>
           </div>
-          <div id="miniCartItems" class="mini-cart-items" tabindex="0" aria-live="polite">
+          <div id="miniCartItems" class="mini-cart-items" tabindex="0" aria-live="polite" style="max-height:220px;overflow:auto;">
             <!-- items dinámicos -->
           </div>
           <div class="mini-cart-footer" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
-              <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout">Pagar</button></div>
+              <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout" type="button">Pagar</button></div>
             </div>
-            <div style="display:flex;gap:8px;"><button id="viewCartBtn" class="btn ghost">Ver carrito</button></div>
+            <div style="display:flex;gap:8px;"><button id="viewCartBtn" class="btn ghost" type="button">Ver carrito</button></div>
           </div>
         </div>
       </div>
 
       <div class="lang-wrapper">
-        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false"> 🇪🇸 <span id="langLabel">Español</span> ▾ </button>
-        <div id="langMenu" class="lang-menu glass" aria-hidden="true">
-          <button class="lang-item" data-lang="es">🇪🇸 Español</button>
-          <button class="lang-item" data-lang="en">🇬🇧 English</button>
-          <button class="lang-item" data-lang="fr">🇫🇷 Français</button>
+        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false" type="button"> 🇪🇸 <span id="langLabel">Español</span> ▾ </button>
+        <div id="langMenu" class="lang-menu glass" aria-hidden="true" style="display:none;flex-direction:column;gap:6px;padding:8px;width:160px;">
+          <button class="lang-item" data-lang="es" type="button">🇪🇸 Español</button>
+          <button class="lang-item" data-lang="en" type="button">🇬🇧 English</button>
+          <button class="lang-item" data-lang="fr" type="button">🇫🇷 Français</button>
         </div>
       </div>
 
-      <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta">Cuenta</button>
-      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+      <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta" type="button">Cuenta</button>
+      <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema" type="button">◐</button>
     </div>
   </div>
 </header>
@@ -141,15 +141,15 @@
     <h2 id="authTitle" style="margin:0 0 8px">Bienvenido a LIXBY</h2>
     <p style="margin:0 0 18px;color:var(--muted)">Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</p>
     <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button id="btnGoogle" class="btn ghost" style="flex:1">Iniciar con Google</button>
-      <button id="btnGitHub" class="btn ghost" style="flex:1">Iniciar con GitHub</button>
+      <button id="btnGoogle" class="btn ghost" style="flex:1" type="button">Iniciar con Google</button>
+      <button id="btnGitHub" class="btn ghost" style="flex:1" type="button">Iniciar con GitHub</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--muted)">
       <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
       <span style="font-size:0.9rem">o con correo</span>
       <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
     </div>
-    <form id="authEmailForm" style="display:flex;flex-direction:column;gap:8px">
+    <form id="authEmailForm" style="display:flex;flex-direction:column;gap:8px" onsubmit="return false;">
       <input id="authEmail" type="email" placeholder="Correo" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
       <input id="authPass" type="password" placeholder="Contraseña" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04)"/>
       <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
@@ -158,12 +158,12 @@
       </div>
     </form>
     <div style="text-align:center;margin-top:12px">
-      <button id="btnAnonymous" class="btn ghost">Continuar como invitado</button>
+      <button id="btnAnonymous" class="btn ghost" type="button">Continuar como invitado</button>
     </div>
     <div style="display:flex;justify-content:center;margin-top:12px;font-size:0.9rem">
       <a id="authToAccount" href="cuenta.html" style="color:var(--muted)">Ya tienes cuenta? Ir a mi cuenta</a>
     </div>
-    <button id="authClose" aria-label="Cerrar" style="position:absolute;right:12px;top:12px;background:transparent;border:0;font-size:18px">✕</button>
+    <button id="authClose" aria-label="Cerrar" style="position:absolute;right:12px;top:12px;background:transparent;border:0;font-size:18px" type="button">✕</button>
   </div>
 </div>
 <!-- END AUTH -->
@@ -193,8 +193,8 @@
         <p>Ultraligero y económico.</p>
         <span class="price">249€</span>
         <div class="actions">
-          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-air'">Ver</button>
-          <button class="btn-add" data-id="lixby-one-air">Añadir al carrito</button>
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-air'" type="button">Ver</button>
+          <button class="btn-add" data-id="lixby-one-air" type="button">Añadir al carrito</button>
         </div>
       </article>
 
@@ -208,8 +208,8 @@
         <p>Ultraligero y potente.</p>
         <span class="price">349€</span>
         <div class="actions">
-          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one'">Ver</button>
-          <button class="btn-add" data-id="lixby-one">Añadir al carrito</button>
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one'" type="button">Ver</button>
+          <button class="btn-add" data-id="lixby-one" type="button">Añadir al carrito</button>
         </div>
       </article>
 
@@ -223,8 +223,8 @@
         <p>Audio de alta fidelidad.</p>
         <span class="price">899€</span>
         <div class="actions">
-          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-pro'">Ver</button>
-          <button class="btn-add" data-id="lixby-one-pro">Añadir al carrito</button>
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-pro'" type="button">Ver</button>
+          <button class="btn-add" data-id="lixby-one-pro" type="button">Añadir al carrito</button>
         </div>
       </article>
     </div>
@@ -256,6 +256,9 @@
   </section>
 </main>
 
+<!-- debug (oculto a usuarios, útil para showDebug) -->
+<div id="debug" style="display:none;max-width:1100px;margin:12px auto;color:var(--muted);white-space:pre-wrap;"></div>
+
 <footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
   <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
 </footer>
@@ -264,19 +267,19 @@
 <div id="cartBackdrop" class="cart-backdrop" aria-hidden="true"></div>
 <aside id="cartPanel" class="cart-panel" aria-hidden="true">
   <div class="cart-panel-inner glass" role="dialog" aria-label="Carrito">
-    <div class="cart-header">
+    <div class="cart-header" style="display:flex;justify-content:space-between;align-items:center;">
       <strong data-i18n="cart.title">Carrito</strong>
-      <button id="cartPanelClose" class="text-btn" aria-label="Cerrar">✕</button>
+      <button id="cartPanelClose" class="text-btn" aria-label="Cerrar" type="button">✕</button>
     </div>
-    <div id="cartPanelItems" class="cart-list"></div>
-    <div class="cart-footer">
+    <div id="cartPanelItems" class="cart-list" style="max-height:60vh;overflow:auto;padding:12px"></div>
+    <div class="cart-footer" style="padding:12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <strong>Total</strong>
         <span id="cartPanelTotal">0€</span>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button id="cartPanelCheckout" class="btn primary" data-i18n="cart.checkout">Pagar</button>
-        <button id="cartPanelClear" class="btn ghost" data-i18n="cart.clear">Vaciar</button>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="cartPanelCheckout" class="btn primary" data-i18n="cart.checkout" type="button">Pagar</button>
+        <button id="cartPanelClear" class="btn ghost" data-i18n="cart.clear" type="button">Vaciar</button>
       </div>
     </div>
   </div>
@@ -298,10 +301,13 @@
   // Helpers y estado
   // -------------------------
   const KEY = 'lixby_cart_v1';
+  // Formateador consistente (es-ES)
+  const CURRENCY = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
   function parsePrice(s){ if (s === undefined || s === null) return 0; return Number(String(s).replace(/[^\d.,-]/g,'').replace(',', '.')) || 0; }
   function saveCart(c){ try { localStorage.setItem(KEY, JSON.stringify(c)); } catch(e){} }
   function loadCart(){ try { return JSON.parse(localStorage.getItem(KEY))||[]; } catch(e){ return []; } }
-  function formatPriceNum(num){ return (Math.round(num*100)/100) + '€'; }
+  function formatPriceNum(num){ return CURRENCY.format(Number(num) || 0); }
   function showDebug(msg){ const el=document.getElementById('debug'); if(!el) return; el.style.display='block'; el.textContent += msg + "\n"; console.log('DEBUG',msg); }
 
   // performance: proxiedUrl (menor tamaño)
@@ -340,7 +346,7 @@
     miniCartItems.innerHTML = '';
     if (cart.length === 0) {
       miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
-      if (miniCartTotal) miniCartTotal.textContent = '0€';
+      if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(0);
       return;
     }
     let total = 0;
@@ -355,11 +361,12 @@
       const meta = document.createElement('div'); meta.className='meta';
       // RENDER SEGURO: no usar innerHTML con contenido dinámico
       const title = document.createElement('div'); title.style.fontWeight = '700'; title.textContent = it.name || '';
-      const subtitle = document.createElement('div'); subtitle.style.color = 'var(--muted)'; subtitle.textContent = `${it.price} x${it.qty||1}`;
+      const subtitle = document.createElement('div'); subtitle.style.color = 'var(--muted)'; subtitle.textContent = `${formatPriceNum(it.priceNum || parsePrice(it.price))} × ${it.qty||1}`;
       meta.appendChild(title); meta.appendChild(subtitle);
 
       const remove = document.createElement('button'); remove.className='remove'; remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
-      remove.addEventListener('click', ()=>{ cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
+      remove.setAttribute('type','button');
+      remove.addEventListener('click', (e)=>{ e.stopPropagation(); cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
       item.appendChild(img); item.appendChild(meta); item.appendChild(remove);
       frag.appendChild(item);
       total += (it.priceNum || parsePrice(it.price)) * (it.qty||1);
@@ -368,17 +375,30 @@
     if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(total);
   }
 
+  // ensure miniCart style reflects aria-hidden initially
+  if (miniCart) {
+    if (miniCart.getAttribute('aria-hidden') === 'false') miniCart.style.display = 'flex';
+    else miniCart.style.display = '';
+  }
+
   if (cartBtn && miniCart) {
     cartBtn.addEventListener('click', (e) => {
       const shown = miniCart.getAttribute('aria-hidden') === 'false';
+      const newState = !shown;
       miniCart.setAttribute('aria-hidden', String(!shown));
-      try { cartBtn.setAttribute('aria-expanded', String(!shown)); } catch(e){}
+      try { cartBtn.setAttribute('aria-expanded', String(newState)); } catch(e){}
+      // ensure visible/hidden visually
+      if (newState) miniCart.style.display = 'flex';
+      else miniCart.style.display = '';
     });
     document.addEventListener('click', (e) => {
-      if (!cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
-        miniCart.setAttribute('aria-hidden','true');
-        try { cartBtn.setAttribute('aria-expanded', 'false'); } catch(e){}
-      }
+      try {
+        if (!cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
+          miniCart.setAttribute('aria-hidden','true');
+          miniCart.style.display = '';
+          try { cartBtn.setAttribute('aria-expanded', 'false'); } catch(e){}
+        }
+      } catch(e){}
     });
   }
   if (clearCartBtn) clearCartBtn.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); });
@@ -387,10 +407,10 @@
   window.addToCart = function(product){
     const existing = cart.find(p => p.id === product.id);
     if (existing) existing.qty = (existing.qty||1) + 1;
-    else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: parsePrice(product.price) || product.priceNum || 0, qty:1, image: product.image });
+    else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: Number(product.priceNum || parsePrice(product.price) || 0), qty:1, image: product.image });
     saveCart(cart);
     updateMiniCartUI();
-    if (miniCart) { miniCart.setAttribute('aria-hidden','false'); try { cartBtn.setAttribute('aria-expanded','true'); } catch(e){} setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
+    if (miniCart) { miniCart.setAttribute('aria-hidden','false'); miniCart.style.display = 'flex'; try { cartBtn.setAttribute('aria-expanded','true'); } catch(e){} setTimeout(()=>{ if (miniCart) { miniCart.setAttribute('aria-hidden','true'); miniCart.style.display = ''; try { cartBtn.setAttribute('aria-expanded','false'); } catch(e){} } }, 2200); }
     // announce for screen readers
     try { if (announcements) announcements.textContent = `${product.name} añadido al carrito.`; } catch(e){}
   };
@@ -409,9 +429,11 @@
     const map = translations[lang] || translations['es'];
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      if (key && map[key]) el.textContent = map[key];
+      if (key && map && map[key]) el.textContent = map[key];
     });
-    document.querySelectorAll('.btn-add').forEach(btn => btn.textContent = map['btn.add'] || btn.textContent);
+    document.querySelectorAll('.btn-add').forEach(btn => {
+      try { btn.textContent = (map && map['btn.add']) || btn.textContent; } catch(e){}
+    });
     const names = { es:'Español', en:'English', fr:'Français' };
     if (langLabel) langLabel.textContent = names[lang] || names['es'];
   }
@@ -427,10 +449,11 @@
     langBtn.addEventListener('click', ()=> {
       const isOpen = langMenu.getAttribute('aria-hidden') === 'false';
       langMenu.setAttribute('aria-hidden', String(!isOpen));
+      langMenu.style.display = !isOpen ? 'flex' : 'none';
       langBtn.setAttribute('aria-expanded', String(!isOpen));
     });
-    langMenu.querySelectorAll('.lang-item').forEach(btn => btn.addEventListener('click', ()=>{ const lang = btn.getAttribute('data-lang'); setLang(lang); langMenu.setAttribute('aria-hidden','true'); langBtn.setAttribute('aria-expanded','false'); }));
-    document.addEventListener('click', (e)=> { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langBtn.setAttribute('aria-expanded','false'); }});
+    Array.from(langMenu.querySelectorAll('.lang-item')).forEach(btn => btn.addEventListener('click', ()=>{ const lang = btn.getAttribute('data-lang'); setLang(lang); langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }));
+    document.addEventListener('click', (e)=> { try { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }} catch(e){} });
   }
 
   // THEME
@@ -441,7 +464,16 @@
 
   // ---------- FALLBACK addToCart (si no hay script.js externo) ----------
   document.addEventListener('click', (ev) => {
-    const btn = ev.target.closest && ev.target.closest('.btn-add');
+    const closestFn = ev.target && ev.target.closest ? ev.target.closest.bind(ev.target) : (sel)=> {
+      // simple fallback: walk up parents
+      let n = ev.target;
+      while(n && n.nodeType === 1) {
+        if (n.matches && n.matches(sel)) return n;
+        n = n.parentElement;
+      }
+      return null;
+    };
+    const btn = closestFn('.btn-add');
     if (!btn) return;
     const id = btn.getAttribute('data-id');
     const product = PRODUCTS_BRIEF[id];
@@ -462,9 +494,17 @@
 
   // ---------- CLICK EN TARJETA: navegar a producto (sin borrar handlers) ----------
   document.addEventListener('click', function(e){
-    const card = e.target.closest && e.target.closest('.card');
+    const closestFn = e.target && e.target.closest ? e.target.closest.bind(e.target) : (sel)=> {
+      let n = e.target;
+      while(n && n.nodeType === 1) {
+        if (n.matches && n.matches(sel)) return n;
+        n = n.parentElement;
+      }
+      return null;
+    };
+    const card = closestFn('.card');
     if (!card) return;
-    if (e.target.closest('button, a')) return;
+    if (closestFn('button, a')) return;
     const pid = card.dataset && card.dataset.product;
     if (!pid) return;
     window.location.href = 'producto.html?id=' + encodeURIComponent(pid);
@@ -502,7 +542,7 @@
         if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
           throw new Error('EmailJS SDK no disponible');
         }
-        const response = await emailjs.sendForm('service_tagcpgm', 'template_l1e0go2', '#contactForm');
+        await emailjs.sendForm('service_tagcpgm', 'template_l1e0go2', '#contactForm');
         successEl.style.display = 'block';
         form.reset();
         setTimeout(()=> successEl.style.display = 'none', 6000);
@@ -535,7 +575,6 @@
   })();
 
   // ---- AÑADIDO: hacer que "Ver carrito" lleve a carrito.html sin borrar el botón original ----
-  // Clonamos y reemplazamos el botón original para eliminar listeners anteriores y añadir navegación explícita.
   (function enableViewCartNavigation(){
     try {
       const orig = document.getElementById('viewCartBtn');
@@ -544,12 +583,8 @@
       if (orig.tagName.toLowerCase() === 'a') return;
       // clonamos sin listeners
       const clone = orig.cloneNode(true);
-      // aseguramos que sea tipo="button" para accesibilidad
       if (!clone.hasAttribute('type')) clone.setAttribute('type','button');
-      // añadimos navegación limpia (reemplaza comportamiento de abrir panel)
       clone.addEventListener('click', (e) => {
-        // prevenir cualquier otro listener en el elemento original (ya perdido por el clone)
-        // navegamos a la página del carrito
         window.location.href = 'carrito.html';
       });
       orig.parentNode.replaceChild(clone, orig);
@@ -564,11 +599,6 @@
 
 })();
 </script>
-
-<!-- Intento de carga del módulo de autenticación (si usas auth-firebase.js, cárgalo aquí como módulo) -->
-<!-- <script type="module" src="/auth-firebase.js"></script> -->
-<!-- tu script principal (defer) -->
-<script src="script.js" defer></script>
 
 <!-- Mejoras: sanitización y accesibilidad del mini-cart (añadido, no borra nada) -->
 <script>
@@ -611,6 +641,7 @@
     if (e.key === 'Escape') {
       if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
         miniCart.setAttribute('aria-hidden','true');
+        miniCart.style.display = '';
         cartBtn && cartBtn.setAttribute('aria-expanded','false');
         cartBtn && cartBtn.focus();
       }
@@ -642,6 +673,9 @@
   }
 })();
 </script>
+
+<!-- tu script principal global (hover preview, account behavior, etc.) -->
+<script src="script.js" defer></script>
 
 </body>
 </html>
