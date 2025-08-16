@@ -437,14 +437,28 @@
       /* =========================
          HANDLERS: cart button, document click
          ========================= */
+
+      // NEW: Apple-like behavior:
+      // - click normal => navigate to carrito.html
+      // - hover / arrowdown => show mini-cart preview
+      // - ctrl/meta/alt + click => show preview (fallback)
       function handleCartBtnClick(e){
-        if (miniCart) {
-          const shown = miniCart.getAttribute('aria-hidden') === 'false';
-          miniCart.setAttribute('aria-hidden', String(!shown));
-          e.stopPropagation();
-          return;
-        }
-        toggleCartPanel(true);
+        try {
+          // If user held a modifier key, open preview instead of navigating (optional handy fallback)
+          if (e && (e.metaKey || e.ctrlKey || e.altKey)) {
+            if (miniCart) {
+              const shown = miniCart.getAttribute('aria-hidden') === 'false';
+              miniCart.setAttribute('aria-hidden', String(!shown));
+              e.stopPropagation();
+              return;
+            }
+            toggleCartPanel(true);
+            e.stopPropagation();
+            return;
+          }
+          // Default: navigate to full carrito page (like Apple)
+          window.location.href = 'carrito.html';
+        } catch(err){ console.warn('handleCartBtnClick error', err); }
       }
 
       if (cartBtn) cartBtn.addEventListener('click', handleCartBtnClick);
@@ -453,6 +467,33 @@
         document.addEventListener('click', function delegated(ev){
           const b = ev.target.closest && ev.target.closest('#cartBtn');
           if (b) handleCartBtnClick(ev);
+        });
+      }
+
+      // Show mini-cart on hover / focus for quick preview (doesn't prevent click navigation)
+      if (cartBtn && miniCart) {
+        // mouseenter shows preview
+        cartBtn.addEventListener('mouseenter', () => {
+          try { miniCart.setAttribute('aria-hidden','false'); } catch(e){}
+        });
+        // if the pointer leaves cartBtn and isn't over miniCart, hide after a small delay
+        cartBtn.addEventListener('mouseleave', () => {
+          setTimeout(() => {
+            try {
+              const overMini = miniCart.matches && miniCart.matches(':hover');
+              if (!overMini) miniCart.setAttribute('aria-hidden','true');
+            } catch(e){}
+          }, 150);
+        });
+        // keep preview open while hovering miniCart
+        miniCart.addEventListener('mouseenter', () => { try { miniCart.setAttribute('aria-hidden','false'); } catch(e){} });
+        miniCart.addEventListener('mouseleave', () => { try { miniCart.setAttribute('aria-hidden','true'); } catch(e){} });
+
+        // keyboard: arrow down opens preview
+        cartBtn.addEventListener('keydown', (ev) => {
+          if (ev.key === 'ArrowDown' || ev.key === 'Down') {
+            try { miniCart.setAttribute('aria-hidden','false'); ev.preventDefault(); } catch(e){}
+          }
         });
       }
 
@@ -469,12 +510,17 @@
       if (clearCartBtn) clearCartBtn.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
       if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (!cart || cart.length ===0) return alert(translations[currentLang]?.['cart.empty'] || translations['es']['cart.empty']); alert('Simulación de pago — artículos: ' + cart.reduce((s,i)=>s+(i.qty||0),0)); });
 
+      // Make "Ver carrito" navigate to carrito.html (Apple-like), even if it's a <button>
       document.addEventListener('click', (ev) => {
-        const el = ev.target;
-        if (!el) return;
-        if (el.id === 'viewCartBtn' || (el.closest && el.closest('#viewCartBtn'))) {
-          toggleCartPanel(true);
-        }
+        try {
+          const el = ev.target;
+          if (!el) return;
+          const viewBtn = el.id === 'viewCartBtn' || (el.closest && el.closest('#viewCartBtn'));
+          if (viewBtn) {
+            // prefer full page navigation
+            window.location.href = 'carrito.html';
+          }
+        } catch(e){}
       });
 
       /* =========================
@@ -541,7 +587,7 @@
           langBtn.setAttribute('aria-expanded', String(!isHidden));
         });
         // delegate click to items
-        Array.from(langMenu.querySelectorAll('[data-lang]')).forEach(b => b.addEventListener('click', ()=>{
+        Array.from(langMenu.querySelectorAll('[data-lang]')).forEach(b => b.addEventListener('click', ()=> {
           const l = b.getAttribute('data-lang'); setLanguage(l);
           langMenu.setAttribute('aria-hidden','true'); if (langBtn) langBtn.setAttribute('aria-expanded','false');
         }));
