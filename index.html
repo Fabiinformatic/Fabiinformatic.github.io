@@ -346,7 +346,7 @@
       <h4>Ayuda</h4>
       <div class="footer-links">
         <a href="contacto.html">Contacto</a>
-        <a href="faq.html">Preguntas frecuentes</a>
+        <a href="faq.html" id="footerFaqLink">Preguntas frecuentes</a>
         <a href="envios.html">Envíos y devoluciones</a>
         <a href="soporte.html">Soporte técnico</a>
       </div>
@@ -1134,6 +1134,25 @@
     document.addEventListener('scroll', scrollHandler, { passive:true });
     // initial
     scrollHandler();
+  }
+
+  // Ensure footer FAQ link navigates correctly (enhanced for analytics/event tracking)
+  const footerFaq = document.getElementById('footerFaqLink');
+  if (footerFaq) {
+    footerFaq.addEventListener('click', (ev) => {
+      // keep default anchor behavior but also provide a reliable navigation fallback/respect target
+      try {
+        const href = footerFaq.getAttribute('href') || 'faq.html';
+        // example: could send analytics event here (omitted) then navigate:
+        // prevent double navigation when href is same-origin and anchor default will handle it,
+        // but to be explicit we use location.assign which keeps history.
+        ev.preventDefault();
+        // small timeout could be used if doing analytics, but we navigate immediately:
+        location.assign(href);
+      } catch(e){
+        // fallback: do nothing special
+      }
+    });
   }
 })();
 </script>
