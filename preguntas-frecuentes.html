@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Preguntas frecuentes — LIXBY</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Preguntas frecuentes de LIXBY — envíos, garantías, métodos de pago y soporte. Diseño minimalista y accesible." />
+  <style>
+    /* Pequeños ajustes específicos para FAQ (no modifican style.css) */
+    body { padding-top: calc(var(--header-height,72px) + 12px); }
+    .faq-wrap { max-width:1000px; margin:28px auto; padding:20px; }
+    .faq-head { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:18px; }
+    .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .search { display:flex; gap:8px; align-items:center; }
+    .search input { min-width:260px; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--text); }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip { padding:6px 10px; border-radius:999px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer; font-size:0.95rem; }
+    .chip.active { background:var(--accent); color:#00121a; border-color:transparent; }
+    .tools { display:flex; gap:8px; align-items:center; }
+    .accordion { display:flex; flex-direction:column; gap:12px; margin-top:10px; }
+    details.summary-open { border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01)); }
+    details summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:12px; font-weight:700; padding:4px 0; }
+    details[open] summary { color:var(--accent); }
+    details p { margin:8px 0 0 0; color:var(--muted); line-height:1.5; }
+    .meta { font-size:0.9rem; color:var(--muted); margin-top:6px; }
+    .no-results { color:var(--muted); padding:18px; text-align:center; }
+    .faq-actions { display:flex; gap:8px; align-items:center; }
+    .small { font-size:0.92rem; color:var(--muted); }
+    @media (max-width:720px){
+      .faq-head { flex-direction:column; align-items:flex-start; gap:12px; }
+      .search input { min-width:160px; }
+    }
+    /* print */
+    @media print {
+      .nav, .footer, .mini-cart, .lang-menu, .back-to-top { display:none !important; }
+      body { background: #fff; color:#000; }
+      .glass { box-shadow:none; background:transparent; border: none; }
+    }
+  </style>
+
+  <!-- JSON-LD para SEO (FAQPage) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Cuánto tarda el envío?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Los envíos estándar dentro de la UE tardan entre 3 y 6 días hábiles. Ofrecemos opciones exprés en la caja cuando están disponibles."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuál es la garantía de los productos LIXBY?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Todos nuestros productos incluyen 2 años de garantía contra defectos de fabricación. Puedes consultar los términos completos en la página de garantía."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Puedo devolver mi producto?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sí. Aceptamos devoluciones en un plazo de 14 días desde la recepción del pedido siempre que el producto esté en condiciones originales. Revisa la política de devoluciones para pasos y excepciones."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <!-- NAV (copiado del estilo general, no modifica index) -->
+  <header class="nav glass" role="banner" style="padding:10px 20px;">
+    <div class="nav-inner">
+      <div class="brand" onclick="location.href='index.html'" style="font-weight:700;cursor:pointer;">LIXBY</div>
+      <div style="flex:1"></div>
+      <div class="nav-right">
+        <button id="accountBtnTop" class="btn ghost">Cuenta</button>
+        <button id="cartBtnTop" class="icon-btn">🛒 <span id="cartCountTop" class="badge">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="faq-wrap" id="maincontent" tabindex="-1" aria-labelledby="faqTitle">
+    <div class="faq-head">
+      <div>
+        <h1 id="faqTitle" style="margin:0 0 6px">Preguntas frecuentes</h1>
+        <div class="small">Respuestas rápidas sobre envíos, pagos, garantías y soporte.</div>
+      </div>
+
+      <div class="controls" role="region" aria-label="Controles de búsqueda y filtros">
+        <div class="search" role="search" aria-label="Buscar en preguntas frecuentes">
+          <input id="qInput" type="search" placeholder="Buscar pregunta..." aria-label="Buscar preguntas">
+        </div>
+
+        <div class="chips" role="tablist" aria-label="Filtrar por categorías" style="margin-left:6px;">
+          <!-- chips generadas por JS -->
+        </div>
+
+        <div class="faq-actions" style="margin-left:8px;">
+          <button id="expandAll" class="btn ghost" type="button" title="Expandir todo">Expandir todo</button>
+          <button id="collapseAll" class="btn ghost" type="button" title="Colapsar todo">Colapsar todo</button>
+          <button id="printBtn" class="btn" type="button" title="Imprimir">Imprimir</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="summaryMeta" class="meta" aria-live="polite"></div>
+
+    <div id="accordion" class="accordion" role="list" aria-live="polite">
+      <!-- items renderizados por JS -->
+    </div>
+
+    <div id="noResults" class="no-results" style="display:none">No se encontraron preguntas que coincidan.</div>
+  </main>
+
+  <footer class="footer glass" style="text-align:center;padding:18px;margin-top:32px;">
+    <p style="margin:0;color:var(--muted)">¿No encuentras lo que buscas? <a href="contacto.html">Contáctanos</a> y te ayudamos.</p>
+  </footer>
+
+  <script>
+    // Datos de FAQ (mínimo, fácil de ampliar)
+    const FAQS = [
+      { id: 'f1', q: '¿Cuánto tarda el envío?', a: 'Los envíos estándar dentro de la UE tardan entre 3 y 6 días hábiles. Ofrecemos opciones exprés en la caja cuando están disponibles.', tag: 'Envíos' },
+      { id: 'f2', q: '¿Cuáles son los costes de envío?', a: 'Los costes varían según el país y el método de envío. El total se calcula en el checkout antes de pagar.', tag: 'Envíos' },
+      { id: 'f3', q: '¿Qué métodos de pago aceptan?', a: 'Aceptamos tarjeta (Visa, MasterCard), Apple Pay, Google Pay y PayPal. Para empresas se puede solicitar factura.', tag: 'Pagos' },
+      { id: 'f4', q: '¿Puedo financiar mi compra?', a: 'Ofrecemos financiación a través de terceros en ciertos países. Si está disponible, verás la opción en la pantalla de pago.', tag: 'Pagos' },
+      { id: 'f5', q: '¿Cuál es la garantía de los productos LIXBY?', a: 'Todos nuestros productos incluyen 2 años de garantía contra defectos de fabricación. Consulta la página de garantía para detalles y procedimiento.', tag: 'Garantía' },
+      { id: 'f6', q: '¿Cómo solicito una reparación en garantía?', a: 'Abre un ticket en soporte con tu número de pedido y descripción; te indicaremos los pasos y la etiqueta de envío si procede.', tag: 'Garantía' },
+      { id: 'f7', q: '¿Puedo devolver mi producto?', a: 'Aceptamos devoluciones en un plazo de 14 días desde la recepción, con el producto en condiciones originales. Algunas ofertas o accesorios pueden tener excepciones.', tag: 'Devoluciones' },
+      { id: 'f8', q: '¿Qué hago si mi producto llega dañado?', a: 'Contacta con soporte inmediatamente y envía fotos del embalaje y del producto; gestionaremos el reemplazo o la devolución.', tag: 'Soporte' },
+      { id: 'f9', q: '¿Cómo contacto al soporte técnico?', a: 'Puedes usar el formulario de contacto, el chat en vivo (cuando esté disponible) o enviar un correo a soporte@lixby.example.', tag: 'Soporte' },
+      { id: 'f10', q: '¿Dónde fabrican los dispositivos?', a: 'Diseñamos en Europa y trabajamos con fabricantes internacionales que cumplen estándares de calidad y responsabilidad social.', tag: 'Productos' },
+      { id: 'f11', q: '¿Tienen descuentos para educación o empresas?', a: 'Sí, ofrecemos condiciones especiales para compras por volumen y programas educativos; contacta ventas para más información.', tag: 'Productos' }
+    ];
+
+    // Estado
+    let state = {
+      q: '',
+      tag: null
+    };
+
+    // Elementos
+    const accordion = document.getElementById('accordion');
+    const qInput = document.getElementById('qInput');
+    const chipsContainer = document.querySelector('.chips');
+    const summaryMeta = document.getElementById('summaryMeta');
+    const noResults = document.getElementById('noResults');
+
+    // Tags únicos
+    const TAGS = Array.from(new Set(FAQS.map(f => f.tag))).sort();
+
+    // Render chips
+    function renderChips(){
+      chipsContainer.innerHTML = '';
+      const all = document.createElement('button');
+      all.type = 'button';
+      all.className = 'chip' + (state.tag === null ? ' active' : '');
+      all.textContent = 'Todos';
+      all.addEventListener('click', () => { state.tag = null; updateUI(); });
+      chipsContainer.appendChild(all);
+
+      TAGS.forEach(t => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip' + (state.tag === t ? ' active' : '');
+        b.textContent = t;
+        b.setAttribute('aria-pressed', String(state.tag === t));
+        b.addEventListener('click', () => {
+          state.tag = (state.tag === t ? null : t);
+          updateUI();
+        });
+        chipsContainer.appendChild(b);
+      });
+    }
+
+    // Render accordion items
+    function renderAccordion(list){
+      accordion.innerHTML = '';
+      if (!list.length) {
+        noResults.style.display = 'block';
+        summaryMeta.textContent = '0 preguntas encontradas';
+        return;
+      } else {
+        noResults.style.display = 'none';
+        summaryMeta.textContent = `${list.length} pregunta${list.length === 1 ? '' : 's'} encontrada${list.length === 1 ? '' : 's'}`;
+      }
+
+      list.forEach(item => {
+        const d = document.createElement('details');
+        d.className = 'summary-open';
+        d.id = item.id;
+        d.setAttribute('role','listitem');
+
+        const s = document.createElement('summary');
+        s.innerHTML = `<span>${escapeHtml(item.q)}</span><span aria-hidden="true">+</span>`;
+        d.appendChild(s);
+
+        const p = document.createElement('p');
+        p.innerHTML = escapeHtml(item.a);
+        d.appendChild(p);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = `Categoría: ${item.tag}`;
+        d.appendChild(meta);
+
+        // improve keyboard: toggle on Enter/Space when summary focused (native works, but ensure +/−)
+        d.addEventListener('toggle', (e) => {
+          const plus = s.querySelector('span[aria-hidden="true"]');
+          if (d.open) plus.textContent = '−'; else plus.textContent = '+';
+        });
+
+        accordion.appendChild(d);
+      });
+    }
+
+    // Helper: escape HTML
+    function escapeHtml(str){ return String(str).replace(/[&<>"']/g, (m)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])); }
+
+    // Apply filters/search
+    function applyFilters(){
+      const q = (state.q || '').trim().toLowerCase();
+      let res = FAQS.slice();
+      if (state.tag) res = res.filter(f => f.tag === state.tag);
+      if (q) {
+        const tokens = q.split(/\s+/).filter(Boolean);
+        res = res.filter(f => tokens.every(t => (f.q + ' ' + f.a + ' ' + f.tag).toLowerCase().includes(t)));
+      }
+      // sort: by relevance -> if q present: questions that startWith first
+      if (q) {
+        res.sort((a,b) => {
+          const aq = a.q.toLowerCase(), bq = b.q.toLowerCase();
+          const score = s => (s.startsWith(q) ? 2 : (s.includes(q) ? 1 : 0)) + (s.length>0?0:0);
+          return score(bq) - score(aq);
+        });
+      } else {
+        // alphabetical by tag then question
+        res.sort((a,b) => a.tag.localeCompare(b.tag) || a.q.localeCompare(b.q));
+      }
+      return res;
+    }
+
+    // Update UI
+    function updateUI(){
+      renderChips();
+      const list = applyFilters();
+      renderAccordion(list);
+    }
+
+    // Expand/Collapse all
+    function expandAll(){
+      accordion.querySelectorAll('details').forEach(d => d.open = true);
+    }
+    function collapseAll(){
+      accordion.querySelectorAll('details').forEach(d => d.open = false);
+    }
+
+    // Wire events
+    qInput.addEventListener('input', (e) => {
+      state.q = e.target.value;
+      updateUI();
+    });
+
+    document.getElementById('expandAll').addEventListener('click', expandAll);
+    document.getElementById('collapseAll').addEventListener('click', collapseAll);
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+    // keyboard shortcuts (f = focus search; / also common)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== qInput) {
+        e.preventDefault();
+        qInput.focus();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        qInput.focus();
+      }
+    });
+
+    // Initialize
+    updateUI();
+
+    // Expose for debug
+    window.__LIXBY_FAQ = { FAQS, updateUI, expandAll, collapseAll };
+
+  </script>
+</body>
+</html>
