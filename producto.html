@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -50,10 +50,10 @@
     .color-dot {
       width:34px; height:34px; border-radius:50%; border:2px solid transparent;
       display:inline-block; cursor:pointer; box-sizing:border-box; position:relative;
-      outline:none;
+      outline:none; transition: transform .12s ease, box-shadow .12s ease;
     }
     .color-dot:focus { box-shadow: 0 0 0 4px rgba(0,0,0,0.06) inset; }
-    .color-dot.active { box-shadow: 0 0 0 4px rgba(0,0,0,0.06) inset; border-color: var(--accent); transform: scale(1.02); }
+    .color-dot.active { box-shadow: 0 0 0 4px rgba(0,0,0,0.06) inset; border-color: var(--accent); transform: scale(1.04); }
     .color-dot[data-color="blue"] { background:#2f6bff; }
     .color-dot[data-color="green"] { background:#9fe0d4; }
     .color-dot[data-color="pink"] { background:#f1b6d9; }
@@ -63,14 +63,14 @@
     .capacities { display:flex; gap:12px; flex-wrap:wrap; }
     .cap-card {
       border:1px solid rgba(255,255,255,0.06); background:transparent; min-width:160px; padding:14px; border-radius:10px;
-      cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px;
+      cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:12px; transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
     }
     .cap-card.active { border-color: var(--accent); box-shadow: 0 8px 22px rgba(2,6,12,0.08); transform: translateY(-4px); }
     .cap-left { font-weight:700; }
     .cap-right { text-align:right; color:var(--muted); font-size:0.95rem; }
 
     .payments, .care { display:flex; gap:12px; flex-wrap:wrap; }
-    .pay-card, .care-card { border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; min-width:200px; cursor:pointer; background:transparent; }
+    .pay-card, .care-card { border:1px solid rgba(255,255,255,0.06); padding:12px; border-radius:10px; min-width:200px; cursor:pointer; background:transparent; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
     .pay-card.active, .care-card.active { border-color:var(--accent); box-shadow:0 8px 20px rgba(2,6,12,0.06); transform: translateY(-4px); }
 
     .summary { margin-top:18px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); display:flex; justify-content:space-between; align-items:center; gap:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); }
@@ -103,6 +103,20 @@
       .image-wrap { max-width:100%; width:100%; margin-bottom:14px; }
       .product-detail { flex-direction:column; padding:16px; }
     }
+
+    /* Minimal glass utility included (keeps the apple-like liquid glass look even if style.css missing) */
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 6px 26px rgba(2,6,12,0.48);
+      color: inherit;
+    }
+
+    /* small responsive container */
+    main { padding: 20px; }
   </style>
 </head>
 <body>
@@ -187,11 +201,31 @@
     function saveCart(c){ try { localStorage.setItem('lixby_cart_v1', JSON.stringify(c)); } catch(e){} }
     function formatPrice(n){
       const v = Math.round((Number(n)||0)*100)/100;
+      // use comma for decimal to match es-ES visual style
       return v.toFixed(2).replace('.',',') + '€';
     }
     function formatDecimal(n){
       const v = Math.round((Number(n)||0)*100)/100;
       return v.toFixed(2);
+    }
+    function parsePriceToNumber(raw){
+      // Accepts numbers, "249€", "1.234,56 €", "1234.56"
+      if (typeof raw === 'number') return raw;
+      if (!raw) return 0;
+      try {
+        const s = String(raw).trim();
+        // remove currency symbol and spaces
+        let cleaned = s.replace(/\s/g,'').replace('€','').replace('EUR','');
+        // If contains comma as decimal separator and dots as thousand separators -> convert
+        if (cleaned.indexOf(',') !== -1 && cleaned.indexOf('.') !== -1) {
+          cleaned = cleaned.replace(/\./g,'').replace(',', '.');
+        } else {
+          // remove any non-digit except dot or minus
+          cleaned = cleaned.replace(/[^0-9\.\-]/g,'');
+        }
+        const v = parseFloat(cleaned);
+        return Number.isFinite(v) ? v : 0;
+      } catch(e){ return 0; }
     }
 
     // small theme helpers (toggle + persist + UI)
@@ -360,9 +394,20 @@
     if (checkoutBtn) checkoutBtn.addEventListener('click', () => { if (cart.length===0) return alert('El carrito está vacío'); alert('Simulación de checkout: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
 
     window.addToCart = function(product){
-      const existing = cart.find(p => p.id === product.id);
+      const existing = cart.find(p => p.id === product.id && p.color === product.color && p.storage === product.storage && p.term === product.term && p.care === product.care);
       if (existing) existing.qty = (existing.qty||1) + 1;
-      else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: product.priceNum || parseFloat(String(product.price).replace(/[^\d.,]/g,'').replace(',','.'))||0, qty:1, image: product.image, color: product.color, storage: product.storage });
+      else cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        priceNum: product.priceNum || parsePriceToNumber(product.price) || 0,
+        qty:1,
+        image: product.image,
+        color: product.color,
+        storage: product.storage,
+        term: product.term,
+        care: product.care
+      });
       saveCart(cart);
       updateMiniCartUI();
       if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
