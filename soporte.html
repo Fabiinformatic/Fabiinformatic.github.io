@@ -186,10 +186,13 @@
   <!-- EmailJS + soporte logic -->
   <script>
   (function(){
-    // ---------- CONFIG: EmailJS credentials ----------
+    // ---------- CONFIG: EmailJS credentials + soporte ----------
     const EMAILJS_USERID = 'xsKpaFjbRsS95AK3i';
     const EMAILJS_SERVICE = 'service_tagcpgm';
     const EMAILJS_TEMPLATE = 'template_l1e0go2';
+
+    // Default support email (recibe copia/alerta)
+    const SUPPORT_EMAIL = 'soporte@lixby.com';
 
     // Limits & allowed extensions
     const MAX_FILES = 5;
@@ -353,7 +356,7 @@
       return emailjs.sendForm(EMAILJS_SERVICE, EMAILJS_TEMPLATE, formEl);
     }
 
-    // Fallback send without attachments via emailjs.send (when retrying pending tickets)
+    // Fallback send without attachments via emailjs.send (when retrying pending tickets or to notify support)
     async function sendTemplateSimple(params){
       await ensureEmailJs();
       if (!window.emailjs || typeof emailjs.send !== 'function') throw new Error('EmailJS no disponible para send');
@@ -394,11 +397,29 @@
       const formEl = document.getElementById('ticketForm');
 
       try {
-        // Try sending with EmailJS (primary)
-        // Note: emailjs.sendForm will read input[name="attachments"] and include files.
+        // Try sending with EmailJS (primary) — includes attachments when using sendForm
         await sendFormWithEmailJS(formEl);
 
-        // Success path
+        // Success path: Notify support with a text-only email (ensures support receives notification)
+        const supportParams = {
+          from_name: name,
+          from_email: email,
+          ticket_id: ticketId,
+          product: product || '—',
+          description: description,
+          support_email: SUPPORT_EMAIL,
+          subject: `Nuevo ticket LIXBY — ${ticketId}`,
+          support_body: `Nuevo ticket creado:\n\nID: ${ticketId}\nNombre: ${name}\nEmail: ${email}\nProducto: ${product || '—'}\n\nDescripción:\n${description}\n\nAdjuntos: ${attachedFiles.length}`
+        };
+        try {
+          // sendText may use same template; many EmailJS templates accept variables like 'support_email' or 'to_email'
+          // If your EmailJS template doesn't use 'support_email' as recipient, configure recipient in EmailJS dashboard.
+          await sendTemplateSimple(supportParams);
+        } catch (warn) {
+          console.warn('Aviso: notificación a soporte por EmailJS falló (no crítico):', warn);
+        }
+
+        // Persist success locally
         const ticketSaved = { ...localTicket, status: 'recibido-via-email' };
         const arr = loadTickets(); arr.unshift(ticketSaved); saveTickets(arr); renderTickets();
 
@@ -408,7 +429,6 @@
         infoEl.textContent = 'Ticket enviado correctamente vía EmailJS. Revisa tu bandeja (o la nuestra) para la confirmación.';
       } catch (err) {
         // EmailJS failed -> persist local copy and inform user
-        // Save local ticket for retry when online
         const arr = loadTickets(); arr.unshift(localTicket); saveTickets(arr); renderTickets();
 
         ticketIdSpan.textContent = localTicket.id;
@@ -447,7 +467,7 @@
 
       for (const t of pending) {
         try {
-          // Since attachments are not stored locally (binary) in this demo, we re-send a text-only notification using template params.
+          // Since attachments are not stored locally in this demo, we re-send a text-only notification using template params.
           const params = {
             from_name: t.name || '',
             from_email: t.email || '',
@@ -455,6 +475,7 @@
             ticket_id: t.id || '',
             product: t.product || '',
             description: t.description || '',
+            support_email: SUPPORT_EMAIL,
             note: 'Reintento automático (sin adjuntos).'
           };
           await sendTemplateSimple(params);
