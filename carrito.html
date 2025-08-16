@@ -85,6 +85,23 @@
     /* small visually-hidden helper */
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   </style>
+
+  <!-- Añadir: glass util (liquid glass styling consistente) -->
+  <style id="lixby-glass-style">
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 6px 26px rgba(2,6,12,0.48);
+      color: inherit;
+    }
+    .btn, .icon-btn {
+      transition: transform .14s cubic-bezier(.2,.9,.3,1), box-shadow .14s ease;
+    }
+    .btn:focus, .icon-btn:focus, button:focus { outline: 3px solid rgba(10,132,255,0.14); outline-offset: 3px; }
+  </style>
 </head>
 <body>
   <a class="sr-only" href="#bag" id="skip">Saltar al contenido</a>
@@ -425,6 +442,71 @@
       };
 
     })();
+  </script>
+
+  <!-- Mejoras accesibilidad/keyboard/toast (añadido, no borra nada) -->
+  <script>
+  (function(){
+    'use strict';
+    // 1) Hacer qval focusable por delegación y soportar ArrowUp/Down
+    document.addEventListener('keydown', (ev) => {
+      const el = document.activeElement;
+      if (!el) return;
+      if (el.classList && el.classList.contains('qval')) {
+        if (ev.key === 'ArrowUp') {
+          ev.preventDefault();
+          const inc = el.parentElement && el.parentElement.querySelector('[data-action="inc"]');
+          inc && inc.click();
+        } else if (ev.key === 'ArrowDown') {
+          ev.preventDefault();
+          const dec = el.parentElement && el.parentElement.querySelector('[data-action="dec"]');
+          dec && dec.click();
+        }
+      }
+    });
+
+    // 2) Asegurar que futuras qval sean focusables (observer sobre el contenedor)
+    const bag = document.getElementById('bag');
+    if (bag) {
+      const qObserver = new MutationObserver((muts) => {
+        muts.forEach(m => {
+          m.addedNodes.forEach(n => {
+            if (n.nodeType !== 1) return;
+            n.querySelectorAll && n.querySelectorAll('.qval').forEach(s => s.setAttribute('tabindex','0'));
+            n.querySelectorAll && n.querySelectorAll('.qty button').forEach(btn => {
+              // permitir pulsación por teclado (Enter), aunque buttons ya lo hacen normalmente
+              btn.addEventListener('keyup', (ev) => { if (ev.key === 'Enter') btn.click(); });
+            });
+          });
+        });
+      });
+      qObserver.observe(bag, { childList:true, subtree:true });
+      // aplicar a los existentes
+      document.querySelectorAll('.qval').forEach(s => s.setAttribute('tabindex','0'));
+    }
+
+    // 3) Toast undo: permitir Escape para cerrar y mover foco a "Deshacer" cuando aparece
+    const undoToast = document.getElementById('undoToast');
+    const undoBtn = document.getElementById('undoBtn');
+    const dismissToast = document.getElementById('dismissToast');
+    if (undoToast) {
+      // observar cambios en style/display
+      const tObs = new MutationObserver(() => {
+        const shown = undoToast.style.display !== 'none' && undoToast.style.display !== '';
+        if (shown) {
+          // comunicar a lectores de pantalla
+          const txt = document.getElementById('undoText')?.textContent || 'Artículo eliminado';
+          const announcements = document.getElementById('announcements') || document.getElementById('topText');
+          if (announcements) announcements.textContent = txt;
+          // focus en undo button para accesibilidad
+          try { undoBtn && undoBtn.focus(); } catch(e){}
+        }
+      });
+      tObs.observe(undoToast, { attributes: true, attributeFilter: ['style'] });
+      // Escape cierra
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && undoToast.style.display !== 'none') { dismissToast && dismissToast.click(); } });
+    }
+  })();
   </script>
 </body>
 </html>
