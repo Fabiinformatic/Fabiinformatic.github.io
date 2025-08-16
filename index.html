@@ -74,6 +74,10 @@
     }
     .account-holder-btn img { width:32px; height:32px; border-radius:8px; object-fit:cover; display:block; }
     .account-holder-btn .name { font-weight:700; font-size:0.95rem; color:var(--muted); }
+
+    /* icon inside auth buttons */
+    .auth-icon { width:18px; height:18px; flex:0 0 18px; display:inline-block; vertical-align:middle; }
+    .auth-btn { display:inline-flex; align-items:center; gap:10px; justify-content:center; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; cursor:pointer; }
   </style>
 
   <!-- Añadir: glass util (liquid glass styling consistente) -->
@@ -152,15 +156,24 @@
   </div>
 </header>
 
-<!-- AUTH / WELCOME MODAL (mantengo tu HTML, sin borrar) -->
+<!-- AUTH / WELCOME MODAL (mantengo tu HTML, actualizado con iconos) -->
 <div id="authOverlay" aria-hidden="true" style="position:fixed;inset:0;z-index:9998;display:none;">
   <div id="authBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px)"></div>
   <div id="authModal" class="glass" role="dialog" aria-labelledby="authTitle" style="position:relative;max-width:540px;margin:6vh auto;padding:22px;border-radius:12px;z-index:9999;">
     <h2 id="authTitle" style="margin:0 0 8px">Bienvenido a LIXBY</h2>
     <p style="margin:0 0 18px;color:var(--muted)">Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</p>
     <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button id="btnGoogle" class="btn ghost" style="flex:1" type="button">Iniciar con Google</button>
-      <button id="btnGitHub" class="btn ghost" style="flex:1" type="button">Iniciar con GitHub</button>
+      <!-- Google button with inline svg icon -->
+      <button id="btnGoogle" class="auth-btn" style="flex:1" type="button" aria-label="Iniciar con Google">
+        <svg class="auth-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path fill="#EA4335" d="M21.6 12.227c0-.74-.066-1.449-.191-2.136H12v4.048h5.4c-.233 1.254-1.01 2.316-2.155 3.03v2.52h3.48c2.036-1.876 3.23-4.64 3.23-7.462z"/><path fill="#34A853" d="M12 22c2.43 0 4.467-.8 5.956-2.17l-3.48-2.52c-.968.647-2.208 1.03-3.476 1.03-2.673 0-4.935-1.802-5.744-4.22H2.664v2.64C4.137 19.95 7.78 22 12 22z"/><path fill="#4A90E2" d="M6.256 13.12A6.997 6.997 0 0 1 6 12c0-.414.042-.817.122-1.2V8.16H2.664A9.997 9.997 0 0 0 2 12c0 1.66.397 3.226 1.096 4.64l3.16-3.52z"/><path fill="#FBBC05" d="M12 6.0c1.318 0 2.5.452 3.43 1.34l2.57-2.57C16.47 2.98 14.43 2 12 2 7.78 2 4.137 4.05 2.664 8.16L6 9.36C6.865 7.16 9.327 6 12 6z"/></svg>
+        <span>Iniciar con Google</span>
+      </button>
+
+      <!-- GitHub button with SVG -->
+      <button id="btnGitHub" class="auth-btn" style="flex:1" type="button" aria-label="Iniciar con GitHub">
+        <svg class="auth-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2C6.48 2 2 6.58 2 12.18c0 4.5 2.87 8.32 6.84 9.66.5.1.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.64-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05A9.24 9.24 0 0 1 12 6.8c.85.004 1.71.115 2.5.34 1.9-1.32 2.74-1.05 2.74-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.64 1.03 2.76 0 3.94-2.34 4.81-4.57 5.07.36.3.68.9.68 1.82 0 1.31-.01 2.36-.01 2.68 0 .26.18.59.69.49A10.2 10.2 0 0 0 22 12.18C22 6.58 17.52 2 12 2z"/></svg>
+        <span>Iniciar con GitHub</span>
+      </button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--muted)">
       <hr style="flex:1;border:none;height:1px;background:rgba(255,255,255,0.04)"/>
@@ -777,6 +790,7 @@
   const btnEmailSignIn = document.getElementById('btnEmailSignIn');
   const btnEmailSignUp = document.getElementById('btnEmailSignUp');
   const authEmailInput = document.getElementById('authEmail');
+  const authPassInput = document.getElementById('authPass');
 
   function getLocalUser() {
     try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY)); } catch(e){ return null; }
@@ -857,32 +871,98 @@
 
   // handlers
   if (authClose) authClose.addEventListener('click', () => { closeAuthOverlay(); });
-  if (btnAnonymous) btnAnonymous.addEventListener('click', () => {
+  if (btnAnonymous) btnAnonymous.addEventListener('click', async () => {
+    // prefer appAuth if available
+    if (window.appAuth && typeof window.appAuth.signInAnonymously === 'function') {
+      try {
+        const u = await window.appAuth.signInAnonymously();
+        // appAuth.signInAnonymously should update UI via onAuthState; close overlay
+        closeAuthOverlay();
+        return;
+      } catch(e){
+        console.warn('appAuth anonymous failed', e);
+      }
+    }
     const user = { uid: 'guest_' + Date.now(), name: 'Invitado', email: null, photoURL: guestImg, isAnonymous: true };
     setLocalUser(user);
     closeAuthOverlay();
   });
 
-  // Simulated social/login flows (demo only)
-  if (btnGoogle) btnGoogle.addEventListener('click', () => {
+  // Social buttons: prefer window.appAuth, fallback to demo local user (so modal still works)
+  if (btnGoogle) btnGoogle.addEventListener('click', async () => {
+    if (window.appAuth && typeof window.appAuth.signInWithGoogle === 'function') {
+      try {
+        await window.appAuth.signInWithGoogle();
+        closeAuthOverlay();
+        return;
+      } catch (err) {
+        console.warn('appAuth.google failed', err);
+        // continue to fallback demo
+      }
+    }
+    // fallback demo
     const user = { uid: 'google_' + Date.now(), name: 'Usuario Google', email: 'usuario@gmail.com', photoURL: 'https://via.placeholder.com/64x64?text=G' };
     setLocalUser(user); closeAuthOverlay();
   });
-  if (btnGithub) btnGithub.addEventListener('click', () => {
+
+  if (btnGithub) btnGithub.addEventListener('click', async () => {
+    if (window.appAuth && typeof window.appAuth.signInWithGitHub === 'function') {
+      try {
+        await window.appAuth.signInWithGitHub();
+        closeAuthOverlay();
+        return;
+      } catch (err) {
+        console.warn('appAuth.github failed', err);
+        // fallback
+      }
+    }
     const user = { uid: 'gh_' + Date.now(), name: 'Usuario GH', email: 'usuario@github.com', photoURL: 'https://via.placeholder.com/64x64?text=GH' };
     setLocalUser(user); closeAuthOverlay();
   });
 
-  if (btnEmailSignIn) btnEmailSignIn.addEventListener('click', () => {
+  // Email sign-in / sign-up: prefer appAuth methods if available
+  if (btnEmailSignIn) btnEmailSignIn.addEventListener('click', async () => {
     const email = (document.getElementById('authEmail')||{}).value || '';
-    const name = email ? (email.split('@')[0]) : 'Usuario';
+    const pass = (document.getElementById('authPass')||{}).value || '';
+    if (!email || !pass) { alert('Introduce email y contraseña'); return; }
+
+    if (window.appAuth && typeof window.appAuth.signInWithEmail === 'function') {
+      try {
+        await window.appAuth.signInWithEmail(email, pass);
+        closeAuthOverlay();
+        return;
+      } catch (err) {
+        console.warn('appAuth.emailSignIn failed', err);
+        alert(err && err.message ? err.message : 'Error al iniciar sesión');
+        return;
+      }
+    }
+
+    // fallback demo
+    const name = email ? email.split('@')[0] : 'Usuario';
     const user = { uid: 'email_' + Date.now(), name: name, email: email || null, photoURL: 'https://via.placeholder.com/64x64?text=U' };
     setLocalUser(user); closeAuthOverlay();
   });
-  if (btnEmailSignUp) btnEmailSignUp.addEventListener('click', () => {
-    // same behavior for demo
+
+  if (btnEmailSignUp) btnEmailSignUp.addEventListener('click', async () => {
     const email = (document.getElementById('authEmail')||{}).value || '';
-    const name = email ? (email.split('@')[0]) : 'Nuevo';
+    const pass = (document.getElementById('authPass')||{}).value || '';
+    if (!email || !pass) { alert('Introduce email y contraseña'); return; }
+
+    if (window.appAuth && typeof window.appAuth.createUserWithEmail === 'function') {
+      try {
+        await window.appAuth.createUserWithEmail(email, pass);
+        closeAuthOverlay();
+        return;
+      } catch (err) {
+        console.warn('appAuth.emailCreate failed', err);
+        alert(err && err.message ? err.message : 'Error al registrarse');
+        return;
+      }
+    }
+
+    // fallback demo
+    const name = email ? email.split('@')[0] : 'Nuevo';
     const user = { uid: 'email_' + Date.now(), name: name, email: email || null, photoURL: 'https://via.placeholder.com/64x64?text=N' };
     setLocalUser(user); closeAuthOverlay();
   });
@@ -899,15 +979,26 @@
     }
   });
 
-  // expose for other modules
+  // If appAuth not present, expose a signOut that clears local storage
   window.lixby = window.lixby || {};
   window.lixby.auth = {
     getUser: getLocalUser,
-    signOut: function(){
+    signOut: async function(){
+      // prefer appAuth signOut
+      if (window.appAuth && typeof window.appAuth.signOut === 'function') {
+        try { await window.appAuth.signOut(); return; } catch(e){ console.warn('appAuth.signOut failed', e); }
+      }
       clearLocalUser();
       try { location.reload(); } catch(e){}
     }
   };
+
+  // react to external auth changes (if some external module updates localStorage)
+  window.addEventListener('storage', (e) => {
+    if (e.key === ACCOUNT_KEY) {
+      try { const u = JSON.parse(e.newValue); renderHeaderUser(u); } catch(e){}
+    }
+  });
 
 })();
 </script>
