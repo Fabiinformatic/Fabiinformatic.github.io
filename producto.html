@@ -5,6 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LIXBY — Detalle de producto</title>
 
+  <!-- Evitar FOUC: aplicar tema antes de que cargue CSS -->
+  <script>
+    (function () {
+      try {
+        const THEME_KEY = 'lixby_theme';
+        const saved = localStorage.getItem(THEME_KEY); // 'light' | 'dark' | null
+        const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+        // if user saved a preference, respect it
+        if (saved === 'light') {
+          document.documentElement.classList.add('light');
+          document.documentElement.dataset.themeManual = 'true';
+        } else if (saved === 'dark') {
+          document.documentElement.classList.remove('light');
+          document.documentElement.dataset.themeManual = 'true';
+        } else {
+          // no saved pref -> follow system
+          if (mq && mq.matches === false) {
+            document.documentElement.classList.add('light');
+          } else {
+            document.documentElement.classList.remove('light');
+          }
+        }
+      } catch (e) {
+        // silent
+      }
+    })();
+  </script>
+
   <!-- PERF -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,9 +53,6 @@
     .product-detail { display:flex; gap:36px; align-items:flex-start; max-width:1100px; margin:120px auto 80px; padding:28px; border-radius:14px; box-sizing:border-box; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.03); }
     .image-wrap { width:420px; height:420px; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); flex:0 0 420px; box-sizing:border-box; }
     .product-image { max-width:100%; max-height:100%; object-fit:contain; display:block; }
-    .thumbs { display:flex; gap:8px; margin-top:12px; }
-    .thumbs img { width:64px; height:64px; object-fit:cover; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.04); }
-    .thumbs img[aria-current="true"]{ outline:2px solid var(--accent); }
     .product-info { flex:1; display:flex; flex-direction:column; gap:14px; }
     .product-info h1 { font-size:1.6rem; margin:0; }
     .product-info p { color:var(--muted); margin:0; }
@@ -45,11 +70,6 @@
     @media(max-width:900px){ .product-detail{ flex-direction:column; margin:90px 16px; } .image-wrap{ width:100%; height:auto; aspect-ratio:1/1; padding:18px; } .product-image{ max-width:80%; max-height:80%; } .mini-cart, .lang-menu { right:8px; top:48px; } }
     .btn-add, .btn-fav, .icon-btn, .btn { transition: transform .16s cubic-bezier(.2,.9,.3,1), box-shadow .16s ease; }
     .btn-add:hover, .btn-fav:hover, .icon-btn:hover, .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 22px rgba(2,6,12,0.12); }
-
-    /* lightbox */
-    .lightbox { position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:99999;background:rgba(0,0,0,0.85); }
-    .lightbox.open{ display:flex; }
-    .lightbox img{ max-width:92%; max-height:92%; object-fit:contain; border-radius:10px; }
   </style>
 </head>
 <body>
@@ -94,7 +114,8 @@
           </div>
         </div>
 
-        <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema">◐</button>
+        <!-- Theme toggle: muestra icono y texto según tema -->
+        <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema" aria-pressed="false">◐</button>
       </div>
     </div>
   </header>
@@ -119,11 +140,6 @@
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <!-- lightbox -->
-  <div id="lightbox" class="lightbox" role="dialog" aria-hidden="true">
-    <img id="lightboxImg" alt="" />
-  </div>
-
   <!-- Mensaje para usuarios sin JS -->
   <noscript>
     <div style="max-width:1100px;margin:16px auto;padding:12px;background:#2a2a2a;color:#fff;border-radius:8px;">
@@ -133,33 +149,98 @@
 
   <script>
   (function(){
-    'use strict';
     // -------------------------
     // Helpers y estado (mejorados)
     // -------------------------
-    const CART_KEY = 'lixby_cart_v1';
+    const THEME_KEY = 'lixby_theme'; // 'light'|'dark' or null
     function showDebug(msg){ const el = document.getElementById('debug'); if (!el) return; el.style.display = 'block'; el.textContent += msg + "\n"; console.log("DEBUG:", msg); }
-    function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY))||[]; } catch(e){ return []; } }
-    function saveCart(c){ try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
+    function loadCart(){ try { return JSON.parse(localStorage.getItem('lixby_cart_v1'))||[]; } catch(e){ return []; } }
+    function saveCart(c){ try { localStorage.setItem('lixby_cart_v1', JSON.stringify(c)); } catch(e){} }
     function parsePriceToNumber(priceStr){ if(!priceStr) return 0; const num=String(priceStr).replace(/[^\d.,]/g,'').replace(',','.'); return parseFloat(num)||0; }
     function formatPriceNum(num){ return (Math.round(num*100)/100) + '€'; }
 
-    // set year
-    const yearEl = document.getElementById('year'); if (yearEl) yearEl.textContent = new Date().getFullYear();
+    // small theme helpers (toggle + persist + UI)
+    function applyThemeClass(theme) {
+      if (theme === 'light') {
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.remove('light');
+      }
+    }
+    function updateThemeToggleUI(theme) {
+      const btn = document.getElementById('themeToggle');
+      if (!btn) return;
+      // icon + label compact
+      if (theme === 'light') {
+        btn.innerHTML = '🌞 Claro';
+        btn.setAttribute('aria-pressed', 'true');
+        btn.title = 'Cambiar a modo oscuro';
+      } else {
+        btn.innerHTML = '🌙 Oscuro';
+        btn.setAttribute('aria-pressed', 'false');
+        btn.title = 'Cambiar a modo claro';
+      }
+    }
+    function setTheme(theme, save=true) {
+      applyThemeClass(theme);
+      updateThemeToggleUI(theme);
+      if (save) {
+        try { localStorage.setItem(THEME_KEY, theme); document.documentElement.dataset.themeManual = 'true'; } catch(e){}
+      } else {
+        try { // if not saving, ensure manual flag is not set
+          if (!localStorage.getItem(THEME_KEY)) delete document.documentElement.dataset.themeManual;
+        } catch(e){}
+      }
+    }
 
-    // Productos (añadí "images" array para poder tener galería sin petar)
+    // initialize theme state (after initial head script)
+    try {
+      const saved = localStorage.getItem(THEME_KEY);
+      const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+      if (saved === 'light' || saved === 'dark') {
+        setTheme(saved, true);
+      } else {
+        const sys = (mq && mq.matches) ? 'dark' : 'light';
+        setTheme(sys, false);
+      }
+      // listen for system changes but only if user didn't manually choose a theme
+      if (mq && mq.addEventListener) {
+        mq.addEventListener('change', (e) => {
+          try {
+            const manual = document.documentElement.dataset.themeManual === 'true';
+            if (manual) return; // respect manual choice
+            const newTheme = e.matches ? 'dark' : 'light';
+            setTheme(newTheme, false);
+          } catch(e){}
+        });
+      }
+      // toggle button
+      const toggleBtn = document.getElementById('themeToggle');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          const isLight = document.documentElement.classList.contains('light');
+          const newTheme = isLight ? 'dark' : 'light';
+          setTheme(newTheme, true);
+        });
+      }
+    } catch(e){ console.warn('theme init err', e); }
+
+    // set year
+    try { const yearEl = document.getElementById('year'); if (yearEl) yearEl.textContent = new Date().getFullYear(); } catch(e){}
+
+    // Productos (igual)
     const products = {
-      "lixby-one-air": { id: 'lixby-one-air', name: "Lixby One Air", description: "Versión ligera y asequible, ideal para un uso diario eficiente.", mini: "Pantalla OLED 6.1\" • Rendimiento equilibrado • Compacto y ligero", price: "249€", image: "https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg", images: ["https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg"] },
-      "lixby-one": { id: 'lixby-one', name: "Lixby One", description: "Ultraligero, potente y diseñado para la vida moderna.", mini: "Pantalla OLED 6.7\", 120 Hz • SoC 5G • Cámara dual 50 MP + 8 MP • Batería 5.000 mAh", price: "349€", image: "https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg", images: ["https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg","https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg"], bom: [ ["SoC 5G (Snapdragon 7s Gen 2 / Dimensity 8300) + PMIC", ""], ["RAM 8 GB LPDDR5X", ""], ["Almacenamiento UFS 3.1 256 GB", ""] ] },
-      "lixby-one-plus": { id: 'lixby-one-plus', name: "Lixby One Plus", description: "Teléfono de última generación con cámara de alta resolución.", mini: "Cámara profesional • Rendimiento equilibrado • Batería duradera", price: "659€", image: "https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg", images: ["https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg"] },
-      "lixby-one-pro": { id: 'lixby-one-pro', name: "Lixby One Pro", description: "Rendimiento y audio de alta fidelidad para creadores y audiófilos.", mini: "Audio premium • CPU/GPU potentes • Diseño robusto", price: "899€", image: "https://m.media-amazon.com/images/I/61rriyfRKwL.jpg", images: ["https://m.media-amazon.com/images/I/61rriyfRKwL.jpg"] }
+      "lixby-one-air": { id: 'lixby-one-air', name: "Lixby One Air", description: "Versión ligera y asequible, ideal para un uso diario eficiente.", mini: "Pantalla OLED 6.1\" • Rendimiento equilibrado • Compacto y ligero", price: "249€", image: "https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg" },
+      "lixby-one": { id: 'lixby-one', name: "Lixby One", description: "Ultraligero, potente y diseñado para la vida moderna.", mini: "Pantalla OLED 6.7\", 120 Hz • SoC 5G • Cámara dual 50 MP + 8 MP • Batería 5.000 mAh", price: "349€", image: "https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg", bom: [ ["SoC 5G (Snapdragon 7s Gen 2 / Dimensity 8300) + PMIC", ""], ["RAM 8 GB LPDDR5X", ""], ["Almacenamiento UFS 3.1 256 GB", ""] ] },
+      "lixby-one-plus": { id: 'lixby-one-plus', name: "Lixby One Plus", description: "Teléfono de última generación con cámara de alta resolución.", mini: "Cámara profesional • Rendimiento equilibrado • Batería duradera", price: "659€", image: "https://media.ldlc.com/r1600/ld/products/00/06/16/66/LD0006166643_0006166668_0006166693.jpg" },
+      "lixby-one-pro": { id: 'lixby-one-pro', name: "Lixby One Pro", description: "Rendimiento y audio de alta fidelidad para creadores y audiófilos.", mini: "Audio premium • CPU/GPU potentes • Diseño robusto", price: "899€", image: "https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" }
     };
 
     // proxiedUrl optimizada (ancho reducido y compresión)
-    function proxiedUrl(originalUrl, width = 900){ if (!originalUrl) return originalUrl || ''; const stripped = String(originalUrl).replace(/^https?:\/\//,''); return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=${width}&q=80`; }
+    function proxiedUrl(originalUrl){ try { const stripped = originalUrl.replace(/^https?:\/\//,''); return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=900&q=80`; } catch(e){ return originalUrl; } }
 
     // -------------------------
-    // Mini-cart UI (sin cambios importantes)
+    // Mini-cart UI
     // -------------------------
     let cart = loadCart();
     const cartBtn = document.getElementById('cartBtn');
@@ -181,6 +262,7 @@
         return;
       }
       let total = 0;
+      // fragment para reducir reflows
       const frag = document.createDocumentFragment();
       cart.forEach((it, idx) => {
         const item = document.createElement('div');
@@ -203,6 +285,7 @@
       cartBtn.addEventListener('click', (e) => {
         const shown = miniCart.getAttribute('aria-hidden') === 'false';
         miniCart.setAttribute('aria-hidden', String(!shown));
+        // keep aria-expanded in sync
         try { cartBtn.setAttribute('aria-expanded', String(!shown)); } catch(e){}
       });
       document.addEventListener('click', (e) => {
@@ -224,13 +307,14 @@
       saveCart(cart);
       updateMiniCartUI();
       if (miniCart) { miniCart.setAttribute('aria-hidden','false'); setTimeout(()=>miniCart.setAttribute('aria-hidden','true'), 2200); }
+      // announce for screen readers
       const pd = document.getElementById('productDetail');
       try { if (pd) pd.setAttribute('aria-live','polite'); } catch(e){}
     };
 
     updateMiniCartUI();
 
-    // I18N (sin cambios)
+    // I18N
     const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu'), langLabel = document.getElementById('langLabel');
     const translations = {
       es: { "nav.inicio":"Inicio","nav.productos":"Productos","nav.contacto":"Contáctanos","nav.conocenos":"Conócenos","cart.title":"Carrito","cart.clear":"Vaciar","cart.total":"Total:","cart.checkout":"Pagar","btn.add":"Añadir al carrito","btn.added":"Añadido" },
@@ -253,11 +337,11 @@
     if (langBtn && langMenu){
       langBtn.addEventListener('click', ()=> { const isOpen = langMenu.getAttribute('aria-hidden') === 'false'; langMenu.setAttribute('aria-hidden', String(!isOpen)); langBtn.setAttribute('aria-expanded', String(!isOpen)); });
       langMenu.querySelectorAll('.lang-item').forEach(btn => btn.addEventListener('click', ()=>{ const lang = btn.getAttribute('data-lang'); setLang(lang); langMenu.setAttribute('aria-hidden','true'); langBtn.setAttribute('aria-expanded','false'); }));
-      document.addEventListener('click', (e)=> { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langBtn.setAttribute('aria-expanded','false'); }});
+      document.addEventListener('click', (e)=> { try { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langBtn.setAttribute('aria-expanded','false'); }} catch(e){}});
     }
 
     // -------------------------
-    // Render product on this page (logic) - optimized
+    // Render product on this page (logic)
     // -------------------------
     try {
       function getProductIdFromUrl() {
@@ -342,87 +426,33 @@
       const p = products[matchedId];
       try { window.currentProductId = matchedId; } catch(e){}
 
-      // wrapper
+      // imagen: ahora se usa data-src + IntersectionObserver para lazy-load robusto
       const wrap = document.createElement('div'); wrap.className = 'image-wrap';
 
-      // lightweight SVG placeholder (fast)
       const placeholder = 'data:image/svg+xml;utf8,' + encodeURIComponent(
         `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="100%" height="100%" fill="#111"/><text x="50%" y="50%" font-size="20" fill="#888" text-anchor="middle" dominant-baseline="middle">Cargando imagen…</text></svg>`
       );
 
-      // main image element (lazy, low-res first)
       const img = document.createElement('img');
       img.className = 'product-image';
       img.alt = p.name;
-      img.src = placeholder; // placeholder
-      img.dataset.src = proxiedUrl(p.images && p.images[0] ? p.images[0] : p.image, 1200); // load larger when visible
-      img.loading = 'lazy'; img.decoding = 'async';
-      img.width = 900; img.height = 900;
-
-      // error fallback
+      img.src = placeholder; // inicial placeholder
+      // store actual url in data-src (proxied)
+      try { img.dataset.src = proxiedUrl(p.image); } catch(e){ img.dataset.src = p.image; }
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.setAttribute('width', '900');
+      img.setAttribute('height', '900');
+      // error fallback: try original, then placeholder image
       let triedOriginal = false, triedPlaceholder = false;
       img.addEventListener('error', function onErr(){
-        if (!triedOriginal) { triedOriginal = true; showDebug('proxied failed, trying original for ' + matchedId); img.src = p.images && p.images[0] ? p.images[0] : p.image; }
+        if (!triedOriginal) { triedOriginal = true; showDebug('proxied failed, trying original for ' + matchedId); img.src = p.image; }
         else if (!triedPlaceholder) { triedPlaceholder = true; img.removeEventListener('error', onErr); showDebug('original failed, using placeholder for ' + matchedId); img.src = 'https://via.placeholder.com/600x600?text=Sin+imagen'; }
       });
 
       wrap.appendChild(img);
 
-      // thumbnails (if multiple images)
-      const thumbsWrap = document.createElement('div'); thumbsWrap.className = 'thumbs';
-      const gallery = Array.isArray(p.images) && p.images.length ? p.images : [p.image];
-
-      // create shared IntersectionObserver for thumbs + main to lazy-load small ones
-      const thumbObserver = ('IntersectionObserver' in window) ? new IntersectionObserver((entries, obs) => {
-        entries.forEach(en => {
-          if (en.isIntersecting) {
-            const el = en.target;
-            if (el.dataset && el.dataset.src) { el.src = el.dataset.src; delete el.dataset.src; }
-            obs.unobserve(el);
-          }
-        });
-      }, { rootMargin: '200px 0px' }) : null;
-
-      gallery.forEach((url, i) => {
-        const t = document.createElement('img');
-        t.alt = p.name + ' ' + (i+1);
-        t.dataset.src = proxiedUrl(url, 300);
-        t.loading = 'lazy'; t.decoding = 'async';
-        t.setAttribute('role','button');
-        t.tabIndex = 0;
-        if (i === 0) t.setAttribute('aria-current','true');
-        // click: swap main image but DO NOT reload until user requests (lightbox)
-        t.addEventListener('click', (e) => {
-          // mark selected
-          thumbsWrap.querySelectorAll('img').forEach(x => x.removeAttribute('aria-current'));
-          t.setAttribute('aria-current','true');
-          // set low-latency proxied medium-res on main
-          img.src = proxiedUrl(url, 900);
-        });
-        t.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); t.click(); } });
-        thumbsWrap.appendChild(t);
-        if (thumbObserver) thumbObserver.observe(t); else { t.src = t.dataset.src; delete t.dataset.src; }
-      });
-
-      // lightbox open on main image click - loads original high-res lazily
-      const lightbox = document.getElementById('lightbox');
-      const lightboxImg = document.getElementById('lightboxImg');
-      function openLightbox(src){
-        try {
-          lightboxImg.alt = p.name;
-          // load original (not proxied) when available: try original first
-          lightboxImg.src = p.images && p.images[0] ? p.images[0] : p.image;
-          lightbox.setAttribute('aria-hidden','false'); lightbox.classList.add('open');
-          document.documentElement.style.overflow = 'hidden';
-        } catch(e){ showDebug('lightbox open err ' + e); }
-      }
-      function closeLightbox(){ lightbox.setAttribute('aria-hidden','true'); lightbox.classList.remove('open'); lightboxImg.src = ''; document.documentElement.style.overflow = ''; }
-      img.style.cursor = 'zoom-in';
-      img.addEventListener('click', ()=> openLightbox());
-      lightbox.addEventListener('click', (ev)=> { if (ev.target === lightbox || ev.target === lightboxImg) closeLightbox(); });
-      document.addEventListener('keydown', (ev)=> { if (ev.key === 'Escape') closeLightbox(); });
-
-      // IntersectionObserver to swap data-src -> src when visible for main image
+      // IntersectionObserver to swap data-src -> src when visible
       if ('IntersectionObserver' in window) {
         const io = new IntersectionObserver((entries, obs) => {
           entries.forEach(entry => {
@@ -431,14 +461,19 @@
               if (el.dataset && el.dataset.src) {
                 el.src = el.dataset.src;
                 delete el.dataset.src;
+                // add lazy loaded class for CSS fade-in if you want
+                el.classList.add('lazy');
+                el.addEventListener('load', ()=> el.classList.add('loaded'), { once: true });
               }
               obs.unobserve(el);
             }
           });
-        }, { rootMargin: '300px 0px' });
+        }, { rootMargin: '200px 0px' });
         io.observe(img);
       } else {
-        img.src = img.dataset.src; delete img.dataset.src;
+        // fallback: load immediately
+        img.src = img.dataset.src;
+        delete img.dataset.src;
       }
 
       // info
@@ -451,8 +486,8 @@
       // favorito (mejor aria y estado)
       const favBtn = document.createElement('button'); favBtn.id='favBtn'; favBtn.className='btn-fav'; favBtn.innerHTML='♡ Favorito'; favBtn.title='Guardar en favoritos';
       favBtn.setAttribute('aria-pressed','false');
-      favBtn.addEventListener('click', (ev) => {
-        // lazy-load firebase module when user interacts with favoritos
+      favBtn.addEventListener('click', () => {
+        // dispatch toggle request for Firebase module
         window.dispatchEvent(new CustomEvent('toggleFavorite', { detail: { id: p.id||matchedId, name: p.name, price: p.price, image: p.image } }));
       });
 
@@ -464,7 +499,11 @@
         if (typeof window.addToCart === 'function') { window.addToCart(productData); }
         else { const existing = cart.find(x => x.id === productData.id); if (existing) existing.qty = (existing.qty||1)+1; else cart.push({ id: productData.id, name: productData.name, price: productData.price, priceNum: parsePriceToNumber(productData.price), qty:1, image: productData.image }); saveCart(cart); updateMiniCartUI(); }
         addBtn.textContent = (translations[currentLang] && translations[currentLang]['btn.added']) || 'Añadido';
-        try { const pd = document.getElementById('productDetail'); if (pd) pd.setAttribute('aria-live','polite'); } catch(e){}
+        // announce to screen readers
+        try {
+          const pd = document.getElementById('productDetail');
+          if (pd) pd.setAttribute('aria-live','polite');
+        } catch(e){}
         setTimeout(()=> addBtn.textContent = (translations[currentLang] && translations[currentLang]['btn.add']) || 'Añadir al carrito', 1000);
       });
 
@@ -475,16 +514,7 @@
       info.appendChild(title); if (desc.textContent) info.appendChild(desc); if (mini.textContent) info.appendChild(mini);
       info.appendChild(price); info.appendChild(actionsWrap);
 
-      // attach thumbs AFTER main to keep layout stable
-      if (gallery.length > 1) {
-        const thumbsContainer = document.createElement('div'); thumbsContainer.style.marginTop = '12px';
-        thumbsContainer.appendChild(thumbsWrap);
-        wrap.appendChild(thumbsContainer);
-      }
-
       container.innerHTML = ''; container.appendChild(wrap); container.appendChild(info);
-      // add thumbs into DOM (after wrap is in DOM to reduce reflow)
-      if (gallery.length > 1) wrap.appendChild(thumbsWrap);
 
       // BOM if any
       if (matchedId === 'lixby-one' && Array.isArray(p.bom)) {
@@ -546,110 +576,91 @@
         window.addEventListener('resize', ()=> { clearTimeout(t); t = setTimeout(updatePad, 120); });
       }
     } catch(e){}
-
-    // -------------------------
-    // Lazy-load Firebase only when needed (fav) — evita bloquear carga
-    // -------------------------
-    (function(){
-      let firebaseLoaded = false;
-      let firebaseInitializing = false;
-      let fb = { app: null, auth: null, db: null, currentUser: null };
-
-      async function loadFirebase(){
-        if (firebaseLoaded) return fb;
-        if (firebaseInitializing) {
-          // wait until loaded
-          return new Promise((res) => {
-            const i = setInterval(() => { if (firebaseLoaded) { clearInterval(i); res(fb); } }, 80);
-          });
-        }
-        firebaseInitializing = true;
-        try {
-          // dynamic import of modules (only when user interacts)
-          const [appMod, authMod, dbMod] = await Promise.all([
-            import('https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js'),
-            import('https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js'),
-            import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js')
-          ]);
-          const { initializeApp, getApps, getApp } = appMod;
-          const { getAuth, onAuthStateChanged } = authMod;
-          const { getFirestore, doc, getDoc, setDoc, deleteDoc } = dbMod;
-
-          const firebaseConfig = {
-            apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
-            authDomain: "lixby-e0344.firebaseapp.com",
-            projectId: "lixby-e0344",
-            storageBucket: "lixby-e0344.firebasestorage.app",
-            messagingSenderId: "671722866179",
-            appId: "1:671722866179:web:65868eca5146942b507036",
-            measurementId: "G-09SQL30MS8"
-          };
-
-          const app = (getApps() && getApps().length) ? getApp() : initializeApp(firebaseConfig);
-          const auth = getAuth(app);
-          const db = getFirestore(app);
-
-          fb.app = app; fb.auth = auth; fb.db = db; fb.doc = doc; fb.getDoc = getDoc; fb.setDoc = setDoc; fb.deleteDoc = deleteDoc;
-
-          // subscribe to auth state
-          onAuthStateChanged(auth, (user) => { fb.currentUser = user; });
-
-          firebaseLoaded = true; firebaseInitializing = false;
-          return fb;
-        } catch(err){
-          firebaseInitializing = false;
-          console.error('Firebase load failed', err);
-          throw err;
-        }
-      }
-
-      // graceful handler for toggleFavorite events
-      window.addEventListener('toggleFavorite', async (ev) => {
-        const detail = ev.detail || {};
-        if (!detail || !detail.id) return;
-        try {
-          await loadFirebase();
-        } catch(e){ alert('No se pudo inicializar el servicio de favoritos. Revisa la consola.'); return; }
-
-        // now we have fb with methods
-        const uid = fb.currentUser && fb.currentUser.uid;
-        if (!uid){
-          const go = confirm('Debes iniciar sesión para guardar favoritos. ¿Ir a la página de cuenta para iniciar sesión?');
-          if (go) window.location.href = 'cuenta.html';
-          return;
-        }
-
-        const favDocRef = (u, pid) => fb.doc(fb.db, 'users', u, 'favorites', pid);
-        const pid = detail.id;
-        const btn = document.getElementById('favBtn');
-        try {
-          const ref = favDocRef(uid, pid);
-          const snap = await fb.getDoc(ref);
-          if (snap.exists()){
-            await fb.deleteDoc(ref);
-            if (btn) { btn.innerHTML = '♡ Favorito'; btn.dataset.favorited = 'false'; btn.setAttribute('aria-pressed','false'); }
-            alert('Eliminado de favoritos');
-          } else {
-            await fb.setDoc(ref, { id: detail.id, name: detail.name || '', price: detail.price || '', image: detail.image || '', createdAt: new Date().toISOString() });
-            if (btn) { btn.innerHTML = '♥ Favorito'; btn.dataset.favorited = 'true'; btn.setAttribute('aria-pressed','true'); }
-            alert('Añadido a favoritos');
-          }
-        } catch(err){ console.error('toggleFavorite err', err); alert('Error guardando favorito. Revisa la consola.'); }
-      });
-
-      // Also refresh the fav button state when productRendered fires (lazy-load only if needed)
-      window.addEventListener('productRendered', async (ev) => {
-        try {
-          // only load firebase if user has logged in (fast check via cookie/local) - we avoid forcing load
-          // We'll try to load firebase only if user interacts or if you explicitly call refreshFavButton
-        } catch(e){}
-      });
-
-      // small API if you want to explicitly refresh favorites
-      window.__LIXBY_FIREBASE = { load: loadFirebase };
-    })();
-
   })();
+  </script>
+
+  <!-- Firebase module for favorites (defensa: getApps/getApp) -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
+      authDomain: "lixby-e0344.firebaseapp.com",
+      projectId: "lixby-e0344",
+      storageBucket: "lixby-e0344.firebasestorage.app",
+      messagingSenderId: "671722866179",
+      appId: "1:671722866179:web:65868eca5146942b507036",
+      measurementId: "G-09SQL30MS8"
+    };
+
+    // inicialización defensiva (evita múltiples apps)
+    const app = (getApps() && getApps().length) ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let currentProductId = (window.currentProductId || null);
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      refreshFavButton();
+    });
+
+    function favDocRef(uid, pid){ return doc(db, 'users', uid, 'favorites', pid); }
+
+    async function refreshFavButton(){
+      const btn = document.getElementById('favBtn');
+      if (!btn) return;
+      if (!currentProductId && window.currentProductId) currentProductId = window.currentProductId;
+      if (!currentProductId) { btn.innerHTML = '♡ Favorito'; btn.setAttribute('aria-pressed','false'); return; }
+      if (!currentUser) { btn.innerHTML = '♡ Favorito'; btn.title='Inicia sesión para guardar favoritos'; btn.dataset.favorited='false'; btn.setAttribute('aria-pressed','false'); return; }
+      try {
+        const ref = favDocRef(currentUser.uid, currentProductId);
+        const snap = await getDoc(ref);
+        if (snap.exists()){ btn.innerHTML = '♥ Favorito'; btn.dataset.favorited='true'; btn.title='Eliminar de favoritos'; btn.setAttribute('aria-pressed','true'); }
+        else { btn.innerHTML = '♡ Favorito'; btn.dataset.favorited='false'; btn.title='Guardar en favoritos'; btn.setAttribute('aria-pressed','false'); }
+      } catch(err){ console.warn('refreshFavButton err', err); btn.innerHTML='♡ Favorito'; btn.dataset.favorited='false'; btn.setAttribute('aria-pressed','false'); }
+    }
+
+    window.addEventListener('productRendered', (ev) => {
+      currentProductId = ev.detail && ev.detail.id ? ev.detail.id : null;
+      try { window.currentProductId = currentProductId; } catch(e){}
+      refreshFavButton();
+    });
+
+    window.addEventListener('toggleFavorite', async (ev) => {
+      const detail = ev.detail;
+      if (!detail || !detail.id) return;
+      if (!currentUser){
+        const go = confirm('Debes iniciar sesión para guardar favoritos. ¿Ir a la página de cuenta para iniciar sesión?');
+        if (go) window.location.href = 'cuenta.html';
+        return;
+      }
+      const pid = detail.id;
+      const ref = favDocRef(currentUser.uid, pid);
+      const btn = document.getElementById('favBtn');
+      try {
+        const snap = await getDoc(ref);
+        if (snap.exists()){
+          await deleteDoc(ref);
+          if (btn) { btn.innerHTML = '♡ Favorito'; btn.dataset.favorited = 'false'; btn.setAttribute('aria-pressed','false'); }
+          alert('Eliminado de favoritos');
+        } else {
+          await setDoc(ref, { id: detail.id, name: detail.name || '', price: detail.price || '', image: detail.image || '', createdAt: new Date().toISOString() });
+          if (btn) { btn.innerHTML = '♥ Favorito'; btn.dataset.favorited = 'true'; btn.setAttribute('aria-pressed','true'); }
+          alert('Añadido a favoritos');
+        }
+      } catch(err){
+        console.error('toggleFavorite err', err);
+        alert('Error guardando favorito. Revisa la consola.');
+      }
+    });
+
+    const observer = new MutationObserver(()=> refreshFavButton());
+    observer.observe(document.getElementById('productDetail') || document.body, { childList:true, subtree:true });
+
   </script>
 
   <!-- tu script principal (defer) -->
