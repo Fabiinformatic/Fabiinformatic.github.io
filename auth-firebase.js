@@ -14,7 +14,7 @@ import {
 import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
 /* ========================
-   CONFIG (cliente - público)
+   CONFIG (cliente - pública)
    ======================== */
 const firebaseConfig = {
   apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
@@ -33,7 +33,6 @@ let app;
 try {
   app = (getApps && getApps().length) ? getApp() : initializeApp(firebaseConfig);
 } catch (err) {
-  // en entornos raros fallará; reintentar mínimo
   console.error('Firebase init error, reintento:', err);
   try { app = initializeApp(firebaseConfig); } catch (e) { console.error('Firebase init final failed', e); }
 }
@@ -87,7 +86,7 @@ function showAuthOverlaySafe(delay = 300) {
     _welcomeTimeout = setTimeout(()=> {
       const overlay = $('authOverlay');
       if (!overlay) return;
-      overlay.style.display = 'block';
+      overlay.style.display = 'flex';
       overlay.setAttribute('aria-hidden','false');
       try { document.documentElement.style.overflow = 'hidden'; } catch(e){}
       const close = $('authClose');
@@ -248,9 +247,7 @@ async function doPopupSignIn(provider, providerName) {
     await upsertUserProfile(res.user);
     updateHeaderSafe(res.user);
     hideAuthOverlaySafe();
-    // dispatch event for other listeners
     window.dispatchEvent(new CustomEvent('lixby:auth:signin', { detail: { uid: res.user.uid, provider: providerName } }));
-    // if on index, forward to account
     const path = window.location.pathname;
     if (path === '/' || path.endsWith('/index.html') || path.endsWith('index.html')) {
       window.location.href = 'cuenta.html';
@@ -342,7 +339,65 @@ function updateHeaderSafe(user) {
 /* ========================
    initAuthUI: wire up overlay and buttons
    ======================== */
+function createAuthOverlayIfMissing() {
+  try {
+    if ($('authOverlay')) return;
+    // create accountBtn if missing (so pages have the trigger)
+    if (!$('accountBtn')) {
+      const navRight = document.querySelector('.nav-right');
+      const btn = document.createElement('button');
+      btn.id = 'accountBtn';
+      btn.className = 'btn ghost';
+      btn.textContent = 'Cuenta';
+      btn.setAttribute('aria-haspopup', 'true');
+      btn.style.marginLeft = '8px';
+      if (navRight) navRight.appendChild(btn);
+      else document.body.appendChild(btn);
+    }
+
+    // overlay markup
+    const overlay = document.createElement('div');
+    overlay.id = 'authOverlay';
+    overlay.setAttribute('aria-hidden','true');
+    overlay.style.display = 'none';
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.zIndex = '1200';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.padding = '20px';
+
+    overlay.innerHTML = `
+      <div id="authBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);"></div>
+      <div class="auth-modal" role="dialog" aria-modal="true" style="position:relative;z-index:1201;max-width:420px;width:100%;background:var(--surface,#07101a);padding:18px;border-radius:12px;color:var(--text,#fff);box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+        <button id="authClose" aria-label="Cerrar" class="text-btn" style="position:absolute;right:10px;top:10px;background:transparent;border:none;color:inherit;font-size:18px;cursor:pointer">✕</button>
+        <h2 style="margin:0 0 8px 0">Iniciar sesión o crear cuenta</h2>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button id="btnGoogle" class="btn" style="flex:1;min-width:140px">Continuar con Google</button>
+          <button id="btnGitHub" class="btn" style="flex:1;min-width:140px">Continuar con GitHub</button>
+        </div>
+        <div style="margin-top:12px;color:var(--muted);font-size:0.95rem">o usa tu correo</div>
+        <input id="authEmail" type="email" placeholder="Correo" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit">
+        <input id="authPass" type="password" placeholder="Contraseña" style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit">
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button id="btnEmailSignIn" class="btn primary" style="flex:1;min-width:100px">Entrar</button>
+          <button id="btnEmailSignUp" class="btn ghost" style="flex:1;min-width:100px">Crear cuenta</button>
+          <button id="btnAnonymous" class="btn" style="flex:1;min-width:100px">Invitado</button>
+        </div>
+        <div style="margin-top:10px;color:var(--muted);font-size:0.88rem">Al iniciar sesión aceptas los términos.</div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+  } catch (e) {
+    console.warn('createAuthOverlayIfMissing err', e);
+  }
+}
+
 function initAuthUI() {
+  // ensure overlay exists
+  createAuthOverlayIfMissing();
+
   const overlay = $('authOverlay');
   const authBackdrop = $('authBackdrop');
   const authClose = $('authClose');
@@ -443,13 +498,11 @@ onAuthStateChanged(auth, async (user) => {
       saveLocalUser(user);
       updateHeaderSafe(user);
       await renderAccountPageIfNeeded(user);
-      // event
       window.dispatchEvent(new CustomEvent('lixby:auth:changed', { detail: { uid: user.uid, signedIn: true } }));
     } catch(e) {
       console.warn('onAuthState user handling error', e);
     }
   } else {
-    // signed out
     clearLocalUser();
     updateHeaderSafe(null);
     if (shouldShowWelcome()) {
@@ -494,7 +547,6 @@ window.appAuth = {
     try { location.href = 'index.html'; } catch(e){}
   },
   onAuthState: (cb) => {
-    // devuelve unsubscribe
     if (typeof cb !== 'function') return () => {};
     const unsub = onAuthStateChanged(auth, (u) => {
       cb(u ? { uid:u.uid, name:u.displayName || (u.email? u.email.split('@')[0] : null), email: u.email, photoURL: u.photoURL } : null);
@@ -511,4 +563,4 @@ window.appAuth = {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAuthUI);
 else initAuthUI();
 
-export { }; // archivo ES module (sin exports públicos adicionales)
+export { };
