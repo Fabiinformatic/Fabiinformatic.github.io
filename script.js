@@ -35,7 +35,6 @@
     holder.style.display = 'inline-flex';
     holder.style.alignItems = 'center';
     holder.style.gap = '8px';
-    holder.style.position = 'relative'; // para el menú posicionado respecto a este
 
     // avatar button (toggle menu)
     const avatarBtn = document.createElement('button');
@@ -49,8 +48,6 @@
     avatarBtn.style.background = 'transparent';
     avatarBtn.style.border = 'none';
     avatarBtn.style.cursor = 'pointer';
-    avatarBtn.style.padding = '6px';
-    avatarBtn.setAttribute('title','Cuenta');
 
     const avatarImg = document.createElement('img');
     avatarImg.id = 'headerAvatar';
@@ -62,13 +59,11 @@
     avatarImg.style.borderRadius = '8px';
     avatarImg.style.objectFit = 'cover';
     avatarImg.style.display = 'block';
-    avatarImg.src = 'https://via.placeholder.com/64x64?text=U';
 
     const nameSpan = document.createElement('span');
     nameSpan.id = 'headerName';
     nameSpan.style.color = 'var(--muted)';
     nameSpan.style.fontWeight = 600;
-    nameSpan.style.fontSize = '0.95rem';
 
     avatarBtn.appendChild(avatarImg);
     avatarBtn.appendChild(nameSpan);
@@ -77,38 +72,32 @@
     const menu = document.createElement('div');
     menu.id = 'accountMenu';
     menu.className = 'account-menu glass';
-    // posición absoluta relativa a holder
     menu.style.position = 'absolute';
     menu.style.minWidth = '200px';
-    menu.style.right = '0';
-    menu.style.top = 'calc(100% + 8px)';
+    menu.style.right = '18px';
+    menu.style.top = '64px';
     menu.style.display = 'none';
     menu.style.flexDirection = 'column';
     menu.style.padding = '8px';
-    menu.style.boxShadow = '0 8px 30px rgba(0,0,0,0.35)';
-    menu.style.zIndex = 9999;
     menu.setAttribute('role','menu');
-    menu.setAttribute('aria-hidden','true');
 
     const viewAccount = document.createElement('button');
     viewAccount.id = 'viewAccountBtn';
     viewAccount.className = 'btn ghost';
     viewAccount.textContent = 'Mi cuenta';
     viewAccount.setAttribute('role','menuitem');
-    viewAccount.style.textAlign = 'left';
 
     const signOutBtn = document.createElement('button');
     signOutBtn.id = 'headerSignOut';
     signOutBtn.className = 'btn ghost';
     signOutBtn.textContent = 'Cerrar sesión';
     signOutBtn.setAttribute('role','menuitem');
-    signOutBtn.style.textAlign = 'left';
 
     // append
     menu.appendChild(viewAccount);
     menu.appendChild(signOutBtn);
 
-    // wrapper combina avatarBtn + menu
+    // wrapper combines avatarBtn + menu
     const wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
     wrapper.appendChild(avatarBtn);
@@ -123,10 +112,7 @@
       if (themeToggle) navRight.insertBefore(holder, themeToggle);
       else navRight.appendChild(holder);
     } else {
-      // fallback: intenta poner dentro del header .nav si existe
-      const headerNav = document.querySelector('.nav .nav-right');
-      if (headerNav) headerNav.appendChild(holder);
-      else document.body.appendChild(holder);
+      document.body.appendChild(holder);
     }
 
     // interactions
@@ -134,7 +120,6 @@
       e.stopPropagation();
       toggleAccountMenu();
     });
-
     // close on outside click
     document.addEventListener('click', (ev) => {
       const menuEl = byId('accountMenu');
@@ -142,12 +127,6 @@
       if (!menuEl || !btnEl) return;
       if (!menuEl.contains(ev.target) && !btnEl.contains(ev.target)) hideAccountMenu();
     });
-
-    // close on Escape key
-    document.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Escape') hideAccountMenu();
-    });
-
     // keyboard accessibility
     avatarBtn.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleAccountMenu(); }
@@ -164,17 +143,13 @@
       e.preventDefault();
       hideAccountMenu();
       try {
-        // flexible signOut depending on how auth is exposed (mantener compatibilidad)
         if (window.appAuth && typeof window.appAuth.signOut === 'function') {
           await window.appAuth.signOut();
         } else if (window.appAuth && window.appAuth._rawAuth && typeof window.appAuth._rawAuth.signOut === 'function') {
           await window.appAuth._rawAuth.signOut();
-        } else if (window.firebase && window.firebase.auth && typeof window.firebase.auth === 'function') {
-          // posible compat shim (si se expone firebase global)
-          try { await window.firebase.auth().signOut(); } catch(e){ /* continue to fallback */ }
         } else {
-          // last resort: limpiar datos locales y recargar a inicio
-          try { localStorage.removeItem('lixby_user'); } catch(e){}
+          // last resort: reload and clear local
+          localStorage.removeItem('lixby_user');
           location.href = 'index.html';
         }
       } catch (err) {
@@ -182,18 +157,6 @@
         alert('Error cerrando sesión. Revisa la consola.');
       }
     });
-
-    // ensure menu items are focusable and keyboard-friendly
-    menu.querySelectorAll('[role="menuitem"]').forEach(item => {
-      item.tabIndex = 0;
-      item.addEventListener('keydown', (ev) => {
-        if (ev.key === 'ArrowDown') { ev.preventDefault(); focusNextMenuItem(ev.target); }
-        if (ev.key === 'ArrowUp') { ev.preventDefault(); focusPrevMenuItem(ev.target); }
-        if (ev.key === 'Escape') hideAccountMenu();
-      });
-    });
-
-    // touch friendly: tap outside handled by document click listener above
 
     return holder;
   }
@@ -204,20 +167,14 @@
     if (!menu || !btn) return;
     const open = menu.style.display !== 'flex';
     menu.style.display = open ? 'flex' : 'none';
-    menu.setAttribute('aria-hidden', open ? 'false' : 'true');
     btn.setAttribute('aria-expanded', String(open));
-    if (open) {
-      // compute if menu fits below, otherwise show above
-      repositionMenuIfNeeded(menu);
-      focusFirstMenuItem();
-    }
+    if (open) focusFirstMenuItem();
   }
   function hideAccountMenu() {
     const menu = byId('accountMenu');
     const btn = byId('headerAvatarBtn');
     if (!menu || !btn) return;
     menu.style.display = 'none';
-    menu.setAttribute('aria-hidden','true');
     btn.setAttribute('aria-expanded','false');
   }
   function focusFirstMenuItem() {
@@ -225,40 +182,6 @@
     if (!menu) return;
     const first = menu.querySelector('[role="menuitem"]');
     if (first && typeof first.focus === 'function') first.focus();
-  }
-  function focusNextMenuItem(current) {
-    const menu = byId('accountMenu');
-    if (!menu) return;
-    const items = Array.from(menu.querySelectorAll('[role="menuitem"]'));
-    const idx = items.indexOf(current);
-    const next = items[(idx + 1) % items.length];
-    if (next) next.focus();
-  }
-  function focusPrevMenuItem(current) {
-    const menu = byId('accountMenu');
-    if (!menu) return;
-    const items = Array.from(menu.querySelectorAll('[role="menuitem"]'));
-    const idx = items.indexOf(current);
-    const prev = items[(idx - 1 + items.length) % items.length];
-    if (prev) prev.focus();
-  }
-
-  // reposition menu if it would overflow viewport (show above if needed)
-  function repositionMenuIfNeeded(menuEl) {
-    try {
-      if (!menuEl) return;
-      const rect = menuEl.getBoundingClientRect();
-      const viewportH = window.innerHeight || document.documentElement.clientHeight;
-      // if bottom overflow, try positioning above
-      if (rect.bottom > viewportH && rect.height + 16 < (menuEl.parentElement ? menuEl.parentElement.getBoundingClientRect().top : 0)) {
-        menuEl.style.top = 'auto';
-        menuEl.style.bottom = 'calc(100% + 8px)';
-        menuEl.style.right = '0';
-      } else {
-        menuEl.style.bottom = 'auto';
-        menuEl.style.top = 'calc(100% + 8px)';
-      }
-    } catch(e){ /* silent */ }
   }
 
   // Render header UI (avatar + menu). userObj puede ser null
@@ -270,10 +193,7 @@
         // remove holder if present
         const holder = byId('accountHolder');
         if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
-        if (accountBtn) { 
-          accountBtn.style.display = ''; 
-          try { accountBtn.textContent = 'Cuenta'; accountBtn.setAttribute('aria-haspopup','true'); } catch(e){}
-        }
+        if (accountBtn) { accountBtn.style.display = ''; accountBtn.textContent = 'Cuenta'; accountBtn.setAttribute('aria-haspopup','true'); }
         if (brand) brand.textContent = 'LIXBY';
         return;
       }
@@ -286,8 +206,7 @@
       const nameSpan = byId('headerName');
 
       const displayName = userObj.name || (userObj.email ? userObj.email.split('@')[0] : 'Usuario');
-      const initial = (displayName && displayName.length) ? displayName.charAt(0).toUpperCase() : 'U';
-      const photo = userObj.photoURL || (`https://via.placeholder.com/64x64?text=${encodeURIComponent(initial)}`);
+      const photo = userObj.photoURL || (`https://via.placeholder.com/64x64?text=${encodeURIComponent((displayName||'U').charAt(0))}`);
 
       if (avatarImg) {
         avatarImg.src = photo;
@@ -296,9 +215,7 @@
       if (nameSpan) {
         nameSpan.textContent = displayName;
       }
-      if (brand) {
-        try { brand.textContent = (userObj.name ? (userObj.name.split(' ')[0]) : 'LIXBY'); } catch(e) { brand.textContent = 'LIXBY'; }
-      }
+      if (brand) brand.textContent = (userObj.name ? (userObj.name.split(' ')[0]) : 'LIXBY');
     } catch (e) {
       console.warn('renderHeaderUser error', e);
     }
@@ -320,7 +237,7 @@
     }
 
     // minimal safe values
-    const fn = (user && (user.firstName || user.name && user.name.split(' ')[0])) ? (user.firstName || (user.name && user.name.split(' ')[0])) : '';
+    const fn = (user && (user.firstName || user.name && user.name.split(' ')[0])) ? (user.firstName || user.name.split(' ')[0]) : '';
     const ln = (user && user.lastName) ? user.lastName : '';
     const dob = (user && user.dob) ? user.dob : '';
 
@@ -418,6 +335,255 @@
     document.addEventListener('DOMContentLoaded', subscribeAuth);
   } else {
     subscribeAuth();
+  }
+
+  /* ============================================================
+     NUEVAS FUNCIONALIDADES GLOBALES: Hover mini-preview carrito,
+     click abre panel (o navega), y fallback del botón Cuenta.
+     Estas se aplican en todas las páginas que incluyan este script.
+     ============================================================ */
+
+  function readCartFromStorage() {
+    try { return JSON.parse(localStorage.getItem('lixby_cart_v1')) || []; } catch(e){ return []; }
+  }
+
+  function computeCartTotals(cart) {
+    let total = 0;
+    let qty = 0;
+    cart.forEach(it => {
+      const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : (typeof it.price === 'string' ? parseFloat(String(it.price).replace(/[^\d.,]/g,'').replace(',','.')) : Number(it.price)||0);
+      const q = Number(it.qty || 1);
+      total += price * q;
+      qty += q;
+    });
+    return { total, qty };
+  }
+
+  function renderMiniCartPreviewInto(miniCartEl) {
+    // if the page already defines updateMiniCartUI, use it
+    if (typeof window.updateMiniCartUI === 'function') {
+      try { window.updateMiniCartUI(); return; } catch(e){ /* continue */ }
+    }
+    // Otherwise build content here
+    if (!miniCartEl) return;
+    const itemsContainer = miniCartEl.querySelector('#miniCartItems') || miniCartEl.querySelector('.mini-cart-items') || miniCartEl;
+    if (!itemsContainer) return;
+    const cart = readCartFromStorage();
+    itemsContainer.innerHTML = '';
+    if (cart.length === 0) {
+      itemsContainer.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
+      const totalEl = miniCartEl.querySelector('#miniCartTotal') || miniCartEl.querySelector('.mini-cart-total');
+      if (totalEl) totalEl.textContent = '0€';
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    let total = 0;
+    cart.forEach((it, idx) => {
+      const row = document.createElement('div');
+      row.className = 'mini-cart-item';
+      row.style.display = 'flex';
+      row.style.gap = '10px';
+      row.style.alignItems = 'center';
+      row.style.padding = '8px';
+      row.style.borderRadius = '8px';
+      const img = document.createElement('img');
+      img.src = it.image || 'https://via.placeholder.com/80x80?text=Img';
+      img.alt = it.name || 'Producto';
+      img.style.width = '44px';
+      img.style.height = '44px';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '6px';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.style.flex = '1';
+      const name = document.createElement('div');
+      name.style.fontWeight = '700';
+      name.textContent = it.name || 'Producto';
+      const sub = document.createElement('div');
+      sub.style.color = 'var(--muted)';
+      sub.textContent = (it.price || '') + ' ×' + (it.qty || 1);
+      meta.appendChild(name);
+      meta.appendChild(sub);
+      const rem = document.createElement('button');
+      rem.className = 'remove';
+      rem.textContent = '✕';
+      rem.style.background = 'transparent';
+      rem.style.border = 'none';
+      rem.style.cursor = 'pointer';
+      rem.style.color = 'var(--muted)';
+      rem.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const c = readCartFromStorage();
+        c.splice(idx,1);
+        try { localStorage.setItem('lixby_cart_v1', JSON.stringify(c)); } catch(e){}
+        // re-render
+        renderMiniCartPreviewInto(miniCartEl);
+        // emit storage event locally
+        try { window.dispatchEvent(new Event('cartUpdated')); } catch(e){}
+      });
+      row.appendChild(img);
+      row.appendChild(meta);
+      row.appendChild(rem);
+      frag.appendChild(row);
+      const priceNum = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : (typeof it.price === 'string' ? parseFloat(String(it.price).replace(/[^\d.,]/g,'').replace(',','.')) : Number(it.price)||0);
+      total += priceNum * Number(it.qty||1);
+    });
+    itemsContainer.appendChild(frag);
+    const totalEl = miniCartEl.querySelector('#miniCartTotal') || miniCartEl.querySelector('.mini-cart-total');
+    if (totalEl) totalEl.textContent = formatPrice(total);
+  }
+
+  function formatPrice(n) {
+    try {
+      const v = Math.round((Number(n)||0)*100)/100;
+      // Spanish format with comma
+      return v.toFixed(2).replace('.',',') + '€';
+    } catch(e){ return String(n); }
+  }
+
+  let miniHideTimer = null;
+  function initCartHoverAndAccountListeners() {
+    // Cart hover preview & click behavior
+    const cartBtnEl = byId('cartBtn') || document.querySelector('.cart-wrapper button') || document.querySelector('.cart-wrapper .icon-btn');
+    const cartWrapper = document.querySelector('.cart-wrapper') || (cartBtnEl && cartBtnEl.parentElement);
+    const miniCartEl = document.getElementById('miniCart') || document.querySelector('.mini-cart');
+    const cartPanel = document.getElementById('cartPanel') || document.querySelector('.cart-panel');
+    const cartBackdrop = document.getElementById('cartBackdrop') || document.querySelector('.cart-backdrop');
+
+    function showMini() {
+      if (!miniCartEl) return;
+      // render content
+      renderMiniCartPreviewInto(miniCartEl);
+      try { miniCartEl.setAttribute('aria-hidden','false'); } catch(e){}
+      miniCartEl.style.display = 'flex';
+      if (miniHideTimer) { clearTimeout(miniHideTimer); miniHideTimer = null; }
+    }
+    function hideMiniDeferred(delay = 350) {
+      if (!miniCartEl) return;
+      if (miniHideTimer) clearTimeout(miniHideTimer);
+      miniHideTimer = setTimeout(()=> {
+        try { miniCartEl.setAttribute('aria-hidden','true'); } catch(e){}
+        // only hide if not pinned open by click/panel
+        if (miniCartEl !== null) miniCartEl.style.display = '';
+      }, delay);
+    }
+
+    if (cartWrapper) {
+      cartWrapper.addEventListener('mouseenter', (ev) => {
+        showMini();
+      });
+      cartWrapper.addEventListener('mouseleave', (ev) => {
+        hideMiniDeferred(300);
+      });
+      // also keyboard focus/blur
+      cartWrapper.addEventListener('focusin', () => showMini());
+      cartWrapper.addEventListener('focusout', () => hideMiniDeferred(250));
+    } else if (cartBtnEl) {
+      cartBtnEl.addEventListener('mouseenter', showMini);
+      cartBtnEl.addEventListener('mouseleave', () => hideMiniDeferred(300));
+      cartBtnEl.addEventListener('focus', showMini);
+      cartBtnEl.addEventListener('blur', () => hideMiniDeferred(250));
+    }
+
+    if (cartBtnEl) {
+      cartBtnEl.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        // If page has cart panel element -> open it
+        if (cartPanel) {
+          cartPanel.classList.toggle('open', true);
+          if (cartBackdrop) cartBackdrop.classList.add('open');
+          try { cartPanel.setAttribute('aria-hidden','false'); cartBackdrop.setAttribute('aria-hidden','false'); } catch(e){}
+          // also ensure mini preview hidden (we want the panel)
+          if (miniCartEl) { miniCartEl.setAttribute('aria-hidden','true'); miniCartEl.style.display = ''; }
+        } else {
+          // If we're already on carrito.html, scroll to #bag; otherwise navigate to carrito.html
+          const path = (location.pathname || '').split('/').pop();
+          if (path && path.indexOf('carrito') !== -1) {
+            const bag = document.getElementById('bag') || document.querySelector('.bag-list');
+            if (bag) bag.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            window.location.href = 'carrito.html';
+          }
+        }
+      });
+    }
+
+    // Close cart panel when backdrop or close button clicked
+    if (cartBackdrop) {
+      cartBackdrop.addEventListener('click', () => {
+        if (cartPanel) {
+          cartPanel.classList.remove('open');
+          cartBackdrop.classList.remove('open');
+          try { cartPanel.setAttribute('aria-hidden','true'); cartBackdrop.setAttribute('aria-hidden','true'); } catch(e){}
+        }
+      });
+    }
+    const cartPanelClose = document.getElementById('cartPanelClose');
+    if (cartPanelClose && cartPanel) {
+      cartPanelClose.addEventListener('click', () => {
+        cartPanel.classList.remove('open');
+        if (cartBackdrop) cartBackdrop.classList.remove('open');
+        try { cartPanel.setAttribute('aria-hidden','true'); if (cartBackdrop) cartBackdrop.setAttribute('aria-hidden','true'); } catch(e){}
+      });
+    }
+
+    // Keep preview in sync: update when storage changes
+    window.addEventListener('storage', (ev) => {
+      if (ev.key === 'lixby_cart_v1') {
+        if (document.activeElement && (document.activeElement === cartBtnEl || cartWrapper && cartWrapper.contains(document.activeElement))) {
+          // If preview shown, re-render
+          if (miniCartEl && miniCartEl.getAttribute('aria-hidden') === 'false') renderMiniCartPreviewInto(miniCartEl);
+        } else {
+          // If panel open, also re-render panel content if a function exists
+          if (typeof window.updateMiniCartUI === 'function') {
+            try { window.updateMiniCartUI(); } catch(e) {}
+          }
+        }
+      }
+    });
+
+    // Also when event 'cartUpdated' emitted by other scripts
+    window.addEventListener('cartUpdated', () => {
+      if (miniCartEl && miniCartEl.getAttribute('aria-hidden') === 'false') renderMiniCartPreviewInto(miniCartEl);
+      if (typeof window.updateMiniCartUI === 'function') {
+        try { window.updateMiniCartUI(); } catch(e){}
+      }
+    });
+
+    // Fix fallback for account button: if no auth module, navigate to account page
+    if (accountBtn) {
+      accountBtn.addEventListener('click', (e) => {
+        // If existing behavior prevented by other handlers, we still navigate as fallback
+        try {
+          const handled = e.defaultPrevented;
+          if (!handled) window.location.href = 'cuenta.html';
+        } catch(e) { window.location.href = 'cuenta.html'; }
+      });
+      accountBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter') accountBtn.click(); });
+    }
+
+    // Keyboard: allow Esc to close panel/preview
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (cartPanel && cartPanel.classList.contains('open')) {
+          cartPanel.classList.remove('open');
+          if (cartBackdrop) cartBackdrop.classList.remove('open');
+        }
+        if (miniCartEl) {
+          miniCartEl.setAttribute('aria-hidden','true');
+          miniCartEl.style.display = '';
+        }
+      }
+    });
+  }
+
+  // run init on DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCartHoverAndAccountListeners);
+  } else {
+    initCartHoverAndAccountListeners();
   }
 
 })();
