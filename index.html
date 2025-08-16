@@ -78,6 +78,27 @@
     /* icon inside auth buttons */
     .auth-icon { width:18px; height:18px; flex:0 0 18px; display:inline-block; vertical-align:middle; }
     .auth-btn { display:inline-flex; align-items:center; gap:10px; justify-content:center; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; cursor:pointer; }
+
+    /* Footer improvements */
+    .footer { text-align:left; padding:40px 20px; margin-top:40px; }
+    .footer-grid { max-width:1200px; margin:0 auto; display:grid; grid-template-columns: 1.4fr 1fr 1fr 1.2fr; gap:22px; align-items:start; }
+    .footer-col h4 { margin:0 0 8px; font-size:1rem; color:var(--text); }
+    .footer-brand { font-weight:800; letter-spacing:0.08em; font-size:1.05rem; margin-bottom:8px; }
+    .footer p { margin:0 0 8px; color:var(--muted); }
+    .footer-links { display:flex; flex-direction:column; gap:6px; }
+    .footer-links a { color:var(--muted); font-size:0.95rem; }
+    .social-links { display:flex; gap:8px; margin-top:8px; }
+    .social-links a { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; background: rgba(255,255,255,0.02); color:var(--text); text-decoration:none; }
+    .newsletter-form { display:flex; gap:8px; align-items:center; margin-top:6px; }
+    .newsletter-form input[type="email"]{ padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--text); min-width:0; flex:1; }
+    .newsletter-form button{ padding:10px 12px; border-radius:8px; border:0; background:var(--accent); color:#00121a; font-weight:700; cursor:pointer; }
+    .footer-bottom { max-width:1200px; margin:18px auto 0; display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--muted); font-size:0.92rem; }
+    .legal-links { display:flex; gap:12px; align-items:center; }
+    .back-to-top { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.04); cursor:pointer; color:var(--text); }
+    @media (max-width:900px){
+      .footer-grid { grid-template-columns: 1fr; gap:14px; }
+      .footer-bottom { flex-direction:column; align-items:flex-start; gap:8px; }
+    }
   </style>
 
   <!-- Añadir: glass util (liquid glass styling consistente) -->
@@ -291,8 +312,71 @@
 <!-- debug (oculto a usuarios, útil para showDebug) -->
 <div id="debug" style="display:none;max-width:1100px;margin:12px auto;color:var(--muted);white-space:pre-wrap;"></div>
 
-<footer class="footer glass" style="text-align:center;padding:24px;margin-top:40px;">
-  <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
+<!-- Enhanced footer: preserve original copyright but add columns, newsletter and links -->
+<footer class="footer glass" role="contentinfo" aria-labelledby="footer-heading">
+  <div class="footer-grid" id="footerGrid">
+    <div class="footer-col">
+      <div class="footer-brand">LIXBY</div>
+      <p>Diseño minimalista, tecnología que acompaña tu día a día. Síguenos para novedades y lanzamientos.</p>
+      <div class="social-links" aria-label="Redes sociales">
+        <a href="#" title="Twitter" aria-label="Twitter" rel="noopener">
+          <!-- simple svg icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 5.92c-.64.29-1.32.49-2.04.58.73-.44 1.28-1.14 1.54-1.97-.68.4-1.43.69-2.23.85C18.94 4.6 18 4.2 17 4.2c-1.83 0-3.32 1.54-3 3.34C9.72 7.3 6.1 5.3 3.73 2.47c-.2.35-.3.76-.3 1.2 0 1.03.52 1.94 1.33 2.48-.6 0-1.15-.18-1.63-.45v.05c0 1.2.9 2.2 2.06 2.43-.45.12-.92.15-1.4.06.4 1.25 1.56 2.16 2.94 2.19C6.1 11.4 4.5 11.9 3 11.9c-.25 0-.5 0-.74-.04C4.36 13.06 6.16 13.8 8.12 13.8c8.35 0 12.92-6.9 12.92-12.88v-.58c.9-.68 1.6-1.54 2.2-2.52-.83.38-1.72.63-2.64.74z"/></svg>
+        </a>
+        <a href="#" title="Instagram" aria-label="Instagram" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 6.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 0 0 0-9.6zm6.5-.9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zM12 9.6a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8z"/></svg>
+        </a>
+        <a href="#" title="YouTube" aria-label="YouTube" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.5s-.2-1.7-.8-2.4c-.8-.9-1.7-.92-2.1-1-2.95-.22-7.35-.22-7.35-.22S6.9 3 3.95 3.22c-.44.07-1.33.1-2.1 1C1.27 4.8 1 6.5 1 6.5S1 8.86 1 11.25v1.5C1 16 1 18.5 1 18.5s.27 1.7.85 2.4c.8.9 1.84.87 2.3.98 1.66.22 7.05.22 7.05.22s4.4 0 7.35-.22c.44-.07 1.33-.1 2.1-1 .62-.66.82-2.4.82-2.4s.1-2.5.1-4.88v-1.5C23 8.86 23 7.5 23 7.5zM9.75 15.5v-7l6 3.5-6 3.5z"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Enlaces</h4>
+      <div class="footer-links" role="navigation" aria-label="Enlaces rápidos">
+        <a href="explorar.html">Explorar</a>
+        <a href="productos.html">Catálogo</a>
+        <a href="carrito.html">Carrito</a>
+        <a href="cuenta.html">Mi cuenta</a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Ayuda</h4>
+      <div class="footer-links">
+        <a href="contacto.html">Contacto</a>
+        <a href="faq.html">Preguntas frecuentes</a>
+        <a href="envios.html">Envíos y devoluciones</a>
+        <a href="soporte.html">Soporte técnico</a>
+      </div>
+    </div>
+
+    <div class="footer-col" aria-label="Newsletter">
+      <h4>Suscríbete</h4>
+      <p>Recibe novedades, ofertas exclusivas y lanzamientos.</p>
+      <form id="newsletterForm" class="newsletter-form" onsubmit="return false;" aria-label="Formulario newsletter">
+        <input id="newsletterEmail" type="email" placeholder="tu@correo.com" aria-label="Correo electrónico para newsletter" required>
+        <button id="newsletterBtn" type="submit" aria-label="Suscribirse">Suscribir</button>
+      </form>
+      <div id="newsletterMsg" role="status" aria-live="polite" style="margin-top:8px;color:var(--muted);font-size:0.95rem"></div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="legal-left">
+      <small>© <span id="year"></span> LIXBY — Todos los derechos reservados</small>
+      <div class="legal-links" style="margin-left:12px;">
+        <a href="privacidad.html">Política de privacidad</a>
+        <a href="terminos.html">Términos y condiciones</a>
+        <a href="accessibility.html">Accesibilidad</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button id="backToTop" class="back-to-top" aria-label="Volver arriba" title="Volver arriba">↑ Volver arriba</button>
+      <small style="color:var(--muted)">Versión demo</small>
+    </div>
+  </div>
 </footer>
 
 <!-- Cart panel (estático) + backdrop -->
@@ -587,8 +671,7 @@
       langMenu.style.display = !isOpen ? 'flex' : 'none';
       langBtn.setAttribute('aria-expanded', String(!isOpen));
     });
-    Array.from(langMenu.querySelectorAll('.lang-item')).forEach(btn => btn.addEventListener('click', ()=>{ const lang = btn.getAttribute('data-lang'); setLang(lang); langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }));
-    document.addEventListener('click', (e)=> { try { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }} catch(e){} });
+    Array.from(langMenu.querySelectorAll('.lang-item')).forEach(btn => btn.addEventListener('click', ()=>{ const lang = btn.getAttribute('data-lang'); setLang(lang); langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }));    document.addEventListener('click', (e)=> { try { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }} catch(e){} });
   }
 
   // THEME
@@ -1000,6 +1083,58 @@
     }
   });
 
+})();
+</script>
+
+<!-- Footer: newsletter handling + back-to-top behaviour -->
+<script>
+(function(){
+  const newsForm = document.getElementById('newsletterForm');
+  const newsInput = document.getElementById('newsletterEmail');
+  const newsBtn = document.getElementById('newsletterBtn');
+  const newsMsg = document.getElementById('newsletterMsg');
+  const storageKey = 'lixby_news_emails_v1';
+  function validEmail(e){ return typeof e === 'string' && e.includes('@') && e.indexOf('.') > e.indexOf('@'); }
+
+  if (newsForm && newsInput && newsBtn) {
+    newsForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const email = (newsInput.value || '').trim().toLowerCase();
+      if (!validEmail(email)) {
+        newsMsg.style.color = '#ffb4b4';
+        newsMsg.textContent = 'Introduce un correo válido.';
+        newsInput.focus();
+        return;
+      }
+      // store locally as demo
+      try {
+        const arr = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (!arr.includes(email)) arr.push(email);
+        localStorage.setItem(storageKey, JSON.stringify(arr));
+      } catch(e){}
+      newsMsg.style.color = 'var(--accent)';
+      newsMsg.textContent = '¡Gracias! Ya estás suscrito.';
+      newsInput.value = '';
+      setTimeout(()=> { newsMsg.textContent = ''; }, 5000);
+    });
+  }
+
+  // Back-to-top
+  const back = document.getElementById('backToTop');
+  function scrollHandler(){
+    if (window.scrollY > 300) back.style.display = 'inline-flex'; else back.style.display = 'none';
+  }
+  if (back) {
+    back.style.display = 'none';
+    back.addEventListener('click', (e)=>{
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(()=> document.querySelector('.brand')?.focus(), 600);
+    });
+    document.addEventListener('scroll', scrollHandler, { passive:true });
+    // initial
+    scrollHandler();
+  }
 })();
 </script>
 
