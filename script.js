@@ -1,618 +1,340 @@
-// script.js — Versión optimizada y compatible (reemplaza tu script.js actual)
-// Conserva toda la funcionalidad original (mini-cart, panel, addToCart, i18n, reveal...)
-// Mejoras: trabajo no crítico en idle, debounce resize, defensivas, menos reflows.
-
+// auth-ui.js  (cargar después de auth-firebase.js)
 (function(){
   'use strict';
 
-  // helpers para posponer trabajo no crítico
-  const idle = (fn, opts = {}) => {
-    if ('requestIdleCallback' in window && !opts.forceSync) {
-      requestIdleCallback(fn, { timeout: opts.timeout || 1000 });
+  // evita cargarse dos veces
+  if (window.__LIXBY_AUTH_UI_LOADED) {
+    console.warn('auth-ui ya cargado');
+    return;
+  }
+  window.__LIXBY_AUTH_UI_LOADED = true;
+
+  // helpers
+  const $ = (sel) => document.querySelector(sel);
+  const byId = (id) => document.getElementById(id);
+
+  function safeJSONParse(raw) {
+    try { return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+  }
+
+  // selectores (pueden no existir en todas las páginas)
+  const accountBtn = byId('accountBtn');
+  const brand = document.querySelector('.brand');
+  const navRight = document.querySelector('.nav-right');
+
+  // crea o actualiza el bloque accountHolder (accesible y keyboard-friendly)
+  function ensureAccountHolder() {
+    let holder = byId('accountHolder');
+    if (holder) return holder;
+
+    holder = document.createElement('div');
+    holder.id = 'accountHolder';
+    holder.className = 'account-holder';
+    holder.setAttribute('role', 'region');
+    holder.setAttribute('aria-label', 'Cuenta');
+    holder.style.display = 'inline-flex';
+    holder.style.alignItems = 'center';
+    holder.style.gap = '8px';
+
+    // avatar button (toggle menu)
+    const avatarBtn = document.createElement('button');
+    avatarBtn.id = 'headerAvatarBtn';
+    avatarBtn.className = 'icon-btn';
+    avatarBtn.setAttribute('aria-haspopup', 'true');
+    avatarBtn.setAttribute('aria-expanded', 'false');
+    avatarBtn.style.display = 'inline-flex';
+    avatarBtn.style.alignItems = 'center';
+    avatarBtn.style.gap = '8px';
+    avatarBtn.style.background = 'transparent';
+    avatarBtn.style.border = 'none';
+    avatarBtn.style.cursor = 'pointer';
+
+    const avatarImg = document.createElement('img');
+    avatarImg.id = 'headerAvatar';
+    avatarImg.alt = 'Avatar de usuario';
+    avatarImg.width = 36;
+    avatarImg.height = 36;
+    avatarImg.style.width = '36px';
+    avatarImg.style.height = '36px';
+    avatarImg.style.borderRadius = '8px';
+    avatarImg.style.objectFit = 'cover';
+    avatarImg.style.display = 'block';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.id = 'headerName';
+    nameSpan.style.color = 'var(--muted)';
+    nameSpan.style.fontWeight = 600;
+
+    avatarBtn.appendChild(avatarImg);
+    avatarBtn.appendChild(nameSpan);
+
+    // menu: acciones (ver cuenta, cerrar sesión)
+    const menu = document.createElement('div');
+    menu.id = 'accountMenu';
+    menu.className = 'account-menu glass';
+    menu.style.position = 'absolute';
+    menu.style.minWidth = '200px';
+    menu.style.right = '18px';
+    menu.style.top = '64px';
+    menu.style.display = 'none';
+    menu.style.flexDirection = 'column';
+    menu.style.padding = '8px';
+    menu.setAttribute('role','menu');
+
+    const viewAccount = document.createElement('button');
+    viewAccount.id = 'viewAccountBtn';
+    viewAccount.className = 'btn ghost';
+    viewAccount.textContent = 'Mi cuenta';
+    viewAccount.setAttribute('role','menuitem');
+
+    const signOutBtn = document.createElement('button');
+    signOutBtn.id = 'headerSignOut';
+    signOutBtn.className = 'btn ghost';
+    signOutBtn.textContent = 'Cerrar sesión';
+    signOutBtn.setAttribute('role','menuitem');
+
+    // append
+    menu.appendChild(viewAccount);
+    menu.appendChild(signOutBtn);
+
+    // wrapper combines avatarBtn + menu
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(avatarBtn);
+    wrapper.appendChild(menu);
+
+    holder.appendChild(wrapper);
+
+    // insert into nav-right (si no existe, append al body como fallback)
+    if (navRight) {
+      // insert before theme toggle if exists
+      const themeToggle = byId('themeToggle');
+      if (themeToggle) navRight.insertBefore(holder, themeToggle);
+      else navRight.appendChild(holder);
     } else {
-      // next tick but after paint
-      setTimeout(fn, opts.delay || 120);
+      document.body.appendChild(holder);
     }
-  };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    try {
-      /* =========================
-         CONSTANTES Y TRANSLACIONES
-         ========================= */
-      const CART_KEY = 'lixby_cart_v1';
-      const LANG_KEY = 'lixby_lang';
-      const THEME_KEY = 'lixby_theme';
+    // interactions
+    avatarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAccountMenu();
+    });
+    // close on outside click
+    document.addEventListener('click', (ev) => {
+      const menuEl = byId('accountMenu');
+      const btnEl = byId('headerAvatarBtn');
+      if (!menuEl || !btnEl) return;
+      if (!menuEl.contains(ev.target) && !btnEl.contains(ev.target)) hideAccountMenu();
+    });
+    // keyboard accessibility
+    avatarBtn.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleAccountMenu(); }
+      if (ev.key === 'ArrowDown') { ev.preventDefault(); focusFirstMenuItem(); }
+    });
 
-      const translations = {
-        es: {
-          "nav.inicio":"Inicio","nav.productos":"Productos","nav.contacto":"Contáctanos","nav.conocenos":"Conócenos",
-          "cart.title":"Carrito","cart.clear":"Vaciar","cart.total":"Total:","cart.checkout":"Pagar",
-          "btn.add":"Añadir al carrito","btn.added":"Añadido","btn.explorar":"Explorar","btn.enviar":"Enviar",
-          "theme.toggle":"Cambiar tema","cart.empty":"Tu carrito está vacío.","view.cart":"Ver carrito",
-          "continue.payment":"Continuar con el pago","shipping.free":"GRATIS","vat.label":"Incluye {vat} de IVA (21%)",
-          "label.subtotal":"Subtotal","label.shipping":"Envío","label.your_total":"Tu total:"
-        },
-        en: {
-          "nav.inicio":"Home","nav.productos":"Products","nav.contacto":"Contact","nav.conocenos":"About",
-          "cart.title":"Cart","cart.clear":"Clear","cart.total":"Total:","cart.checkout":"Checkout",
-          "btn.add":"Add to cart","btn.added":"Added","btn.explorar":"Explore","btn.enviar":"Send",
-          "theme.toggle":"Toggle theme","cart.empty":"Your cart is empty.","view.cart":"View cart",
-          "continue.payment":"Continue to payment","shipping.free":"FREE","vat.label":"Includes {vat} VAT (21%)",
-          "label.subtotal":"Subtotal","label.shipping":"Shipping","label.your_total":"Your total:"
-        },
-        fr: {
-          "nav.inicio":"Accueil","nav.productos":"Produits","nav.contacto":"Contact","nav.conocenos":"À propos",
-          "cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer",
-          "btn.add":"Ajouter au panier","btn.added":"Ajouté","btn.explorar":"Explorer","btn.enviar":"Envoyer",
-          "theme.toggle":"Changer le thème","cart.empty":"Votre panier est vide.","view.cart":"Voir le panier",
-          "continue.payment":"Continuer le paiement","shipping.free":"GRATUIT","vat.label":"Inclut {vat} de TVA (21%)",
-          "label.subtotal":"Sous-total","label.shipping":"Livraison","label.your_total":"Votre total :"
-        }
-      };
+    viewAccount.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAccountMenu();
+      window.location.href = 'cuenta.html';
+    });
 
-      /* =========================
-         UTILIDADES (precio, storage)
-         ========================= */
-      function parsePriceToNumber(priceStr){
-        if (priceStr === 0) return 0;
-        if (!priceStr) return 0;
-        const clean = String(priceStr).replace(/[^\d.,-]/g,'').replace(',', '.');
-        return parseFloat(clean) || 0;
-      }
-      function formatPriceNum(num){
-        return (Math.round(num * 100) / 100).toFixed(2) + ' €';
-      }
-      function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e){ return []; } }
-      function saveCart(c){ try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
-
-      // estado
-      let cart = loadCart();
-
-      /* =========================
-         0) INJECT CSS FIXES (no crítico)
-         ========================= */
-      idle(() => {
-        if (document.getElementById('lixby-fixes-css')) return;
-        const css = `
-          .nav { border-radius: 0 !important; box-shadow: none !important; }
-          .nav-inner { display:flex !important; align-items:center !important; justify-content:space-between !important; gap:16px !important; max-width:1200px; margin:0 auto; min-height:64px !important; }
-          .nav-left{ display:flex !important; align-items:center !important; gap:8px !important; flex:0 0 auto !important; }
-          #navLinks{ display:flex !important; gap:18px !important; align-items:center !important; justify-content:center !important; flex:1 1 auto !important; padding:0 12px !important; white-space:nowrap !important; }
-          .nav-right{ display:flex !important; flex-direction:row !important; gap:10px !important; align-items:center !important; justify-content:flex-end !important; flex:0 0 auto !important; }
-          .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
-          .mini-cart{ right:18px !important; top:56px !important; width:320px !important; box-sizing:border-box !important; }
-          @media (max-width:720px){ .mini-cart{ width:92% !important; right:8px !important; top:56px !important; } }
-          .cart-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:210; display:none; }
-          .cart-backdrop.open{ display:block; }
-          .cart-panel{ position:fixed; top:0; right:0; bottom:0; width:360px; transform:translateX(110%); transition:transform .28s ease; z-index:220; pointer-events:auto; }
-          .cart-panel.open{ transform:translateX(0); }
-          @media (max-width:720px){ .cart-panel{ width:92% !important; } }
-        `;
-        const s = document.createElement('style');
-        s.id = 'lixby-fixes-css';
-        s.textContent = css;
-        document.head.appendChild(s);
-      });
-
-      /* =========================
-         HEADER layout enforcement + debounced padding-top adjust
-         ========================= */
-      (function forceHeaderLayoutAndPadding(){
-        const header = document.querySelector('.nav');
-        const navInner = document.querySelector('.nav-inner');
-        if (header && navInner) {
-          // read once
-          navInner.style.display = 'flex';
-          navInner.style.alignItems = 'center';
-          navInner.style.justifyContent = 'space-between';
-        }
-        const adjust = () => {
-          const h = document.querySelector('.nav');
-          if (!h) return;
-          const pad = Math.round(h.getBoundingClientRect().height + 12);
-          document.body.style.paddingTop = pad + 'px';
-        };
-        let t;
-        const debounced = () => { clearTimeout(t); t = setTimeout(adjust, 120); };
-        window.addEventListener('resize', debounced);
-        adjust();
-      })();
-
-      /* =========================
-         ELEMENT REFERENCES (defensivas)
-         ========================= */
-      const cartBtn = document.getElementById('cartBtn');
-      const miniCart = document.getElementById('miniCart');
-      const miniCartItems = document.getElementById('miniCartItems');
-      const miniCartTotal = document.getElementById('miniCartTotal');
-      const cartCount = document.getElementById('cartCount');
-      const clearCartBtn = document.getElementById('clearCart');
-      const checkoutBtn = document.getElementById('checkoutBtn');
-
-      /* =========================
-         CART PANEL (drawer) creation
-         ========================= */
-      function ensureCartPanel(){
-        if (document.getElementById('cartPanel')) return;
-        // create panel
-        const panel = document.createElement('aside');
-        panel.id = 'cartPanel';
-        panel.className = 'cart-panel';
-        panel.setAttribute('aria-hidden', 'true');
-
-        // build inner with DOM methods to avoid innerHTML large reflows
-        const inner = document.createElement('div');
-        inner.className = 'cart-panel-inner glass';
-        inner.setAttribute('role','dialog');
-        inner.setAttribute('aria-label','Carrito');
-        // header
-        const headerRow = document.createElement('div');
-        headerRow.className = 'cart-header';
-        headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04)';
-        const title = document.createElement('strong'); title.setAttribute('data-i18n','cart.title'); title.textContent = translations['es']['cart.title'];
-        const headerControls = document.createElement('div'); headerControls.style.cssText = 'display:flex;gap:8px;align-items:center;';
-        const clearBtn = document.createElement('button'); clearBtn.id = 'cartPanelClear'; clearBtn.className = 'btn ghost'; clearBtn.setAttribute('data-i18n','cart.clear'); clearBtn.textContent = translations['es']['cart.clear'];
-        const closeBtn = document.createElement('button'); closeBtn.id = 'cartPanelClose'; closeBtn.className = 'text-btn'; closeBtn.setAttribute('aria-label','Cerrar'); closeBtn.textContent = '✕';
-        headerControls.appendChild(clearBtn); headerControls.appendChild(closeBtn);
-        headerRow.appendChild(title); headerRow.appendChild(headerControls);
-
-        // items container
-        const list = document.createElement('div');
-        list.id = 'cartPanelItems';
-        list.className = 'cart-list';
-        list.style.cssText = 'padding:12px;overflow:auto;flex:1;';
-
-        // footer
-        const footer = document.createElement('div');
-        footer.className = 'cart-footer';
-        footer.style.cssText = 'padding:12px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:10px;';
-
-        const subRow = document.createElement('div');
-        subRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
-        const subLabel = document.createElement('div'); subLabel.setAttribute('data-i18n','label.subtotal'); subLabel.textContent = translations['es']['label.subtotal'];
-        const subVal = document.createElement('div'); subVal.id = 'cartPanelSubtotal'; subVal.textContent = '0 €';
-        subRow.appendChild(subLabel); subRow.appendChild(subVal);
-
-        const shipRow = document.createElement('div');
-        shipRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
-        const shipLabel = document.createElement('div'); shipLabel.setAttribute('data-i18n','label.shipping'); shipLabel.textContent = translations['es']['label.shipping'];
-        const shipVal = document.createElement('div'); shipVal.id = 'cartPanelShipping'; shipVal.textContent = translations['es']['shipping.free'];
-        shipRow.appendChild(shipLabel); shipRow.appendChild(shipVal);
-
-        const totalRow = document.createElement('div');
-        totalRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1.05rem;margin-top:8px;';
-        const totLabel = document.createElement('div'); totLabel.setAttribute('data-i18n','label.your_total'); totLabel.textContent = translations['es']['label.your_total'];
-        const totVal = document.createElement('div'); totVal.id = 'cartPanelTotal'; totVal.textContent = '0 €';
-        totalRow.appendChild(totLabel); totalRow.appendChild(totVal);
-
-        const vatRow = document.createElement('div');
-        vatRow.style.cssText = 'font-size:0.92rem;color:var(--muted);margin-top:6px;';
-        const vatSpan = document.createElement('span'); vatSpan.id = 'cartPanelVAT'; vatSpan.textContent = '0 €';
-        const vatLabel = document.createElement('span'); vatLabel.setAttribute('data-i18n','vat.label'); vatLabel.textContent = translations['es']['vat.label'].replace('{vat}','0 €');
-        vatRow.appendChild(vatSpan); vatRow.appendChild(document.createTextNode(' ')); vatRow.appendChild(vatLabel);
-
-        const footerBtns = document.createElement('div');
-        footerBtns.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
-        const checkoutBtnPanel = document.createElement('button');
-        checkoutBtnPanel.id = 'cartPanelCheckout';
-        checkoutBtnPanel.className = 'btn primary';
-        checkoutBtnPanel.style.cssText = 'flex:1';
-        checkoutBtnPanel.setAttribute('data-i18n','continue.payment');
-        checkoutBtnPanel.textContent = translations['es']['continue.payment'];
-        footerBtns.appendChild(checkoutBtnPanel);
-
-        footer.appendChild(subRow);
-        footer.appendChild(shipRow);
-        footer.appendChild(totalRow);
-        footer.appendChild(vatRow);
-        footer.appendChild(footerBtns);
-
-        // compose
-        inner.appendChild(headerRow);
-        inner.appendChild(list);
-        inner.appendChild(footer);
-        panel.appendChild(inner);
-        document.body.appendChild(panel);
-
-        // backdrop
-        if (!document.getElementById('cartBackdrop')) {
-          const backdrop = document.createElement('div');
-          backdrop.id = 'cartBackdrop';
-          backdrop.className = 'cart-backdrop';
-          backdrop.setAttribute('aria-hidden','true');
-          document.body.appendChild(backdrop);
-          backdrop.addEventListener('click', ()=> toggleCartPanel(false));
-        }
-
-        // listeners
-        closeBtn.addEventListener('click', ()=> toggleCartPanel(false));
-        clearBtn.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
-        checkoutBtnPanel.addEventListener('click', ()=> {
-          if (!cart || cart.length === 0) return alert(translations[currentLang]?.['cart.empty'] || translations['es']['cart.empty']);
-          alert('Simulación de checkout — artículos: ' + cart.reduce((s,i)=>s+(i.qty||0),0));
-        });
-
-        // escape key closes
-        document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') toggleCartPanel(false); });
-      }
-
-      function toggleCartPanel(open){
-        ensureCartPanel();
-        const panel = document.getElementById('cartPanel');
-        const backdrop = document.getElementById('cartBackdrop');
-        if (!panel) return;
-        const show = (typeof open === 'boolean') ? open : !panel.classList.contains('open');
-        panel.classList.toggle('open', show);
-        panel.setAttribute('aria-hidden', String(!show));
-        if (backdrop) { backdrop.classList.toggle('open', show); backdrop.setAttribute('aria-hidden', String(!show)); }
-        document.documentElement.style.overflow = show ? 'hidden' : '';
-        if (show) updateCartPanelUI();
-      }
-
-      /* =========================
-         MINI-CART popover render + update
-         ========================= */
-      function updateMiniCartUI(){
-        try {
-          if (cartCount) cartCount.textContent = cart.reduce((s,i)=>s+(i.qty||0),0);
-          if (!miniCartItems) return;
-          // build fragment to avoid repeated reflows
-          const frag = document.createDocumentFragment();
-          if (!cart || cart.length === 0) {
-            const empty = document.createElement('div');
-            empty.style.padding = '8px';
-            empty.style.color = 'var(--muted)';
-            empty.textContent = translations[currentLang]?.['cart.empty'] || translations['es']['cart.empty'];
-            frag.appendChild(empty);
-            if (miniCartTotal) miniCartTotal.textContent = '0 €';
-          } else {
-            let total = 0;
-            cart.forEach((it, idx) => {
-              const row = document.createElement('div');
-              row.className = 'mini-cart-item';
-              row.style.display = 'flex';
-              row.style.gap = '10px';
-              row.style.alignItems = 'center';
-
-              const img = document.createElement('img');
-              img.src = it.image || 'https://via.placeholder.com/80x80?text=Img';
-              img.alt = it.name || 'Producto';
-              img.style.width = '48px'; img.style.height = '48px'; img.style.objectFit = 'cover'; img.style.borderRadius = '8px';
-
-              const meta = document.createElement('div');
-              meta.style.flex = '1';
-              meta.innerHTML = `<div style="font-weight:700">${it.name}</div><div style="color:var(--muted)">${it.price} x${it.qty||1}</div>`;
-
-              const remove = document.createElement('button');
-              remove.className = 'remove';
-              remove.textContent = '✕';
-              remove.title = 'Eliminar';
-              remove.style.background = 'transparent';
-              remove.style.border = 'none';
-              remove.style.cursor = 'pointer';
-              remove.addEventListener('click', (ev)=> { ev.stopPropagation(); cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
-
-              row.appendChild(img);
-              row.appendChild(meta);
-              row.appendChild(remove);
-              frag.appendChild(row);
-
-              total += (it.priceNum || parsePriceToNumber(it.price)) * (it.qty || 1);
-            });
-            if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(total);
-          }
-          // replace children (single reflow)
-          miniCartItems.innerHTML = '';
-          miniCartItems.appendChild(frag);
-        } catch(e){ console.warn('updateMiniCartUI error', e); }
-      }
-
-      /* =========================
-         CART PANEL UI rendering (rows, totals, vat)
-         ========================= */
-      function updateCartPanelUI(){
-        ensureCartPanel();
-        const panel = document.getElementById('cartPanel');
-        if (!panel) return;
-        const list = panel.querySelector('#cartPanelItems');
-        const subtotalEl = panel.querySelector('#cartPanelSubtotal');
-        const totalEl = panel.querySelector('#cartPanelTotal');
-        const vatEl = panel.querySelector('#cartPanelVAT');
-        const shippingEl = panel.querySelector('#cartPanelShipping');
-
-        if (!list || !subtotalEl || !totalEl || !vatEl) return;
-
-        // shipping label
-        if (shippingEl) shippingEl.textContent = translations[currentLang]?.['shipping.free'] || translations['es']['shipping.free'];
-
-        // clear list
-        list.innerHTML = '';
-
-        if (!cart || cart.length === 0) {
-          const empty = document.createElement('div');
-          empty.style.padding = '12px';
-          empty.style.color = 'var(--muted)';
-          empty.textContent = translations[currentLang]?.['cart.empty'] || translations['es']['cart.empty'];
-          list.appendChild(empty);
-          subtotalEl.textContent = '0 €';
-          totalEl.textContent = '0 €';
-          vatEl.textContent = '0 €';
-          const vatSpan = panel.querySelector('[data-i18n="vat.label"]');
-          if (vatSpan) vatSpan.textContent = (translations[currentLang]?.['vat.label'] || translations['es']['vat.label']).replace('{vat}', formatPriceNum(0));
-          return;
-        }
-
-        // Build rows in fragment
-        const frag = document.createDocumentFragment();
-        let subtotal = 0;
-        cart.forEach((it) => {
-          const priceNum = (it.priceNum !== undefined) ? it.priceNum : parsePriceToNumber(it.price);
-          const qty = it.qty || 1;
-          const line = priceNum * qty;
-          subtotal += line;
-
-          const row = document.createElement('div');
-          row.className = 'cart-row';
-          row.style.display = 'flex';
-          row.style.gap = '12px';
-          row.style.alignItems = 'center';
-          row.style.padding = '10px 0';
-          row.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
-
-          const img = document.createElement('img');
-          img.className = 'cart-row-img';
-          img.src = it.image || 'https://via.placeholder.com/120';
-          img.alt = (it.name||'Producto');
-          img.style.width = '72px'; img.style.height = '72px'; img.style.objectFit = 'cover'; img.style.borderRadius = '8px'; img.style.flex = '0 0 72px';
-
-          const info = document.createElement('div');
-          info.className = 'cart-row-info';
-          info.style.flex = '1 1 auto';
-          info.style.minWidth = '0';
-          info.innerHTML = `<div class="cart-row-name" style="font-weight:700;margin-bottom:6px;">${it.name || 'Producto'}</div>
-                            <div class="cart-row-meta" style="color:var(--muted);font-size:0.95rem;">Cantidad: <strong>${qty}</strong></div>`;
-
-          const priceEl = document.createElement('div');
-          priceEl.className = 'cart-row-price';
-          priceEl.style.flex = '0 0 auto';
-          priceEl.style.fontWeight = '700';
-          priceEl.style.marginLeft = '12px';
-          priceEl.textContent = formatPriceNum(line);
-
-          row.appendChild(img);
-          row.appendChild(info);
-          row.appendChild(priceEl);
-          frag.appendChild(row);
-        });
-
-        list.appendChild(frag);
-
-        const shipping = 0;
-        const total = subtotal + shipping;
-        const vatRate = 0.21;
-        const vatAmount = Math.round((total - total / (1 + vatRate)) * 100) / 100;
-
-        subtotalEl.textContent = formatPriceNum(subtotal);
-        totalEl.textContent = formatPriceNum(total);
-        vatEl.textContent = formatPriceNum(vatAmount);
-
-        const vatSpan = panel.querySelector('[data-i18n="vat.label"]');
-        if (vatSpan) vatSpan.textContent = (translations[currentLang]?.['vat.label'] || translations['es']['vat.label']).replace('{vat}', formatPriceNum(vatAmount));
-
-        if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(subtotal);
-        if (cartCount) cartCount.textContent = cart.reduce((s,i)=>s+(i.qty||0),0);
-      }
-
-      /* =========================
-         window.addToCart (exposed)
-         ========================= */
-      window.addToCart = function(product){
-        if (!product || !product.id) return;
-        const existing = cart.find(p => p.id === product.id);
-        if (existing) existing.qty = (existing.qty||1) + 1;
-        else {
-          cart.push({
-            id: product.id,
-            name: product.name || 'Producto',
-            price: product.price || '0 €',
-            priceNum: parsePriceToNumber(product.price || '0'),
-            qty: 1,
-            image: product.image || ''
-          });
-        }
-        saveCart(cart);
-        updateMiniCartUI();
-        updateCartPanelUI();
-
-        // if miniCart exists, flash it; otherwise open panel
-        if (miniCart) {
-          miniCart.setAttribute('aria-hidden', 'false');
-          setTimeout(()=> miniCart.setAttribute('aria-hidden', 'true'), 2200);
-        } else {
-          toggleCartPanel(true);
-        }
-      };
-
-      /* =========================
-         HANDLERS: cart button, document click
-         ========================= */
-      function handleCartBtnClick(e){
-        if (miniCart) {
-          const shown = miniCart.getAttribute('aria-hidden') === 'false';
-          miniCart.setAttribute('aria-hidden', String(!shown));
-          e.stopPropagation();
-          return;
-        }
-        toggleCartPanel(true);
-      }
-
-      if (cartBtn) cartBtn.addEventListener('click', handleCartBtnClick);
-      else {
-        // delegated fallback
-        document.addEventListener('click', function delegated(ev){
-          const b = ev.target.closest && ev.target.closest('#cartBtn');
-          if (b) handleCartBtnClick(ev);
-        });
-      }
-
-      // close miniCart on outside click
-      document.addEventListener('click', (e) => {
-        try {
-          if (!miniCart) return;
-          if (cartBtn && !cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
-            miniCart.setAttribute('aria-hidden', 'true');
-          }
-        } catch(e){}
-      });
-
-      if (clearCartBtn) clearCartBtn.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); });
-      if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (!cart || cart.length ===0) return alert(translations[currentLang]?.['cart.empty'] || translations['es']['cart.empty']); alert('Simulación de pago — artículos: ' + cart.reduce((s,i)=>s+(i.qty||0),0)); });
-
-      document.addEventListener('click', (ev) => {
-        const el = ev.target;
-        if (!el) return;
-        if (el.id === 'viewCartBtn' || (el.closest && el.closest('#viewCartBtn'))) {
-          toggleCartPanel(true);
-        }
-      });
-
-      /* =========================
-         CARD interactions (idle) — no bloquear DOMContentLoaded
-         ========================= */
-      idle(() => {
-        try {
-          const cards = document.querySelectorAll && document.querySelectorAll('.card[data-product]');
-          if (!cards || !cards.length) return;
-          cards.forEach(card => {
-            card.style.transition = card.style.transition || 'transform 0.22s ease';
-            const onMove = (e) => {
-              const rect = card.getBoundingClientRect();
-              const cx = e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX;
-              const cy = e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY;
-              const x = cx - rect.left; const y = cy - rect.top;
-              const moveX = (x / rect.width - 0.5) * 6; const moveY = (y / rect.height - 0.5) * 6;
-              card.style.transform = `translateY(-8px) rotateX(${moveY}deg) rotateY(${moveX}deg)`;
-            };
-            const onLeave = () => card.style.transform = 'translateY(0) rotateX(0) rotateY(0)';
-            card.addEventListener('mousemove', onMove);
-            card.addEventListener('mouseleave', onLeave);
-            card.addEventListener('touchstart', ()=> card.style.transform = 'translateY(-8px)');
-            card.addEventListener('touchend', onLeave);
-            card.addEventListener('click', (e) => {
-              if (e.target.closest('button, a, input, textarea, select')) return;
-              const pid = card.getAttribute('data-product');
-              if (pid) window.location.href = `producto.html?id=${encodeURIComponent(pid)}`;
-            });
-          });
-        } catch(e){ console.warn('cards init error', e); }
-      });
-
-      /* =========================
-         LANGUAGE + THEME
-         ========================= */
-      let currentLang = localStorage.getItem(LANG_KEY) || 'es';
-      function applyTranslations(lang){
-        const map = translations[lang] || translations['es'];
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-          const key = el.getAttribute('data-i18n');
-          if (key && map[key]) el.textContent = map[key];
-        });
-        document.querySelectorAll('.btn-add').forEach(btn => { btn.textContent = map['btn.add'] || btn.textContent; });
-        const label = document.getElementById('langLabel');
-        const names = { es:'Español', en:'English', fr:'Français' };
-        if (label) label.textContent = names[lang] || names['es'];
-      }
-      function setLanguage(lang){
-        if (!translations[lang]) lang = 'es';
-        currentLang = lang;
-        try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
-        applyTranslations(lang);
-        updateMiniCartUI();
-        updateCartPanelUI();
-      }
-      // attach UI
-      const langBtn = document.getElementById('langBtn');
-      const langMenu = document.getElementById('langMenu');
-      if (langBtn && langMenu) {
-        langBtn.addEventListener('click', ()=> {
-          const isHidden = langMenu.getAttribute('aria-hidden') === 'true' || langMenu.getAttribute('aria-hidden') === null;
-          langMenu.setAttribute('aria-hidden', String(!isHidden));
-          langBtn.setAttribute('aria-expanded', String(!isHidden));
-        });
-        // delegate click to items
-        Array.from(langMenu.querySelectorAll('[data-lang]')).forEach(b => b.addEventListener('click', ()=>{
-          const l = b.getAttribute('data-lang'); setLanguage(l);
-          langMenu.setAttribute('aria-hidden','true'); if (langBtn) langBtn.setAttribute('aria-expanded','false');
-        }));
-        document.addEventListener('click', (ev) => {
-          try { if (!langBtn.contains(ev.target) && !langMenu.contains(ev.target)) { langMenu.setAttribute('aria-hidden','true'); if (langBtn) langBtn.setAttribute('aria-expanded','false'); } } catch(e){}
-        });
-      }
-      setLanguage(currentLang);
-
-      const themeToggle = document.getElementById('themeToggle');
-      if (localStorage.getItem(THEME_KEY) === 'light') document.documentElement.classList.add('light');
-      if (themeToggle) themeToggle.addEventListener('click', ()=> {
-        const isLight = document.documentElement.classList.toggle('light');
-        try { localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark'); } catch(e){}
-      });
-
-      /* =========================
-         REVEAL (IntersectionObserver) — idle for perf
-         ========================= */
-      idle(() => {
-        try {
-          const els = Array.from(document.querySelectorAll('.reveal'));
-          if (!els.length) return;
-          setTimeout(()=> els.slice(0,6).forEach(el => el.classList.add('visible')), 40);
-          if ('IntersectionObserver' in window) {
-            const obs = new IntersectionObserver((entries, o)=> {
-              entries.forEach(en => {
-                if (en.isIntersecting) { en.target.classList.add('visible'); o.unobserve(en.target); }
-              });
-            }, { threshold: 0.12 });
-            els.forEach(el => { if (!el.classList.contains('visible')) obs.observe(el); });
-          } else {
-            els.forEach(el=> el.classList.add('visible'));
-          }
-        } catch(e){ console.warn('reveal init error', e); }
-      });
-
-      /* =========================
-         CROSS-TAB sync y arranque inicial
-         ========================= */
-      window.addEventListener('storage', (ev) => {
-        if (ev.key === CART_KEY) {
-          cart = loadCart();
-          updateMiniCartUI();
-          updateCartPanelUI();
-        }
-      });
-
-      // inicial updates
-      updateMiniCartUI();
-      ensureCartPanel();
-      updateCartPanelUI();
-      applyTranslations(currentLang);
-
-      // helpful debug API
-      window.__LIXBY = {
-        getCart: () => JSON.parse(JSON.stringify(cart || [])),
-        clearCart: () => { cart = []; saveCart(cart); updateMiniCartUI(); updateCartPanelUI(); }
-      };
-
-      // notify other modules
-      window.dispatchEvent(new Event('cartUpdated'));
-
-    } catch (err) {
-      console.error('Error en script LIXBY:', err);
-      // degrade gracefully
+    signOutBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      hideAccountMenu();
       try {
-        const ns = document.querySelector('noscript');
-        if (ns) ns.textContent = 'Ha ocurrido un error en el script. Mira la consola (F12 → Console).';
-      } catch(e){}
+        if (window.appAuth && typeof window.appAuth.signOut === 'function') {
+          await window.appAuth.signOut();
+        } else if (window.appAuth && window.appAuth._rawAuth && typeof window.appAuth._rawAuth.signOut === 'function') {
+          await window.appAuth._rawAuth.signOut();
+        } else {
+          // last resort: reload and clear local
+          localStorage.removeItem('lixby_user');
+          location.href = 'index.html';
+        }
+      } catch (err) {
+        console.warn('Sign-out failed', err);
+        alert('Error cerrando sesión. Revisa la consola.');
+      }
+    });
+
+    return holder;
+  }
+
+  function toggleAccountMenu() {
+    const menu = byId('accountMenu');
+    const btn = byId('headerAvatarBtn');
+    if (!menu || !btn) return;
+    const open = menu.style.display !== 'flex';
+    menu.style.display = open ? 'flex' : 'none';
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) focusFirstMenuItem();
+  }
+  function hideAccountMenu() {
+    const menu = byId('accountMenu');
+    const btn = byId('headerAvatarBtn');
+    if (!menu || !btn) return;
+    menu.style.display = 'none';
+    btn.setAttribute('aria-expanded','false');
+  }
+  function focusFirstMenuItem() {
+    const menu = byId('accountMenu');
+    if (!menu) return;
+    const first = menu.querySelector('[role="menuitem"]');
+    if (first && typeof first.focus === 'function') first.focus();
+  }
+
+  // Render header UI (avatar + menu). userObj puede ser null
+  function renderHeaderUser(userObj) {
+    // si no hay nav, no hacer nada
+    try {
+      // if null -> restore accountBtn
+      if (!userObj) {
+        // remove holder if present
+        const holder = byId('accountHolder');
+        if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
+        if (accountBtn) { accountBtn.style.display = ''; accountBtn.textContent = 'Cuenta'; accountBtn.setAttribute('aria-haspopup','true'); }
+        if (brand) brand.textContent = 'LIXBY';
+        return;
+      }
+
+      // ensure accountBtn hidden (we replace it with holder)
+      if (accountBtn) accountBtn.style.display = 'none';
+
+      const holder = ensureAccountHolder();
+      const avatarImg = byId('headerAvatar');
+      const nameSpan = byId('headerName');
+
+      const displayName = userObj.name || (userObj.email ? userObj.email.split('@')[0] : 'Usuario');
+      const photo = userObj.photoURL || (`https://via.placeholder.com/64x64?text=${encodeURIComponent((displayName||'U').charAt(0))}`);
+
+      if (avatarImg) {
+        avatarImg.src = photo;
+        avatarImg.alt = `${displayName} — avatar`;
+      }
+      if (nameSpan) {
+        nameSpan.textContent = displayName;
+      }
+      if (brand) brand.textContent = (userObj.name ? (userObj.name.split(' ')[0]) : 'LIXBY');
+    } catch (e) {
+      console.warn('renderHeaderUser error', e);
     }
-  });
+  }
+
+  // Account panel for cuenta.html (uses appAuth.updateProfileExtra as in your auth-firebase)
+  function renderAccountPanel(user) {
+    // Only render if account panel container present or on cuenta.html
+    const isCuentaPage = location.pathname.endsWith('cuenta.html') || !!byId('accountPanel');
+    if (!isCuentaPage) return;
+
+    // prefer container with #accountPanel else insert into main
+    let container = byId('accountPanel');
+    if (!container) {
+      const main = document.querySelector('main') || document.body;
+      container = document.createElement('div');
+      container.id = 'accountPanel';
+      main.prepend(container);
+    }
+
+    // minimal safe values
+    const fn = (user && (user.firstName || user.name && user.name.split(' ')[0])) ? (user.firstName || user.name.split(' ')[0]) : '';
+    const ln = (user && user.lastName) ? user.lastName : '';
+    const dob = (user && user.dob) ? user.dob : '';
+
+    container.innerHTML = `
+      <div class="account-profile glass" style="max-width:980px;margin:28px auto;padding:18px;border-radius:12px;display:flex;gap:16px;align-items:flex-start;">
+        <div style="flex:0 0 84px;">
+          <div class="avatar" style="width:84px;height:84px;border-radius:12px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)">${(fn||'U').charAt(0).toUpperCase()}</div>
+        </div>
+        <div style="flex:1">
+          <h2>Mi cuenta</h2>
+          <div class="profile-row" style="display:flex;gap:10px;margin-top:6px;">
+            <input id="pf_firstName" placeholder="Nombre" value="${escapeHtml(fn)}" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);"/>
+            <input id="pf_lastName" placeholder="Apellidos" value="${escapeHtml(ln)}" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);"/>
+          </div>
+          <div style="margin-top:10px;">
+            <input id="pf_dob" type="date" placeholder="Fecha de nacimiento" value="${escapeHtml(dob)}" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);"/>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+            <button id="btnSaveProfile" class="btn primary">Guardar</button>
+            <button id="btnCancelProfile" class="btn ghost">Cancelar</button>
+          </div>
+          <div id="profileMsg" style="margin-top:8px;color:var(--muted);font-size:0.95rem"></div>
+        </div>
+      </div>
+    `;
+
+    // attach handlers
+    const btnSave = byId('btnSaveProfile');
+    const btnCancel = byId('btnCancelProfile');
+    const profileMsg = byId('profileMsg');
+
+    if (btnCancel) btnCancel.addEventListener('click', () => { location.reload(); });
+
+    if (btnSave) {
+      btnSave.addEventListener('click', async () => {
+        const firstName = (byId('pf_firstName')||{}).value || '';
+        const lastName = (byId('pf_lastName')||{}).value || '';
+        const dobVal = (byId('pf_dob')||{}).value || '';
+        profileMsg.textContent = 'Guardando...';
+        try {
+          if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') throw new Error('updateProfileExtra no disponible');
+          await window.appAuth.updateProfileExtra({ firstName, lastName, dob: dobVal });
+          profileMsg.textContent = 'Guardado ✔';
+          // update header name locally
+          const local = safeJSONParse(localStorage.getItem('lixby_user')) || {};
+          local.firstName = firstName || local.firstName;
+          local.lastName = lastName || local.lastName;
+          local.dob = dobVal || local.dob;
+          try { localStorage.setItem('lixby_user', JSON.stringify(local)); } catch(e){/*ignore*/}
+
+          // try to update header immediately
+          renderHeaderUser({ uid: (local.uid||''), name: (firstName ? (firstName + (lastName ? ' ' + lastName : '')) : local.name || local.firstName), email: local.email, photoURL: local.photoURL });
+        } catch (err) {
+          console.error('Guardar perfil', err);
+          profileMsg.textContent = 'Error al guardar. Revisa consola.';
+        }
+      });
+    }
+  }
+
+  function escapeHtml(str){
+    if (str === undefined || str === null) return '';
+    return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]); });
+  }
+
+  // Read minimal local snapshot
+  function getLocalUserSnapshot() {
+    return safeJSONParse(localStorage.getItem('lixby_user'));
+  }
+
+  // Subscribe to auth state; prefer appAuth.onAuthState but fallback to localStorage
+  function subscribeAuth() {
+    if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
+      try {
+        window.appAuth.onAuthState((u) => {
+          // u may be null or user object as provided by appAuth
+          const local = getLocalUserSnapshot();
+          const toShow = u || local || null;
+          renderHeaderUser(toShow);
+          renderAccountPanel(toShow || {});
+        });
+        return;
+      } catch (e) {
+        console.warn('appAuth.onAuthState failed, using fallback', e);
+      }
+    }
+    // fallback to reading local snapshot once
+    const local = getLocalUserSnapshot();
+    renderHeaderUser(local);
+    renderAccountPanel(local || {});
+  }
+
+  // inicializar en DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', subscribeAuth);
+  } else {
+    subscribeAuth();
+  }
 
 })();
