@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LIXBY — Contacto</title>
+  <meta name="description" content="Contacta con LIXBY — soporte, ventas y prensa. Minimal y directo." />
+  <style>
+    :root{
+      --bg:#061217;
+      --card:#07121a;
+      --muted:#91a3a8;
+      --text:#dbe9ee;
+      --accent:#3dd1c3;
+      --glass-bg: rgba(255,255,255,0.02);
+      --radius:12px;
+      --maxw:980px;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#041018 0%, #07121a 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:20px;
+      display:flex;
+      justify-content:center;
+    }
+    .wrap{width:100%;max-width:var(--maxw);}
+
+    /* header */
+    header.nav{display:flex;align-items:center;justify-content:space-between;padding:12px 8px;margin-bottom:18px;position:sticky;top:10px;background:transparent}
+    .brand{font-weight:800;letter-spacing:0.08em;font-size:1.05rem;cursor:pointer}
+    nav.links{display:flex;gap:12px;align-items:center}
+    nav.links a{color:var(--muted);text-decoration:none;font-size:0.95rem}
+    .header-actions{display:flex;gap:8px;align-items:center}
+
+    /* hero */
+    .hero{display:flex;align-items:center;gap:18px;padding:20px;border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.03)}
+    .hero-left h1{margin:0;font-size:1.4rem}
+    .hero-left p{margin:6px 0 0;color:var(--muted)}
+    .hero-cta{margin-left:auto;}
+
+    /* layout columns */
+    .columns{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
+    @media (max-width:980px){ .columns{grid-template-columns:1fr} }
+
+    /* card */
+    .card{background:var(--card);border-radius:var(--radius);padding:14px;border:1px solid rgba(255,255,255,0.03)}
+    .muted{color:var(--muted);font-size:0.95rem}
+
+    /* form */
+    form .row{display:flex;gap:8px}
+    form label{display:block;font-size:0.9rem;margin-bottom:6px}
+    input[type="text"], input[type="email"], textarea, select{
+      width:100%;box-sizing:border-box;padding:10px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text);
+    }
+    textarea{min-height:120px;resize:vertical}
+    .actions{display:flex;gap:8px;align-items:center;margin-top:10px}
+    .btn{padding:8px 12px;border-radius:9px;border:0;cursor:pointer;font-weight:700}
+    .btn.primary{background:var(--accent);color:#052024}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--text)}
+    .note{font-size:0.9rem;color:var(--muted);margin-top:8px}
+
+    /* attachments */
+    .dropzone{border:2px dashed rgba(255,255,255,0.03);padding:12px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.005)}
+    .attachments{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+    .attach-item{display:flex;justify-content:space-between;gap:12px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
+    .attach-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;background:rgba(255,255,255,0.02);display:inline-block}
+
+    /* status */
+    .status{margin-top:10px;padding:10px;border-radius:8px}
+    .status.ok{background:rgba(61,209,195,0.08);color:var(--accent);font-weight:700}
+    .status.err{background:rgba(255,90,90,0.08);color:#ffb4b4;font-weight:700}
+
+    /* footer */
+    footer{margin-top:22px;text-align:center;color:var(--muted);font-size:0.9rem}
+
+    /* small helpers */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+  <a class="sr-only" href="#maincontent">Saltar al contenido</a>
+  <div class="wrap">
+    <header class="nav" role="banner" aria-label="Cabecera">
+      <div style="display:flex;gap:12px;align-items:center">
+        <img src="https://i.imgur.com/dOCYmkx.jpeg" alt="Lixby logo" style="width:44px;height:44px;border-radius:8px;object-fit:cover">
+        <div class="brand" onclick="location.href='index.html'">LIXBY</div>
+      </div>
+      <nav class="links" role="navigation" aria-label="Enlaces principales">
+        <a href="index.html">Inicio</a>
+        <a href="index.html#productos">Productos</a>
+        <a href="soporte.html">Soporte</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn ghost" onclick="location.href='cuenta.html'">Cuenta</button>
+      </div>
+    </header>
+
+    <main id="maincontent">
+      <section class="hero card" aria-labelledby="h1">
+        <div class="hero-left">
+          <h1 id="h1">Hablemos — estamos para ayudar</h1>
+          <p class="muted">¿Tienes dudas sobre un producto o necesitas soporte? Escríbenos y te responderemos en el horario indicado.</p>
+          <div class="note" style="margin-top:8px">Horario: Lun–Vie • 09:00–18:00 (CEST). Respuestas en <strong>24–48h</strong>.</div>
+        </div>
+        <div class="hero-cta">
+          <a class="btn primary" href="#contact-form">Enviar mensaje</a>
+        </div>
+      </section>
+
+      <div class="columns">
+        <!-- LEFT: Formulario -->
+        <section aria-labelledby="contact-form">
+          <h2 id="contact-form" style="margin-top:0">Contacto</h2>
+          <form id="contactForm" class="card" enctype="multipart/form-data" onsubmit="return false" aria-label="Formulario de contacto">
+            <!-- Honeypot anti-spam (no visible) -->
+            <input type="text" name="website" id="honeypot" class="sr-only" autocomplete="off">
+
+            <label for="name">Nombre</label>
+            <input id="name" name="from_name" type="text" placeholder="Tu nombre" required autocomplete="name">
+
+            <label for="email">Correo</label>
+            <input id="email" name="from_email" type="email" placeholder="tu@correo.com" required autocomplete="email">
+
+            <label for="subject">Asunto</label>
+            <input id="subject" name="subject" type="text" placeholder="Asunto breve" required>
+
+            <label for="message">Mensaje</label>
+            <textarea id="message" name="message" placeholder="Cuéntanos el problema o consulta" required></textarea>
+
+            <label class="dropzone" id="dropzone" tabindex="0" for="files" aria-label="Adjuntar archivos">
+              <div class="dz-info">Adjuntar archivos (opcional, máximo 3 archivos — 6MB total)</div>
+              <input id="files" name="attachments" type="file" accept=".png,.jpg,.jpeg,.webp,.txt,.log,.zip,.pdf" multiple style="display:none">
+            </label>
+
+            <div id="attachments" class="attachments" aria-live="polite"></div>
+
+            <div class="actions">
+              <button id="sendBtn" class="btn primary" type="button">Enviar mensaje</button>
+              <button id="clearBtn" class="btn ghost" type="button">Limpiar</button>
+              <div style="margin-left:auto" class="muted">Protegemos tus datos</div>
+            </div>
+
+            <div id="formStatus" aria-live="polite" style="margin-top:10px"></div>
+            <div class="note" style="margin-top:10px">También puedes escribirnos a <strong>soporte@lixby.com</strong>.</div>
+          </form>
+        </section>
+
+        <!-- RIGHT: Contact details & FAQ -->
+        <aside>
+          <div class="card" style="margin-bottom:12px">
+            <h3>Contacto rápido</h3>
+            <div class="muted">Horario</div>
+            <div style="font-weight:700;margin-top:6px">Lun–Vie • 09:00–18:00 (CEST)</div>
+            <hr style="margin:12px 0;border:none;height:1px;background:rgba(255,255,255,0.03)">
+            <div class="muted">Correo</div>
+            <div style="font-weight:700;margin-top:6px">soporte@lixby.com</div>
+            <div class="muted" style="margin-top:8px">Teléfono</div>
+            <div style="font-weight:700;margin-top:6px">+34 600 000 000 (demo)</div>
+          </div>
+
+          <div class="card">
+            <h3>FAQ rápido</h3>
+            <details style="margin-top:8px"><summary style="font-weight:700">¿Dónde está mi pedido?</summary><div class="muted" style="margin-top:8px">Escribe tu número de pedido y te ayudamos a localizarlo.</div></details>
+            <details style="margin-top:8px"><summary style="font-weight:700">Garantía</summary><div class="muted" style="margin-top:8px">2 años en todos nuestros productos. Consulta condiciones en T&C.</div></details>
+            <details style="margin-top:8px"><summary style="font-weight:700">Soporte técnico</summary><div class="muted" style="margin-top:8px">Abre un ticket en la sección de soporte para logs y adjuntos.</div></details>
+          </div>
+        </aside>
+      </div>
+
+      <footer>
+        <div class="muted">© <span id="year"></span> LIXBY — Minimal tech</div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (function(){
+      // --- CONFIG: reemplaza si quieres usar EmailJS ---
+      const EMAILJS_USER_ID = '';        // ej: 'xsKpaFjbRsS95AK3i'
+      const EMAILJS_SERVICE_ID = '';     // ej: 'service_tagcpgm'
+      const EMAILJS_TEMPLATE_ID = '';    // ej: 'template_oxwjyfc'
+      const MAX_FILES = 3;
+      const MAX_TOTAL = 6 * 1024 * 1024; // 6MB
+
+      // DOM
+      const form = document.getElementById('contactForm');
+      const filesInput = document.getElementById('files');
+      const dropzone = document.getElementById('dropzone');
+      const attachmentsEl = document.getElementById('attachments');
+      const sendBtn = document.getElementById('sendBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const statusEl = document.getElementById('formStatus');
+      const year = document.getElementById('year');
+      const honeypot = document.getElementById('honeypot');
+
+      year.textContent = new Date().getFullYear();
+
+      let attached = []; // File objects
+
+      function fmtBytes(n){ if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(2)+' MB'; }
+
+      function renderAttachments(){
+        attachmentsEl.innerHTML = '';
+        if (!attached.length) return;
+        attached.forEach((f, i) => {
+          const div = document.createElement('div'); div.className = 'attach-item';
+          const left = document.createElement('div'); left.style.display='flex'; left.style.alignItems='center'; left.style.gap='10px';
+          const thumb = document.createElement('div'); thumb.className='attach-thumb';
+          if (f.type && f.type.startsWith('image/')) {
+            const img = document.createElement('img'); img.src = URL.createObjectURL(f); img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
+            thumb.appendChild(img);
+          } else {
+            thumb.textContent = '📄';
+            thumb.style.display='flex'; thumb.style.alignItems='center'; thumb.style.justifyContent='center';
+          }
+          left.appendChild(thumb);
+          const meta = document.createElement('div'); meta.innerHTML = `<div style="font-weight:700">${f.name}</div><div class="muted">${fmtBytes(f.size)} • ${f.type||'—'}</div>`;
+          left.appendChild(meta);
+          const right = document.createElement('div');
+          const btn = document.createElement('button'); btn.className='btn ghost'; btn.type='button'; btn.textContent='Eliminar';
+          btn.addEventListener('click', () => { URL.revokeObjectURL(f.objectURL); attached.splice(i,1); renderAttachments(); });
+          right.appendChild(btn);
+          div.appendChild(left);
+          div.appendChild(right);
+          attachmentsEl.appendChild(div);
+        });
+        const note = document.createElement('div'); note.className='muted'; note.style.marginTop='6px';
+        const total = attached.reduce((s,f)=>s+f.size,0);
+        note.textContent = `Archivos: ${attached.length} — Total: ${fmtBytes(total)}`;
+        attachmentsEl.appendChild(note);
+      }
+
+      // add files with validation
+      function addFiles(list){
+        const arr = Array.from(list || []);
+        if (attached.length + arr.length > MAX_FILES) { showError(`Máximo ${MAX_FILES} archivos.`); return; }
+        const totalNow = attached.reduce((s,f)=>s+f.size,0);
+        const incoming = arr.reduce((s,f)=>s+f.size,0);
+        if (totalNow + incoming > MAX_TOTAL) { showError(`Tamaño total excede ${fmtBytes(MAX_TOTAL)}.`); return; }
+        arr.forEach(f => {
+          // store objectURL for preview cleanup
+          f.objectURL = URL.createObjectURL(f);
+          attached.push(f);
+        });
+        renderAttachments();
+      }
+
+      // dropzone interactions
+      dropzone.addEventListener('click', () => filesInput.click());
+      dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); filesInput.click(); }});
+      dropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; });
+      dropzone.addEventListener('dragleave', (e)=>{ dropzone.style.borderColor = ''; });
+      dropzone.addEventListener('drop', (e)=>{ e.preventDefault(); dropzone.style.borderColor = ''; addFiles(e.dataTransfer.files); });
+
+      filesInput.addEventListener('change', (e) => addFiles(e.target.files));
+
+      clearBtn.addEventListener('click', () => {
+        attached.forEach(f => f.objectURL && URL.revokeObjectURL(f));
+        attached = [];
+        form.reset();
+        renderAttachments();
+        statusEl.innerHTML = '';
+      });
+
+      // tiny helpers for status
+      function showStatus(msg){ statusEl.innerHTML = `<div class="status ok">${msg}</div>`; }
+      function showError(msg){ statusEl.innerHTML = `<div class="status err">${msg}</div>`; }
+
+      // EmailJS lazy loader + send (if configured)
+      let emailJsLoaded = false;
+      async function ensureEmailJs(){
+        if (!EMAILJS_USER_ID || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) return false;
+        if (emailJsLoaded && window.emailjs) return true;
+        try {
+          await new Promise((res,rej)=>{
+            const s=document.createElement('script');
+            s.src='https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js';
+            s.crossOrigin='anonymous';
+            s.onload=res; s.onerror=rej;
+            document.head.appendChild(s);
+          });
+          if (window.emailjs && typeof emailjs.init === 'function') {
+            emailjs.init(EMAILJS_USER_ID);
+            emailJsLoaded = true;
+            return true;
+          }
+        } catch(e){ console.warn('EmailJS load error', e); }
+        return false;
+      }
+
+      // send via EmailJS (sendForm preferred for attachments). We'll attempt sendForm — if EmailJS not configured, fallback to local save.
+      async function sendViaEmailJs(){
+        const formEl = form;
+        // Put attachments into the files input if not already (best-effort)
+        try {
+          if (attached.length && window.DataTransfer) {
+            const dt = new DataTransfer();
+            attached.forEach(f => dt.items.add(new File([f], f.name, {type: f.type})));
+            filesInput.files = dt.files;
+          }
+        } catch(e){ console.warn('No se sincronizaron archivos programáticamente', e); }
+
+        const ok = await ensureEmailJs();
+        if (!ok) throw new Error('EmailJS no configurado');
+        // EmailJS sendForm(service, template, formElement)
+        return emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, formEl);
+      }
+
+      // persist fallback
+      function saveLocalTicket(data){
+        try{
+          const key='lixby_contact_fallback';
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          arr.unshift(data);
+          localStorage.setItem(key, JSON.stringify(arr.slice(0,50)));
+        }catch(e){ console.warn('saveLocalTicket err', e); }
+      }
+
+      // submit handler
+      sendBtn.addEventListener('click', async () => {
+        statusEl.innerHTML = '';
+        // honeypot check
+        if (honeypot && honeypot.value) { showError('Spam detectado'); return; }
+
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const subject = document.getElementById('subject').value.trim();
+        const message = document.getElementById('message').value.trim();
+
+        if (!name || !email || !subject || !message) { showError('Completa todos los campos obligatorios.'); return; }
+
+        // disable UI
+        sendBtn.disabled = true; sendBtn.textContent = 'Enviando...';
+
+        const ticket = {
+          id: `CT-${Date.now().toString(36).toUpperCase().slice(-8)}`,
+          name, email, subject, message,
+          attachments: attached.map(f => ({name:f.name,size:f.size,type:f.type})),
+          createdAt: new Date().toISOString()
+        };
+
+        // Try EmailJS
+        try {
+          const ok = await ensureEmailJs();
+          if (!ok) throw new Error('EmailJS no configurado');
+          // ensure the form has minimal required fields names that template expects:
+          // (we use names: from_name, from_email, subject, message)
+          // attempt sendForm (will include filesInput if user selected files)
+          await emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, form);
+          showStatus('Mensaje enviado. Te contactaremos pronto.');
+          saveLocalTicket({ ...ticket, status:'sent' });
+        } catch (err) {
+          console.warn('EmailJS fallo', err);
+          // fallback: save local and inform user
+          saveLocalTicket({ ...ticket, status:'pending' });
+          showError('No se pudo enviar por email. Mensaje guardado localmente.');
+        } finally {
+          sendBtn.disabled = false; sendBtn.textContent = 'Enviar mensaje';
+          attached.forEach(f => f.objectURL && URL.revokeObjectURL(f));
+          attached = [];
+          renderAttachments();
+          form.reset();
+        }
+      });
+
+      // keyboard accessibility: Enter/Space in dropzone
+      dropzone.addEventListener('keyup', (e) => { if (e.key === 'Enter') filesInput.click(); });
+
+    })();
+  </script>
+</body>
+</html>
