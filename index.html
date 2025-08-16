@@ -290,33 +290,20 @@
       <p class="lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
     </div>
 
-    <!-- Añadido enctype para poder enviar attachments vía EmailJS sendForm (si tu template lo soporta) -->
-    <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;" enctype="multipart/form-data">
+    <!-- Añadido: hidden ticket_id para que EmailJS reciba un identificador único del ticket -->
+    <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;">
       <input id="contactName" name="from_name" type="text" placeholder="Nombre" required autocomplete="name">
       <input id="contactEmail" name="from_email" type="email" placeholder="Correo" required autocomplete="email">
-      <input id="contactSubject" name="subject" type="text" placeholder="Asunto (opcional)" />
-      <select id="contactProduct" name="product" aria-label="Producto relacionado (opcional)">
-        <option value="">— Producto relacionado —</option>
-        <option value="lixby-one-air">Lixby One Air</option>
-        <option value="lixby-one">Lixby One</option>
-        <option value="lixby-one-pro">Lixby One Pro</option>
-      </select>
-
       <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
 
-      <!-- archivo(s) opcional(es) para diagnóstico / captura (EmailJS soporta file inputs en sendForm si tu plantilla lo permite) -->
-      <label for="contactFiles" style="font-size:0.9rem;color:var(--muted);">Adjuntar archivos (logs / capturas) — opcional</label>
-      <input id="contactFiles" name="attachments" type="file" multiple accept=".png,.jpg,.jpeg,.txt,.log,.pdf" />
-
-      <!-- hidden ticket id para trazar internamente -->
-      <input type="hidden" id="ticketId" name="ticket_id" value="">
+      <!-- hidden field que enviaremos a EmailJS como {{ticket_id}} -->
+      <input id="ticketId" type="hidden" name="ticket_id" value="">
 
       <div class="actions">
         <button type="button" class="btn ghost" onclick="document.getElementById('contactForm').reset();">Borrar</button>
         <button type="submit" id="contactSend" class="btn primary">Enviar</button>
       </div>
       <div id="contactSuccess" class="contact-success" role="status" aria-live="polite">Mensaje enviado. ¡Gracias! Te contestaremos pronto.</div>
-      <div id="contactError" role="alert" style="display:none;color:#ffb4b4;margin-top:8px;"></div>
     </form>
   </section>
 
@@ -746,9 +733,12 @@
     window.location.href = 'producto.html?id=' + encodeURIComponent(pid);
   });
 
-  // ---------- CONTACT: EmailJS lazy-load al enviar (mejorado para tickets con attachments) ----------
-  // Esta versión usa emailjs.sendForm para enviar el formulario (incluyendo inputs file)
-  // RECUERDA: reemplaza SERVICE_ID, TEMPLATE_ID y USER_ID por tus valores en EmailJS dashboard.
+  // ---------- CONTACT: EmailJS lazy-load al enviar ----------
+  // EmailJS configuration (tus credenciales)
+  // USERID: xsKpaFjbRsS95AK3i
+  // SERVICE ID: service_tagcpgm
+  // TEMPLATE ID: template_l1e0go2
+
   async function ensureEmailJs(){
     if (window.emailjs && typeof window.emailjs.sendForm === 'function') return;
     await new Promise((res, rej) => {
@@ -759,102 +749,73 @@
       s.onerror = () => rej(new Error('EmailJS load failed'));
       document.head.appendChild(s);
     });
-    try {
-      // Inicializa EmailJS: cambia 'YOUR_EMAILJS_USERID' por tu user id
-      if (window.emailjs && typeof emailjs.init === 'function') emailjs.init('YOUR_EMAILJS_USERID');
-      // Nota: si ya tenías una key real en el proyecto, puedes dejarla.
-    } catch(e){ console.warn('EmailJS init failed', e); }
+    try { if (window.emailjs && typeof emailjs.init === 'function') emailjs.init('xsKpaFjbRsS95AK3i'); } catch(e){ console.warn('EmailJS init failed', e); }
   }
 
   (function initContact(){
     const form = document.getElementById('contactForm');
     const sendBtn = document.getElementById('contactSend');
     const successEl = document.getElementById('contactSuccess');
-    const errorEl = document.getElementById('contactError');
-    const ticketIdEl = document.getElementById('ticketId');
+    const ticketHidden = document.getElementById('ticketId');
 
     if (!form) return;
 
-    // helper: genera id corto para el ticket
-    function makeTicketId(){ return 'LX-' + Date.now().toString(36).toUpperCase(); }
-
-    // fallback: guardar localmente los tickets (clave lixby_tickets_v1) para auditar si falla el envío
-    function saveLocalTicket(ticket){
-      try {
-        const key = 'lixby_tickets_v1';
-        const arr = JSON.parse(localStorage.getItem(key) || '[]');
-        arr.unshift(ticket);
-        localStorage.setItem(key, JSON.stringify(arr));
-      } catch(e){
-        console.warn('saveLocalTicket failed', e);
-      }
+    // Helper: genera un ticket id legible y único
+    function generateTicketId(){
+      const t = 'LIXBY-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8).toUpperCase();
+      return t;
     }
 
     async function sendEmail(e){
       e.preventDefault();
-      errorEl.style.display = 'none';
-      const name = (document.getElementById('contactName')||{}).value.trim();
-      const email = (document.getElementById('contactEmail')||{}).value.trim();
-      const message = (document.getElementById('contactMessage')||{}).value.trim();
-      const subject = (document.getElementById('contactSubject')||{}).value.trim();
-      const product = (document.getElementById('contactProduct')||{}).value || '';
+      const name = document.getElementById('contactName').value.trim();
+      const email = document.getElementById('contactEmail').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+      if (!name || !email || !message) { alert('Por favor completa todos los campos.'); return; }
 
-      if (!name || !email || !message) { alert('Por favor completa todos los campos requeridos.'); return; }
-
-      // genera ticket id (se incluye en el email para rastreo)
-      const ticketId = makeTicketId();
-      ticketIdEl.value = ticketId;
+      // asignar ticket id al campo oculto justo antes de enviar
+      const ticket = generateTicketId();
+      if (ticketHidden) ticketHidden.value = ticket;
 
       sendBtn.disabled = true;
       const prev = sendBtn.textContent; sendBtn.textContent = 'Enviando...';
 
       try {
         await ensureEmailJs();
-
         if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
           throw new Error('EmailJS SDK no disponible');
         }
+        // Enviamos usando los IDs que nos pasaste
+        await emailjs.sendForm('service_tagcpgm', 'template_l1e0go2', '#contactForm');
 
-        // Envía el form. Sustituye 'YOUR_SERVICE_ID' y 'YOUR_TEMPLATE_ID' por tus credenciales EmailJS.
-        // Si tu plantilla espera campos llamados from_name, from_email, subject, message, product, ticket_id and attachments,
-        // emailjs.sendForm los mapeará automáticamente (incluyendo inputs file en la mayoría de configuraciones).
-        await emailjs.sendForm('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', '#contactForm');
-
-        // respuesta correcta
+        // mostrar éxito visual y limpiar
         successEl.style.display = 'block';
-        errorEl.style.display = 'none';
-
-        // guarda una copia local (opcional) con metadatos
-        const ticket = {
-          id: ticketId,
-          name, email, subject, product, message,
-          createdAt: Date.now(),
-          sentVia: 'emailjs'
-        };
-        saveLocalTicket(ticket);
-
         form.reset();
+        // opcional: guardamos una copia local como redundancia (audit trail del cliente)
+        try {
+          const key = 'lixby_tickets_v1';
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          arr.push({ ticket_id: ticket, name: name, email: email, message: message, created_at: new Date().toISOString(), status: 'sent' });
+          localStorage.setItem(key, JSON.stringify(arr));
+        } catch (errLocal) { /* no crítico */ }
+
         // ocultar mensaje tras unos segundos
-        setTimeout(()=> successEl.style.display = 'none', 7000);
+        setTimeout(()=> successEl.style.display = 'none', 6000);
       } catch (err) {
         console.error('Error enviando con EmailJS:', err);
-        // guarda localmente para reintento/diagnóstico
-        const ticket = {
-          id: ticketIdEl.value || makeTicketId(),
-          name, email, subject, product, message,
-          createdAt: Date.now(),
-          sentVia: 'local_fallback',
-          error: String(err && err.message ? err.message : err)
-        };
-        saveLocalTicket(ticket);
+        // fallback: guardar ticket localmente para reintento manual
+        try {
+          const key = 'lixby_tickets_v1';
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          arr.push({ ticket_id: ticket, name: name, email: email, message: message, created_at: new Date().toISOString(), status: 'failed', error: String(err) });
+          localStorage.setItem(key, JSON.stringify(arr));
+        } catch (errLocal) { console.warn('Fallback save failed', errLocal); }
 
-        errorEl.style.display = 'block';
-        errorEl.textContent = 'No se pudo enviar el mensaje ahora. Se ha guardado localmente y puedes intentarlo de nuevo más tarde.';
+        alert('No se pudo enviar el mensaje vía EmailJS. Hemos guardado una copia local del ticket y puedes reintentar más tarde.');
       } finally {
         sendBtn.disabled = false; sendBtn.textContent = prev;
       }
     }
-
     form.addEventListener('submit', sendEmail);
   })();
 
@@ -1243,6 +1204,11 @@
 
 <!-- tu script principal global (si existe) -->
 <script src="script.js" defer></script>
+
+<!-- AÑADIDO: incluir tu gist (haste / snippet) -->
+<!-- El script del gist puede contener añadidos, snippets o utilidades que quieras inyectar.
+     Si tu gist exporta JS, se ejecutará aquí. -->
+<script src="https://gist.github.com/Fabiinformatic/5bad9397bee30659c5cbd57861abf1bf.js"></script>
 
 </body>
 </html>
