@@ -1210,5 +1210,202 @@
      Si tu gist exporta JS, se ejecutará aquí. -->
 <script src="https://gist.github.com/Fabiinformatic/5bad9397bee30659c5cbd57861abf1bf.js"></script>
 
+<!-- =============================
+     COOKIE BANNER (insertado en index)
+     - Coloca scripts que quieras condicionar con data-cookie="analytics" o "marketing"
+     - EmailJS y scripts necesarios deben dejarse sin data-cookie para funcionar siempre
+   ============================= -->
+<style id="lixby-cookie-style">
+  #lixbyCookieBanner{position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;box-shadow:0 8px 26px rgba(2,6,12,0.28);background:linear-gradient(180deg,#fff 6%, #f8fafb 100%);color:#07101a;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  #lixbyCookieBanner .text{flex:1;font-size:0.95rem}
+  #lixbyCookieBanner .actions{display:flex;gap:8px;align-items:center}
+  #lixbyCookieBanner button{padding:8px 10px;border-radius:8px;border:1px solid rgba(2,6,12,0.06);background:transparent;cursor:pointer}
+  #lixbyCookieBanner .primary{background:var(--accent);color:#00121a;border:0;font-weight:700}
+  #lixbyCookiePrefs{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:100000;padding:18px;border-radius:12px;max-width:520px;width:94%;box-shadow:0 18px 40px rgba(2,6,12,0.32);background:#fff;color:#07101a}
+  #lixbyCookiePrefs h3{margin:0 0 8px}
+  #lixbyCookiePrefs .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(2,6,12,0.04)}
+  #lixbyCookieOverlay{position:fixed;inset:0;background:rgba(2,6,12,0.28);z-index:99999;display:none}
+  @media (max-width:640px){ #lixbyCookieBanner{flex-direction:column;align-items:flex-start} #lixbyCookieBanner .actions{width:100%;justify-content:flex-end} }
+</style>
+
+<div id="lixbyCookieOverlay" aria-hidden="true"></div>
+
+<div id="lixbyCookieBanner" role="dialog" aria-live="polite" aria-label="Aviso cookies">
+  <div class="text">
+    Usamos cookies para mejorar la experiencia. Puedes aceptar todo o elegir preferencias. No bloqueamos funciones esenciales.
+  </div>
+  <div class="actions" role="group" aria-label="Acciones cookies">
+    <button id="lixbyCookiePrefsBtn" type="button">Preferencias</button>
+    <button id="lixbyCookieReject" type="button">Rechazar</button>
+    <button id="lixbyCookieAccept" class="primary" type="button">Aceptar todo</button>
+  </div>
+</div>
+
+<div id="lixbyCookiePrefs" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lixbyCookieTitle">
+  <h3 id="lixbyCookieTitle">Preferencias de cookies</h3>
+  <p class="muted" style="margin:6px 0 12px">Activa o desactiva categorías. Las cookies funcionales son necesarias para que el sitio funcione y no se pueden desactivar.</p>
+  <div class="row"><div>Funcionales (necesarias)</div><div aria-hidden="true">Siempre activas</div></div>
+  <div class="row">
+    <div>Analítica</div>
+    <div><label><input id="cookie_analytics" type="checkbox"> Permitir</label></div>
+  </div>
+  <div class="row">
+    <div>Marketing</div>
+    <div><label><input id="cookie_marketing" type="checkbox"> Permitir</label></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+    <button id="lixbyCookieCancel" type="button">Cancelar</button>
+    <button id="lixbyCookieSave" class="primary" type="button">Guardar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const KEY = 'lixby_cookie_consent_v1';
+  const banner = document.getElementById('lixbyCookieBanner');
+  const overlay = document.getElementById('lixbyCookieOverlay');
+  const prefs = document.getElementById('lixbyCookiePrefs');
+  const btnPrefs = document.getElementById('lixbyCookiePrefsBtn');
+  const btnAccept = document.getElementById('lixbyCookieAccept');
+  const btnReject = document.getElementById('lixbyCookieReject');
+  const btnSave = document.getElementById('lixbyCookieSave');
+  const btnCancel = document.getElementById('lixbyCookieCancel');
+  const chkAnalytics = document.getElementById('cookie_analytics');
+  const chkMarketing = document.getElementById('cookie_marketing');
+
+  const DEFAULT = { functional: true, analytics: false, marketing: false };
+
+  function readConsent(){
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e){ return null; }
+  }
+  function writeConsent(obj){
+    try { localStorage.setItem(KEY, JSON.stringify(obj)); } catch(e){ console.warn('No localStorage'); }
+  }
+  function hideBanner(){
+    if (banner) banner.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+  }
+  function showBanner(){
+    if (banner) banner.style.display = '';
+  }
+  function openPrefs(){
+    if (!prefs || !overlay) return;
+    prefs.style.display = 'block';
+    prefs.setAttribute('aria-hidden','false');
+    overlay.style.display = 'block';
+    overlay.setAttribute('aria-hidden','false');
+    // populate checkboxes from stored consent
+    const c = readConsent() || DEFAULT;
+    chkAnalytics.checked = !!c.analytics;
+    chkMarketing.checked = !!c.marketing;
+  }
+  function closePrefs(){
+    if (!prefs || !overlay) return;
+    prefs.style.display = 'none';
+    prefs.setAttribute('aria-hidden','true');
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden','true');
+  }
+
+  // Inject deferred scripts marked with data-cookie attribute
+  function injectDeferredScripts(consent){
+    // find all scripts with data-cookie
+    const nodes = document.querySelectorAll('script[data-cookie]');
+    nodes.forEach(node => {
+      const cat = node.getAttribute('data-cookie'); // 'analytics' or 'marketing'
+      if (!cat) return;
+      if (!consent[cat]) return; // not allowed
+      // if it already has been replaced, skip
+      if (node.getAttribute('data-cookie-loaded') === '1') return;
+      const src = node.getAttribute('data-src');
+      const isInline = node.getAttribute('data-cookie-inline') !== null || node.type === 'text/plain';
+      // create actual script
+      if (src) {
+        const s = document.createElement('script');
+        s.src = src;
+        if (node.hasAttribute('data-async')) s.async = true;
+        if (node.hasAttribute('data-defer')) s.defer = true;
+        // copy nonce if present
+        if (node.getAttribute('nonce')) s.setAttribute('nonce', node.getAttribute('nonce'));
+        s.onload = () => { node.setAttribute('data-cookie-loaded','1'); };
+        s.onerror = () => { node.setAttribute('data-cookie-loaded','err'); };
+        node.parentNode.insertBefore(s, node.nextSibling);
+      } else if (isInline) {
+        // re-create inline content
+        const s = document.createElement('script');
+        s.type = 'text/javascript';
+        s.text = node.textContent || node.innerText || '';
+        node.parentNode.insertBefore(s, node.nextSibling);
+        node.setAttribute('data-cookie-loaded','1');
+      }
+    });
+  }
+
+  // Apply consent: store and inject scripts
+  function applyConsent(obj){
+    const consent = Object.assign({}, DEFAULT, obj || {});
+    writeConsent(consent);
+    hideBanner();
+    try { window.LIXBY_Cookie = window.LIXBY_Cookie || {}; } catch(e) {}
+    window.LIXBY_Cookie._consent = consent;
+    // inject allowed deferred scripts
+    injectDeferredScripts(consent);
+  }
+
+  // Init: if consent exists -> apply and hide; else show banner
+  const existing = readConsent();
+  if (existing) {
+    // apply silently
+    applyConsent(existing);
+  } else {
+    showBanner();
+  }
+
+  // Buttons
+  btnAccept && btnAccept.addEventListener('click', ()=> {
+    applyConsent({ functional:true, analytics:true, marketing:true });
+  });
+  btnReject && btnReject.addEventListener('click', ()=> {
+    applyConsent({ functional:true, analytics:false, marketing:false });
+  });
+  btnPrefs && btnPrefs.addEventListener('click', ()=> openPrefs());
+  btnCancel && btnCancel.addEventListener('click', ()=> closePrefs());
+  btnSave && btnSave.addEventListener('click', ()=> {
+    const c = { functional:true, analytics: !!chkAnalytics.checked, marketing: !!chkMarketing.checked };
+    applyConsent(c);
+    closePrefs();
+  });
+
+  // Expose API
+  window.LIXBY_Cookie = {
+    get: function(){ return readConsent() || DEFAULT; },
+    set: function(obj){ applyConsent(obj); },
+    openPreferences: function(){ openPrefs(); }
+  };
+
+  // Accessibility: close prefs with Esc
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (prefs && prefs.style.display === 'block') closePrefs();
+    }
+  });
+
+  // Small helper: auto-inject when consent changed by other tabs
+  window.addEventListener('storage', (e)=> {
+    if (e.key === KEY) {
+      const c = readConsent();
+      if (c) {
+        injectDeferredScripts(c);
+      }
+    }
+  });
+
+})();
+</script>
+
 </body>
 </html>
