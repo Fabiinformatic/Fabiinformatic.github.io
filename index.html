@@ -59,6 +59,21 @@
     @media (max-width:900px){
       .contact-min { flex-direction:column; } .contact-min .form{ width:100% }
     }
+
+    /* small header account holder */
+    .account-holder-btn {
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 8px;
+      border-radius:10px;
+      background: transparent;
+      border:1px solid rgba(255,255,255,0.03);
+      color:var(--text);
+      cursor:pointer;
+    }
+    .account-holder-btn img { width:32px; height:32px; border-radius:8px; object-fit:cover; display:block; }
+    .account-holder-btn .name { font-weight:700; font-size:0.95rem; color:var(--muted); }
   </style>
 
   <!-- Añadir: glass util (liquid glass styling consistente) -->
@@ -128,7 +143,10 @@
         </div>
       </div>
 
-      <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta" type="button">Cuenta</button>
+      <div id="accountContainer">
+        <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta" type="button">Cuenta</button>
+      </div>
+
       <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema" type="button">◐</button>
     </div>
   </div>
@@ -174,7 +192,8 @@
     <div class="hero-content">
       <h1 id="hero-title">La tecnología que te entiende</h1>
       <p>Innovación minimalista para tu día a día</p>
-      <a href="#productos" class="btn primary" data-i18n="btn.explorar">Explorar</a>
+      <!-- changed to explorar.html as requested -->
+      <a href="explorar.html" class="btn primary" data-i18n="btn.explorar">Explorar</a>
     </div>
   </section>
 
@@ -310,13 +329,6 @@
   function formatPriceNum(num){ return CURRENCY.format(Number(num) || 0); }
   function showDebug(msg){ const el=document.getElementById('debug'); if(!el) return; el.style.display='block'; el.textContent += msg + "\n"; console.log('DEBUG',msg); }
 
-  // performance: proxiedUrl (menor tamaño)
-  function proxiedUrl(originalUrl){
-    if (!originalUrl) return '';
-    const stripped = String(originalUrl).replace(/^https?:\/\//,'');
-    return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=900&q=80`;
-  }
-
   // set year
   try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
 
@@ -338,6 +350,14 @@
   const checkoutBtn = document.getElementById('checkoutBtn');
   const announcements = document.getElementById('announcements');
 
+  // panel elements
+  const cartPanel = document.getElementById('cartPanel');
+  const cartBackdrop = document.getElementById('cartBackdrop');
+  const cartPanelClose = document.getElementById('cartPanelClose');
+  const cartPanelItems = document.getElementById('cartPanelItems');
+  const cartPanelTotal = document.getElementById('cartPanelTotal');
+  const cartPanelClear = document.getElementById('cartPanelClear');
+
   function updateMiniCartUI(){
     if (!cartCount) return;
     const totalQty = cart.reduce((s,i)=>s+(i.qty||0),0);
@@ -345,7 +365,7 @@
     if (!miniCartItems) return;
     miniCartItems.innerHTML = '';
     if (cart.length === 0) {
-      miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
+      miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">'+ (getTranslation('cart.empty') || 'Tu carrito está vacío.') +'</div>';
       if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(0);
       return;
     }
@@ -366,7 +386,7 @@
 
       const remove = document.createElement('button'); remove.className='remove'; remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
       remove.setAttribute('type','button');
-      remove.addEventListener('click', (e)=>{ e.stopPropagation(); cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
+      remove.addEventListener('click', (e)=>{ e.stopPropagation(); cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); updateCartPanel(); });
       item.appendChild(img); item.appendChild(meta); item.appendChild(remove);
       frag.appendChild(item);
       total += (it.priceNum || parsePrice(it.price)) * (it.qty||1);
@@ -375,34 +395,125 @@
     if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(total);
   }
 
+  function updateCartPanel(){
+    if (!cartPanelItems) return;
+    cartPanelItems.innerHTML = '';
+    if (cart.length === 0) {
+      cartPanelItems.innerHTML = '<div style="padding:12px;color:var(--muted)">'+ (getTranslation('cart.empty') || 'Tu carrito está vacío.') +'</div>';
+      if (cartPanelTotal) cartPanelTotal.textContent = formatPriceNum(0);
+      return;
+    }
+    let total = 0;
+    const frag = document.createDocumentFragment();
+    cart.forEach((it, idx) => {
+      const row = document.createElement('div');
+      row.style.display='flex'; row.style.gap='12px'; row.style.alignItems='center'; row.style.padding='10px 0'; row.style.borderBottom='1px solid rgba(255,255,255,0.03)';
+      const img = document.createElement('img'); img.src = it.image || ''; img.alt = it.name; img.style.width='64px'; img.style.height='64px'; img.style.objectFit='cover'; img.style.borderRadius='8px';
+      const meta = document.createElement('div'); meta.style.flex='1';
+      const title = document.createElement('div'); title.style.fontWeight='700'; title.textContent = it.name || '';
+      const qty = document.createElement('div'); qty.style.color='var(--muted)'; qty.textContent = `× ${it.qty || 1} — ${formatPriceNum(it.priceNum || parsePrice(it.price))}`;
+      meta.appendChild(title); meta.appendChild(qty);
+      const remove = document.createElement('button'); remove.className='text-btn'; remove.textContent='Eliminar'; remove.setAttribute('type','button');
+      remove.addEventListener('click', ()=> { cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); updateCartPanel(); });
+      row.appendChild(img); row.appendChild(meta); row.appendChild(remove);
+      frag.appendChild(row);
+      total += (it.priceNum || parsePrice(it.price)) * (it.qty||1);
+    });
+    cartPanelItems.appendChild(frag);
+    if (cartPanelTotal) cartPanelTotal.textContent = formatPriceNum(total);
+  }
+
   // ensure miniCart style reflects aria-hidden initially
   if (miniCart) {
     if (miniCart.getAttribute('aria-hidden') === 'false') miniCart.style.display = 'flex';
     else miniCart.style.display = '';
   }
 
-  if (cartBtn && miniCart) {
-    cartBtn.addEventListener('click', (e) => {
-      const shown = miniCart.getAttribute('aria-hidden') === 'false';
-      const newState = !shown;
-      miniCart.setAttribute('aria-hidden', String(!shown));
-      try { cartBtn.setAttribute('aria-expanded', String(newState)); } catch(e){}
-      // ensure visible/hidden visually
-      if (newState) miniCart.style.display = 'flex';
-      else miniCart.style.display = '';
-    });
-    document.addEventListener('click', (e) => {
-      try {
-        if (!cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
-          miniCart.setAttribute('aria-hidden','true');
-          miniCart.style.display = '';
-          try { cartBtn.setAttribute('aria-expanded', 'false'); } catch(e){}
-        }
-      } catch(e){}
-    });
+  // Hover show mini-cart & click open panel
+  (function wireCartHoverAndClick(){
+    const wrapper = document.querySelector('.cart-wrapper');
+    let hideTimeout = null;
+
+    function showMini(){
+      if (!miniCart) return;
+      miniCart.setAttribute('aria-hidden','false');
+      miniCart.style.display = 'flex';
+      try { cartBtn.setAttribute('aria-expanded','true'); } catch(e){}
+    }
+    function hideMini(){
+      if (!miniCart) return;
+      miniCart.setAttribute('aria-hidden','true');
+      miniCart.style.display = '';
+      try { cartBtn.setAttribute('aria-expanded','false'); } catch(e){}
+    }
+
+    // show on hover enter; keep visible while hovering miniCart
+    if (wrapper) {
+      wrapper.addEventListener('mouseenter', (e) => {
+        clearTimeout(hideTimeout);
+        showMini();
+      });
+      wrapper.addEventListener('mouseleave', (e) => {
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+          // do not hide if cart panel is open
+          if (cartPanel && cartPanel.classList.contains('open')) return;
+          hideMini();
+        }, 180);
+      });
+    }
+    if (miniCart) {
+      miniCart.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); showMini(); });
+      miniCart.addEventListener('mouseleave', () => {
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+          if (cartPanel && cartPanel.classList.contains('open')) return;
+          hideMini();
+        }, 180);
+      });
+    }
+
+    // click opens panel (and hide mini)
+    if (cartBtn) {
+      cartBtn.addEventListener('click', (e) => {
+        openCartPanel();
+      });
+    }
+
+    // also wire viewCartBtn to open panel
+    const viewBtn = document.getElementById('viewCartBtn');
+    if (viewBtn) viewBtn.addEventListener('click', (e)=> openCartPanel());
+  })();
+
+  // Panel control functions
+  function openCartPanel(){
+    if (!cartPanel || !cartBackdrop) return;
+    cartPanel.classList.add('open');
+    cartBackdrop.classList.add('open');
+    cartPanel.setAttribute('aria-hidden','false');
+    cartBackdrop.setAttribute('aria-hidden','false');
+    // ensure mini hidden
+    if (miniCart) { miniCart.setAttribute('aria-hidden','true'); miniCart.style.display = ''; try { cartBtn.setAttribute('aria-expanded','false'); } catch(e){} }
+    // update content
+    updateCartPanel();
   }
-  if (clearCartBtn) clearCartBtn.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); });
+  function closeCartPanel(){
+    if (!cartPanel || !cartBackdrop) return;
+    cartPanel.classList.remove('open');
+    cartBackdrop.classList.remove('open');
+    cartPanel.setAttribute('aria-hidden','true');
+    cartBackdrop.setAttribute('aria-hidden','true');
+  }
+  if (cartBackdrop) cartBackdrop.addEventListener('click', closeCartPanel);
+  if (cartPanelClose) cartPanelClose.addEventListener('click', closeCartPanel);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (cartPanel && cartPanel.classList.contains('open')) closeCartPanel(); } });
+
+  // clear handlers for panel & mini
+  if (clearCartBtn) clearCartBtn.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); updateCartPanel(); });
+  if (cartPanelClear) cartPanelClear.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); updateCartPanel(); });
+
   if (checkoutBtn) checkoutBtn.addEventListener('click', () => { if (cart.length===0) return alert('El carrito está vacío'); alert('Simulación de checkout: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
+  if (document.getElementById('cartPanelCheckout')) document.getElementById('cartPanelCheckout').addEventListener('click', () => { if (cart.length===0) return alert('El carrito está vacío'); alert('Simulación de checkout desde panel: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
 
   window.addToCart = function(product){
     const existing = cart.find(p => p.id === product.id);
@@ -410,12 +521,14 @@
     else cart.push({ id: product.id, name: product.name, price: product.price, priceNum: Number(product.priceNum || parsePrice(product.price) || 0), qty:1, image: product.image });
     saveCart(cart);
     updateMiniCartUI();
+    updateCartPanel();
     if (miniCart) { miniCart.setAttribute('aria-hidden','false'); miniCart.style.display = 'flex'; try { cartBtn.setAttribute('aria-expanded','true'); } catch(e){} setTimeout(()=>{ if (miniCart) { miniCart.setAttribute('aria-hidden','true'); miniCart.style.display = ''; try { cartBtn.setAttribute('aria-expanded','false'); } catch(e){} } }, 2200); }
     // announce for screen readers
     try { if (announcements) announcements.textContent = `${product.name} añadido al carrito.`; } catch(e){}
   };
 
   updateMiniCartUI();
+  updateCartPanel();
 
   // LANG / I18N (simple)
   const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu'), langLabel = document.getElementById('langLabel');
@@ -425,6 +538,12 @@
     fr: { "nav.inicio":"Accueil","nav.productos":"Produits","nav.contacto":"Contact","nav.conocenos":"À propos","cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer","btn.add":"Ajouter au panier","btn.added":"Ajouté","btn.explorar":"Explorer","btn.enviar":"Envoyer","theme.toggle":"Changer el thème","cart.empty":"Votre panier est vide." }
   };
   let currentLang = localStorage.getItem('lixby_lang') || 'es';
+  function getTranslation(key){
+    try {
+      const map = translations[currentLang] || translations['es'];
+      return (map && map[key]) ? map[key] : null;
+    } catch(e){ return null; }
+  }
   function applyTranslations(lang){
     const map = translations[lang] || translations['es'];
     document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -436,6 +555,9 @@
     });
     const names = { es:'Español', en:'English', fr:'Français' };
     if (langLabel) langLabel.textContent = names[lang] || names['es'];
+    // refresh cart empty message
+    updateMiniCartUI();
+    updateCartPanel();
   }
   function setLang(l){
     if (!translations[l]) l = 'es';
@@ -484,7 +606,7 @@
       const existing = cart.find(i => i.id === payload.id);
       if (existing) existing.qty = (existing.qty||1) + 1;
       else cart.push({ id: payload.id, name: payload.name || 'Producto', price: payload.price || '0€', priceNum: payload.priceNum || 0, qty:1, image: payload.image || '' });
-      saveCart(cart); updateMiniCartUI();
+      saveCart(cart); updateMiniCartUI(); updateCartPanel();
       try { if (announcements) announcements.textContent = `${payload.name} añadido al carrito.`; } catch(e){}
     }
     const original = btn.textContent;
@@ -554,43 +676,6 @@
       }
     }
     form.addEventListener('submit', sendEmail);
-  })();
-
-  // small fallback panel toggle
-  (function panelToggle(){
-    const viewBtn = document.getElementById('viewCartBtn');
-    const cartPanel = document.getElementById('cartPanel');
-    const cartBackdrop = document.getElementById('cartBackdrop');
-    const cartPanelClose = document.getElementById('cartPanelClose');
-    function setPanel(open){
-      if(!cartPanel || !cartBackdrop) return;
-      cartPanel.classList.toggle('open', !!open);
-      cartBackdrop.classList.toggle('open', !!open);
-      cartPanel.setAttribute('aria-hidden', String(!open));
-      cartBackdrop.setAttribute('aria-hidden', String(!open));
-    }
-    if (viewBtn) viewBtn.addEventListener('click', ()=> setPanel(true));
-    if (cartBackdrop) cartBackdrop.addEventListener('click', ()=> setPanel(false));
-    if (cartPanelClose) cartPanelClose.addEventListener('click', ()=> setPanel(false));
-  })();
-
-  // ---- AÑADIDO: hacer que "Ver carrito" lleve a carrito.html sin borrar el botón original ----
-  (function enableViewCartNavigation(){
-    try {
-      const orig = document.getElementById('viewCartBtn');
-      if (!orig) return;
-      // Si ya es un enlace <a>, no tocar
-      if (orig.tagName.toLowerCase() === 'a') return;
-      // clonamos sin listeners
-      const clone = orig.cloneNode(true);
-      if (!clone.hasAttribute('type')) clone.setAttribute('type','button');
-      clone.addEventListener('click', (e) => {
-        window.location.href = 'carrito.html';
-      });
-      orig.parentNode.replaceChild(clone, orig);
-    } catch (err) {
-      console.warn('No se pudo habilitar navegación a carrito:', err);
-    }
   })();
 
   // export for other modules if needed
@@ -674,7 +759,160 @@
 })();
 </script>
 
-<!-- tu script principal global (hover preview, account behavior, etc.) -->
+<!-- ===== New: lightweight account/auth UI (localStorage-backed demo) ===== -->
+<script>
+(function(){
+  // Demo auth behavior: stores minimal user in localStorage.lixby_user
+  const ACCOUNT_KEY = 'lixby_user';
+  const SEEN_KEY = 'lixby_seen_auth';
+  const guestImg = 'https://ohsobserver.com/wp-content/uploads/2022/12/Guest-user.png';
+
+  const accountContainer = document.getElementById('accountContainer');
+  const accountBtn = document.getElementById('accountBtn');
+  const authOverlay = document.getElementById('authOverlay');
+  const authClose = document.getElementById('authClose');
+  const btnAnonymous = document.getElementById('btnAnonymous');
+  const btnGoogle = document.getElementById('btnGoogle');
+  const btnGithub = document.getElementById('btnGitHub');
+  const btnEmailSignIn = document.getElementById('btnEmailSignIn');
+  const btnEmailSignUp = document.getElementById('btnEmailSignUp');
+  const authEmailInput = document.getElementById('authEmail');
+
+  function getLocalUser() {
+    try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY)); } catch(e){ return null; }
+  }
+  function setLocalUser(u) {
+    try { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(u)); } catch(e){}
+    renderHeaderUser(u);
+  }
+  function clearLocalUser(){
+    try { localStorage.removeItem(ACCOUNT_KEY); } catch(e){}
+    renderHeaderUser(null);
+  }
+
+  function renderHeaderUser(user){
+    // if no user -> show original account button
+    const container = accountContainer;
+    if (!container) return;
+    container.innerHTML = '';
+    if (!user) {
+      // show 'Cuenta' button
+      const btn = document.createElement('button');
+      btn.id = 'accountBtn';
+      btn.className = 'btn ghost';
+      btn.setAttribute('type','button');
+      btn.textContent = 'Cuenta';
+      btn.addEventListener('click', () => openAuthOverlay());
+      container.appendChild(btn);
+      return;
+    }
+    // show avatar + name (click goes to cuenta.html)
+    const wrapper = document.createElement('button');
+    wrapper.className = 'account-holder-btn';
+    wrapper.setAttribute('type','button');
+    wrapper.addEventListener('click', () => {
+      // go to cuenta.html (or open menu)
+      location.href = 'cuenta.html';
+    });
+    const img = document.createElement('img');
+    img.alt = (user.name || 'Usuario') + ' — avatar';
+    img.src = user.photoURL || guestImg;
+    const span = document.createElement('span');
+    span.className = 'name';
+    span.textContent = user.name || (user.email ? user.email.split('@')[0] : 'Usuario');
+    wrapper.appendChild(img);
+    wrapper.appendChild(span);
+    container.appendChild(wrapper);
+  }
+
+  function openAuthOverlay(){
+    if (!authOverlay) return;
+    authOverlay.style.display = 'block';
+    authOverlay.setAttribute('aria-hidden','false');
+    // focus first control
+    setTimeout(()=> {
+      (authEmailInput || document.querySelector('#btnAnonymous')).focus();
+    }, 80);
+  }
+  function closeAuthOverlay(){
+    if (!authOverlay) return;
+    authOverlay.style.display = 'none';
+    authOverlay.setAttribute('aria-hidden','true');
+    // mark seen so it doesn't auto-open again
+    try { localStorage.setItem(SEEN_KEY, '1'); } catch(e){}
+  }
+
+  // Wire initial render
+  renderHeaderUser(getLocalUser());
+
+  // Show auth overlay on first visit if no user and not seen
+  try {
+    const seen = localStorage.getItem(SEEN_KEY);
+    const user = getLocalUser();
+    if (!user && !seen) {
+      // small delay so header paints first
+      setTimeout(openAuthOverlay, 700);
+    }
+  } catch(e){}
+
+  // handlers
+  if (authClose) authClose.addEventListener('click', () => { closeAuthOverlay(); });
+  if (btnAnonymous) btnAnonymous.addEventListener('click', () => {
+    const user = { uid: 'guest_' + Date.now(), name: 'Invitado', email: null, photoURL: guestImg, isAnonymous: true };
+    setLocalUser(user);
+    closeAuthOverlay();
+  });
+
+  // Simulated social/login flows (demo only)
+  if (btnGoogle) btnGoogle.addEventListener('click', () => {
+    const user = { uid: 'google_' + Date.now(), name: 'Usuario Google', email: 'usuario@gmail.com', photoURL: 'https://via.placeholder.com/64x64?text=G' };
+    setLocalUser(user); closeAuthOverlay();
+  });
+  if (btnGithub) btnGithub.addEventListener('click', () => {
+    const user = { uid: 'gh_' + Date.now(), name: 'Usuario GH', email: 'usuario@github.com', photoURL: 'https://via.placeholder.com/64x64?text=GH' };
+    setLocalUser(user); closeAuthOverlay();
+  });
+
+  if (btnEmailSignIn) btnEmailSignIn.addEventListener('click', () => {
+    const email = (document.getElementById('authEmail')||{}).value || '';
+    const name = email ? (email.split('@')[0]) : 'Usuario';
+    const user = { uid: 'email_' + Date.now(), name: name, email: email || null, photoURL: 'https://via.placeholder.com/64x64?text=U' };
+    setLocalUser(user); closeAuthOverlay();
+  });
+  if (btnEmailSignUp) btnEmailSignUp.addEventListener('click', () => {
+    // same behavior for demo
+    const email = (document.getElementById('authEmail')||{}).value || '';
+    const name = email ? (email.split('@')[0]) : 'Nuevo';
+    const user = { uid: 'email_' + Date.now(), name: name, email: email || null, photoURL: 'https://via.placeholder.com/64x64?text=N' };
+    setLocalUser(user); closeAuthOverlay();
+  });
+
+  // allow clicking accountBtn to open auth overlay when unauthenticated
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    // if original accountBtn exists and was clicked
+    if (target && target.id === 'accountBtn') {
+      e.preventDefault();
+      const user = getLocalUser();
+      if (!user) openAuthOverlay();
+      else renderHeaderUser(user);
+    }
+  });
+
+  // expose for other modules
+  window.lixby = window.lixby || {};
+  window.lixby.auth = {
+    getUser: getLocalUser,
+    signOut: function(){
+      clearLocalUser();
+      try { location.reload(); } catch(e){}
+    }
+  };
+
+})();
+</script>
+
+<!-- tu script principal global (si existe) -->
 <script src="script.js" defer></script>
 
 </body>
