@@ -6,48 +6,112 @@
   <title>Explorar — LIXBY</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    :root{
+      --bg:#0b0c10; --panel:#0f1316; --muted:#aab3ba; --text:#e9eef2; --accent:#0a84ff;
+    }
+    body{ background:var(--bg); color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; }
     .explore-wrap { max-width:1200px; margin:28px auto; padding:20px; }
-    .explore-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .explore-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
     .search { display:flex; gap:8px; align-items:center; }
     .search input { padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.01); color:var(--text); min-width:240px; }
-    .filters { display:flex; gap:8px; align-items:center; }
+    .filters-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+    .filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .select, select { padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--text); }
     .grid-explore { display:grid; gap:18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .card-square { border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px; align-items:flex-start; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); cursor:pointer; }
+    .card-square { border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px; align-items:flex-start; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); cursor:pointer; transition:transform .14s; }
+    .card-square:hover { transform: translateY(-6px); box-shadow: 0 14px 34px rgba(0,0,0,0.6); }
     .card-square .thumb { width:100%; aspect-ratio:1/1; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#0f1113; }
     .card-square img { width:100%; height:100%; object-fit:contain; display:block; }
     .card-meta { width:100%; display:flex; justify-content:space-between; align-items:center; gap:8px; }
     .price { font-weight:800; color:var(--accent); }
     .tag { font-size:0.85rem; color:var(--muted); }
+    .facets { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .facet { background: rgba(255,255,255,0.03); padding:6px 8px; border-radius:8px; font-size:0.9rem; color:var(--muted); display:inline-flex; gap:8px; align-items:center; }
+    .chip { padding:6px 10px; border-radius:999px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer; }
+    .chip.active { background:var(--accent); color:#00121a; border-color:transparent; }
+    .controls { display:flex; gap:8px; align-items:center; }
+    .summary-line{ margin-bottom:12px; color:var(--muted); font-size:0.95rem; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .pager { display:flex; gap:8px; align-items:center; }
+    .btn { padding:8px 10px; border-radius:8px; border:0; cursor:pointer; background:transparent; color:var(--text); }
+    .btn.primary{ background:var(--accent); color:#00121a; font-weight:700; }
+    .small{ font-size:0.92rem; color:var(--muted); }
+    /* typeahead suggestions */
+    .suggestions { position:relative; }
+    .suggest-list { position:absolute; top:110%; left:0; right:0; background:var(--panel); border:1px solid rgba(255,255,255,0.04); border-radius:8px; z-index:60; max-height:200px; overflow:auto; box-shadow:0 12px 30px rgba(0,0,0,0.6); }
+    .suggest-list button { display:block; width:100%; padding:8px 10px; background:transparent; border:0; text-align:left; color:var(--text); cursor:pointer; }
+    .highlight { background:rgba(10,132,255,0.12); color:var(--accent); padding:2px 4px; border-radius:4px; }
+    /* responsive */
+    @media (max-width:720px){
+      .explore-head { flex-direction:column; align-items:flex-start; }
+      .filters-bar { width:100%; }
+    }
   </style>
 </head>
 <body>
-  <header class="nav glass">
-    <div class="nav-inner">
-      <div class="brand" onclick="location.href='index.html'">LIXBY</div>
+  <header class="nav glass" style="padding:12px 20px;">
+    <div class="nav-inner" style="display:flex;align-items:center;gap:12px;">
+      <div class="brand" onclick="location.href='index.html'" style="font-weight:700;cursor:pointer;">LIXBY</div>
       <div style="flex:1"></div>
       <div class="nav-right">
-        <button id="accountBtn" class="btn ghost">Cuenta</button>
-        <button id="cartBtn" class="icon-btn">🛒 <span id="cartCount" class="badge">0</span></button>
+        <button id="accountBtn" class="btn">Cuenta</button>
+        <button id="cartBtn" class="btn">🛒 <span id="cartCount">0</span></button>
       </div>
     </div>
   </header>
 
-  <main class="explore-wrap" style="padding-top:calc(var(--header-height) + 12px);">
+  <main class="explore-wrap" style="padding-top:18px;">
     <div class="explore-head">
       <h1>Explorar productos</h1>
-      <div class="search">
-        <input id="searchInput" placeholder="Buscar producto..." aria-label="Buscar productos">
-        <select id="filterSelect" aria-label="Filtrar por">
-          <option value="">Todos</option>
-          <option value="lixby-one-air">Lixby One Air</option>
-          <option value="lixby-one">Lixby One</option>
-          <option value="lixby-one-pro">Lixby One Pro</option>
-        </select>
+
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div class="search suggestions" role="search" aria-label="Buscar productos">
+          <input id="searchInput" placeholder="Buscar producto..." aria-label="Buscar productos" autocomplete="off">
+          <div id="suggestList" class="suggest-list" style="display:none" role="listbox" aria-label="Sugerencias"></div>
+        </div>
+
+        <div class="controls">
+          <select id="sortSelect" class="select" aria-label="Ordenar">
+            <option value="relevance">Orden: Relevancia</option>
+            <option value="az">A → Z</option>
+            <option value="za">Z → A</option>
+            <option value="price-asc">Precio: bajo → alto</option>
+            <option value="price-desc">Precio: alto → bajo</option>
+            <option value="pop-desc">Más populares</option>
+          </select>
+
+          <select id="perPage" class="select" aria-label="Resultados por página">
+            <option value="6">6 / pág</option>
+            <option value="12" selected>12 / pág</option>
+            <option value="24">24 / pág</option>
+          </select>
+
+          <button id="clearFilters" class="btn" title="Limpiar filtros">Limpiar</button>
+        </div>
       </div>
     </div>
 
-    <div id="results" class="grid-explore" role="list" aria-live="polite">
-      <!-- items rendered by JS -->
+    <div class="filters-bar" aria-hidden="false">
+      <div class="facets" id="tagFacets" aria-label="Filtrar por etiqueta"></div>
+
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label class="small" for="minPrice">Precio</label>
+        <input id="minPrice" type="number" placeholder="Min" style="width:88px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)">
+        <input id="maxPrice" type="number" placeholder="Max" style="width:88px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)">
+        <label style="display:inline-flex;gap:6px;align-items:center;color:var(--muted);">
+          <input id="saleOnly" type="checkbox"> <span class="small">Sólo oferta</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="summary-line" id="summaryLine">
+      <div id="resultCount" class="small">-- resultados</div>
+      <div id="activeFilters" class="small" aria-live="polite"></div>
+    </div>
+
+    <div id="results" class="grid-explore" role="list" aria-live="polite"></div>
+
+    <div style="margin-top:18px;display:flex;justify-content:center;align-items:center;">
+      <div class="pager" id="pagerControls" aria-label="Paginación"></div>
     </div>
   </main>
 
@@ -56,64 +120,336 @@
   </footer>
 
   <script>
-    const PRODUCTS = [
-      { id: 'lixby-one-air', name: 'Lixby One Air', priceNum: 249, price: '249€', image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg', tag: 'Ligero' },
-      { id: 'lixby-one', name: 'Lixby One', priceNum: 349, price: '349€', image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg', tag: 'Potente' },
-      { id: 'lixby-one-pro', name: 'Lixby One Pro', priceNum: 899, price: '899€', image: 'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg', tag: 'Pro' }
-    ];
+  // Datos de producto (añadí popularity y sale para demo)
+  const PRODUCTS = [
+    { id: 'lixby-one-air', name: 'Lixby One Air', priceNum: 249, price: '249€', image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg', tag: 'Ligero', popularity: 82, sale: false },
+    { id: 'lixby-one',     name: 'Lixby One',     priceNum: 349, price: '349€', image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg', tag: 'Potente', popularity: 95, sale: true },
+    { id: 'lixby-one-pro', name: 'Lixby One Pro', priceNum: 899, price: '899€', image: 'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg', tag: 'Pro', popularity: 76, sale: false },
+    // Más ejemplos para paginación/demo
+    { id: 'lixby-mini',    name: 'Lixby Mini',    priceNum: 129, price: '129€', image: 'https://via.placeholder.com/400x400?text=Mini', tag: 'Ligero', popularity: 64, sale: true },
+    { id: 'lixby-studio',  name: 'Lixby Studio',  priceNum: 599, price: '599€', image: 'https://via.placeholder.com/400x400?text=Studio', tag: 'Pro', popularity: 88, sale: false },
+    { id: 'lixby-max',     name: 'Lixby Max',     priceNum: 1299, price: '1.299€', image: 'https://via.placeholder.com/400x400?text=Max', tag: 'Pro', popularity: 70, sale: false },
+    { id: 'lixby-lite',    name: 'Lixby Lite',    priceNum: 179, price: '179€', image: 'https://via.placeholder.com/400x400?text=Lite', tag: 'Económico', popularity: 54, sale: true },
+    { id: 'lixby-plus',    name: 'Lixby Plus',    priceNum: 479, price: '479€', image: 'https://via.placeholder.com/400x400?text=Plus', tag: 'Potente', popularity: 91, sale: false }
+  ];
 
-    function renderResults(list) {
-      const el = document.getElementById('results');
-      el.innerHTML = '';
-      if (!list || list.length === 0) {
-        el.innerHTML = '<div style="color:var(--muted)">No se encontraron productos.</div>';
-        return;
-      }
-      const frag = document.createDocumentFragment();
-      list.forEach(p => {
-        const card = document.createElement('article');
-        card.className = 'card-square glass clickable';
-        card.setAttribute('role','listitem');
-        card.innerHTML = `
-          <div class="thumb"><img src="${p.image}" alt="${p.name}" loading="lazy" decoding="async"></div>
-          <div style="width:100%"><div style="font-weight:700">${p.name}</div><div class="tag">${p.tag}</div></div>
-          <div class="card-meta"><div class="price">${p.price}</div><button class="btn-view btn ghost">Ver</button></div>
-        `;
-        card.querySelector('.btn-view').addEventListener('click', (ev) => {
-          ev.stopPropagation();
-          window.location.href = 'producto.html?id=' + encodeURIComponent(p.id);
-        });
-        card.addEventListener('click', () => window.location.href = 'producto.html?id=' + encodeURIComponent(p.id));
-        frag.appendChild(card);
-      });
-      el.appendChild(frag);
-    }
+  // Estado
+  let state = {
+    q: '',
+    selectedTag: null,
+    minPrice: null,
+    maxPrice: null,
+    saleOnly: false,
+    sort: 'relevance',
+    perPage: 12,
+    page: 1
+  };
 
-    // initial render
-    renderResults(PRODUCTS);
+  // Elementos
+  const el = {
+    searchInput: document.getElementById('searchInput'),
+    suggestList: document.getElementById('suggestList'),
+    sortSelect: document.getElementById('sortSelect'),
+    perPage: document.getElementById('perPage'),
+    results: document.getElementById('results'),
+    tagFacets: document.getElementById('tagFacets'),
+    minPrice: document.getElementById('minPrice'),
+    maxPrice: document.getElementById('maxPrice'),
+    saleOnly: document.getElementById('saleOnly'),
+    clearFilters: document.getElementById('clearFilters'),
+    resultCount: document.getElementById('resultCount'),
+    activeFilters: document.getElementById('activeFilters'),
+    pagerControls: document.getElementById('pagerControls'),
+    year: document.getElementById('year')
+  };
 
-    // search/filter
-    const searchInput = document.getElementById('searchInput');
-    const filterSelect = document.getElementById('filterSelect');
+  // Utilidades
+  const nf = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+  function fmt(n){ return nf.format(Number(n)||0); }
+  function debounce(fn, wait=300){ let t; return (...a)=>{ clearTimeout(t); t = setTimeout(()=>fn(...a), wait); }; }
 
-    function applyFilters() {
-      const q = (searchInput.value || '').toLowerCase().trim();
-      const f = filterSelect.value || '';
-      let res = PRODUCTS.slice();
-      if (f) res = res.filter(p => p.id === f);
-      if (q) res = res.filter(p => p.name.toLowerCase().includes(q) || (p.tag || '').toLowerCase().includes(q));
-      renderResults(res);
-    }
+  // Deriva tags desde PRODUCTS
+  const TAGS = Array.from(new Set(PRODUCTS.map(p => p.tag))).sort();
 
-    searchInput.addEventListener('input', applyFilters);
-    filterSelect.addEventListener('change', applyFilters);
+  // Construcción de UI de facetas
+  function renderFacets(){
+    el.tagFacets.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'chip' + (!state.selectedTag ? ' active' : '');
+    allBtn.textContent = 'Todos';
+    allBtn.type = 'button';
+    allBtn.onclick = () => { state.selectedTag = null; state.page = 1; applyAndRender(); };
+    el.tagFacets.appendChild(allBtn);
 
-    // header interactions: account fallback + cart behavior (script.js also initializará hover)
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('year').textContent = new Date().getFullYear();
-      const accountBtn = document.getElementById('accountBtn');
-      accountBtn && accountBtn.addEventListener('click', () => location.href = 'cuenta.html');
+    TAGS.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'chip' + (state.selectedTag === t ? ' active' : '');
+      btn.type = 'button';
+      btn.textContent = t;
+      btn.onclick = () => { state.selectedTag = (state.selectedTag === t ? null : t); state.page = 1; applyAndRender(); };
+      el.tagFacets.appendChild(btn);
     });
+  }
+
+  // Aplicar filtros y orden (devuelve array filtrado + ordenado)
+  function filterAndSort(items){
+    let res = items.slice();
+
+    // search query: tokenizar y priorizar coincidencias en nombre
+    const q = (state.q || '').trim().toLowerCase();
+    if (q) {
+      const tokens = q.split(/\s+/).filter(Boolean);
+      res = res.filter(p => {
+        const hay = (p.name + ' ' + (p.tag||'') + ' ' + (p.id||'')).toLowerCase();
+        return tokens.every(t => hay.indexOf(t) !== -1);
+      });
+    }
+
+    // tag
+    if (state.selectedTag) res = res.filter(p => p.tag === state.selectedTag);
+
+    // sale
+    if (state.saleOnly) res = res.filter(p => p.sale);
+
+    // price
+    if (state.minPrice !== null && state.minPrice !== '') {
+      const mn = Number(state.minPrice) || 0;
+      res = res.filter(p => Number(p.priceNum) >= mn);
+    }
+    if (state.maxPrice !== null && state.maxPrice !== '') {
+      const mx = Number(state.maxPrice) || Infinity;
+      res = res.filter(p => Number(p.priceNum) <= mx);
+    }
+
+    // sort
+    switch(state.sort){
+      case 'az': res.sort((a,b)=> a.name.localeCompare(b.name)); break;
+      case 'za': res.sort((a,b)=> b.name.localeCompare(a.name)); break;
+      case 'price-asc': res.sort((a,b)=> a.priceNum - b.priceNum); break;
+      case 'price-desc': res.sort((a,b)=> b.priceNum - a.priceNum); break;
+      case 'pop-desc': res.sort((a,b)=> b.popularity - a.popularity); break;
+      case 'relevance':
+      default:
+        // for relevance: boost exact startsWith, then includes, then popularity
+        if (q) {
+          res.sort((a,b) => {
+            const an = a.name.toLowerCase(), bn = b.name.toLowerCase();
+            const score = (s) => (s.startsWith(q) ? 1000 : (s.includes(q) ? 100 : 0)) + (s.length>0?0:0);
+            const sa = score(an) + a.popularity/100;
+            const sb = score(bn) + b.popularity/100;
+            return sb - sa;
+          });
+        } else {
+          res.sort((a,b)=> b.popularity - a.popularity);
+        }
+    }
+
+    return res;
+  }
+
+  // Highlight query in product name
+  function highlight(text, q){
+    if(!q) return text;
+    const re = new RegExp('(' + q.trim().split(/\s+/).map(s => escapeRegExp(s)).join('|') + ')', 'ig');
+    return text.replace(re, '<span class="highlight">$1</span>');
+  }
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  // Render resultados (paginado)
+  function renderResults(pList){
+    el.results.innerHTML = '';
+    if (!pList || pList.length === 0) {
+      el.results.innerHTML = '<div style="color:var(--muted)">No se encontraron productos.</div>';
+      el.resultCount.textContent = '0 resultados';
+      el.pagerControls.innerHTML = '';
+      el.activeFilters.textContent = '';
+      return;
+    }
+
+    const total = pList.length;
+    const per = Number(state.perPage) || 12;
+    const pages = Math.max(1, Math.ceil(total / per));
+    if (state.page > pages) state.page = pages;
+
+    const start = (state.page - 1) * per;
+    const pageItems = pList.slice(start, start + per);
+
+    const frag = document.createDocumentFragment();
+    pageItems.forEach(p => {
+      const card = document.createElement('article');
+      card.className = 'card-square glass';
+      card.setAttribute('role','listitem');
+      const highlighted = highlight(p.name, state.q);
+      card.innerHTML = `
+        <div class="thumb"><img src="${p.image}" alt="${escapeHtml(p.name)}" loading="lazy" decoding="async"></div>
+        <div style="width:100%"><div style="font-weight:700">${highlighted}</div><div class="tag">${escapeHtml(p.tag)}</div></div>
+        <div class="card-meta"><div class="price">${fmt(p.priceNum)}</div><div style="display:flex;gap:8px"><button class="btn-view btn" data-id="${p.id}">Ver</button><button class="btn primary btn-add" data-id="${p.id}">Añadir</button></div></div>
+      `;
+      // click handlers
+      card.querySelector('.btn-view').addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        window.location.href = 'producto.html?id=' + encodeURIComponent(p.id);
+      });
+      card.querySelector('.btn-add').addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        addToCartDemo(p);
+      });
+      card.addEventListener('click', () => window.location.href = 'producto.html?id=' + encodeURIComponent(p.id));
+      frag.appendChild(card);
+    });
+    el.results.appendChild(frag);
+
+    el.resultCount.textContent = `${total} resultado${total===1?'':'s'}`;
+    renderActiveFilters(total);
+    renderPager(pages);
+  }
+
+  function renderActiveFilters(total){
+    const parts = [];
+    if (state.q) parts.push(`"${state.q}"`);
+    if (state.selectedTag) parts.push(state.selectedTag);
+    if (state.minPrice) parts.push(`>= ${fmt(state.minPrice)}`);
+    if (state.maxPrice) parts.push(`<= ${fmt(state.maxPrice)}`);
+    if (state.saleOnly) parts.push('Oferta');
+    el.activeFilters.textContent = parts.length ? `Filtros: ${parts.join(' · ')}` : `Mostrando ${total} productos`;
+  }
+
+  function renderPager(pages){
+    el.pagerControls.innerHTML = '';
+    if (pages <= 1) return;
+    const createBtn = (txt, disabled, cb) => {
+      const b = document.createElement('button'); b.className='btn'; b.textContent = txt; b.disabled = !!disabled;
+      b.addEventListener('click', cb);
+      return b;
+    };
+    // prev
+    el.pagerControls.appendChild(createBtn('« Anterior', state.page === 1, ()=>{ state.page = Math.max(1, state.page - 1); applyAndRender(); }));
+    // pages (show up to 7)
+    const range = pagerRange(state.page, pages, 7);
+    range.forEach(n => {
+      if (n === '...') {
+        const span = document.createElement('span'); span.className='small'; span.textContent='...'; el.pagerControls.appendChild(span);
+      } else {
+        const btn = createBtn(n, false, ()=>{ state.page = n; applyAndRender(); });
+        if (n === state.page) { btn.classList.add('primary'); btn.disabled = true; }
+        el.pagerControls.appendChild(btn);
+      }
+    });
+    // next
+    el.pagerControls.appendChild(createBtn('Siguiente »', state.page === pages, ()=>{ state.page = Math.min(pages, state.page + 1); applyAndRender(); }));
+  }
+
+  function pagerRange(current, total, maxShown){
+    const res=[];
+    if (total <= maxShown) {
+      for(let i=1;i<=total;i++) res.push(i);
+      return res;
+    }
+    const half = Math.floor(maxShown/2);
+    let start = Math.max(1, current - half);
+    let end = Math.min(total, current + half);
+    if (current - start < half) end = Math.min(total, start + maxShown - 1);
+    if (end - current < half) start = Math.max(1, end - maxShown + 1);
+    if (start > 1) { res.push(1); if (start > 2) res.push('...'); }
+    for(let i=start;i<=end;i++) res.push(i);
+    if (end < total) { if (end < total - 1) res.push('...'); res.push(total); }
+    return res;
+  }
+
+  // Apply filters to PRODUCTS and render
+  function applyAndRender(){
+    const filtered = filterAndSort(PRODUCTS);
+    renderResults(filtered);
+  }
+
+  // Event wiring
+  el.searchInput.addEventListener('input', debounce((ev)=>{
+    state.q = ev.target.value;
+    state.page = 1;
+    showSuggestions(state.q);
+    applyAndRender();
+  }, 220));
+
+  el.sortSelect.addEventListener('change', (e)=>{ state.sort = e.target.value; state.page = 1; applyAndRender(); });
+  el.perPage.addEventListener('change', (e)=>{ state.perPage = Number(e.target.value); state.page = 1; applyAndRender(); });
+  el.minPrice.addEventListener('input', debounce((e)=>{ state.minPrice = e.target.value; state.page = 1; applyAndRender(); }, 300));
+  el.maxPrice.addEventListener('input', debounce((e)=>{ state.maxPrice = e.target.value; state.page = 1; applyAndRender(); }, 300));
+  el.saleOnly.addEventListener('change', (e)=>{ state.saleOnly = e.target.checked; state.page = 1; applyAndRender(); });
+  el.clearFilters.addEventListener('click', ()=>{ resetFilters(); applyAndRender(); });
+
+  function resetFilters(){
+    state.q = ''; state.selectedTag = null; state.minPrice = null; state.maxPrice = null; state.saleOnly = false; state.sort = 'relevance'; state.perPage = 12; state.page = 1;
+    el.searchInput.value = ''; el.minPrice.value = ''; el.maxPrice.value = ''; el.saleOnly.checked = false; el.sortSelect.value = 'relevance'; el.perPage.value = '12';
+    renderFacets();
+  }
+
+  // small demo addToCart
+  function addToCartDemo(product){
+    // localStorage based cart simple demo
+    try {
+      const KEY='lixby_cart_v1';
+      let cart = JSON.parse(localStorage.getItem(KEY) || '[]');
+      const found = cart.find(i=>i.id===product.id);
+      if (found) found.qty = (found.qty||1) + 1; else cart.push({ id: product.id, name: product.name, priceNum: product.priceNum, qty: 1, image: product.image });
+      localStorage.setItem(KEY, JSON.stringify(cart));
+      const count = cart.reduce((s,i)=> s + (i.qty||0), 0);
+      document.getElementById('cartCount').textContent = count;
+      // quick feedback
+      const btn = document.createElement('div'); btn.textContent = `${product.name} añadido`; btn.style.position='fixed'; btn.style.right='18px'; btn.style.bottom='18px'; btn.style.background='rgba(0,0,0,0.72)'; btn.style.color='#fff'; btn.style.padding='10px 12px'; btn.style.borderRadius='8px'; document.body.appendChild(btn);
+      setTimeout(()=> btn.remove(), 1600);
+    } catch(e){ console.warn(e); }
+  }
+
+  // Typeahead suggestions (simple)
+  function showSuggestions(q){
+    const s = (q||'').trim().toLowerCase();
+    if (!s) { el.suggestList.style.display='none'; el.suggestList.innerHTML=''; return; }
+    const matches = PRODUCTS.filter(p => p.name.toLowerCase().includes(s) || (p.tag||'').toLowerCase().includes(s)).slice(0,8);
+    if (matches.length === 0){ el.suggestList.style.display='none'; el.suggestList.innerHTML=''; return; }
+    el.suggestList.innerHTML = '';
+    matches.forEach(m => {
+      const btn = document.createElement('button');
+      btn.type='button';
+      btn.innerHTML = highlight(m.name, s) + ` <span class="small" style="color:var(--muted);float:right">${fmt(m.priceNum)}</span>`;
+      btn.onclick = () => {
+        state.q = m.name;
+        el.searchInput.value = m.name;
+        el.suggestList.style.display='none';
+        applyAndRender();
+      };
+      el.suggestList.appendChild(btn);
+    });
+    el.suggestList.style.display='block';
+  }
+
+  // Escape html for alt/content
+  function escapeHtml(str){ return String(str).replace(/[&<>"']/g, (m)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])); }
+
+  // Initialize
+  function init(){
+    el.year.textContent = new Date().getFullYear();
+    renderFacets();
+    applyAndRender();
+    // keyboard support: esc to close suggestions
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        el.suggestList.style.display='none';
+      }
+    });
+    // click outside suggestions closes it
+    document.addEventListener('click', (ev) => {
+      if (!document.querySelector('.suggestions')?.contains(ev.target)) {
+        el.suggestList.style.display='none';
+      }
+    });
+  }
+
+  // run
+  init();
+
+  // expose for debugging
+  window.__LIXBY_EXPLORE = { state, applyAndRender, PRODUCTS };
+
   </script>
 
   <script src="script.js" defer></script>
