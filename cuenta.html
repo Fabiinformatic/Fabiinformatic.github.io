@@ -49,6 +49,23 @@
       .user-meta { min-width:0; }
     }
   </style>
+
+  <!-- Añadir: glass util (liquid glass styling consistente) -->
+  <style id="lixby-glass-style">
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 6px 26px rgba(2,6,12,0.48);
+      color: inherit;
+    }
+    .btn, .icon-btn {
+      transition: transform .14s cubic-bezier(.2,.9,.3,1), box-shadow .14s ease;
+    }
+    .btn:focus, .icon-btn:focus, button:focus { outline: 3px solid rgba(10,132,255,0.14); outline-offset: 3px; }
+  </style>
 </head>
 <body>
   <!-- Skip link -->
@@ -198,11 +215,12 @@
     const googleProvider = new GoogleAuthProvider();
     const githubProvider = new GithubAuthProvider();
 
+    const CURRENCY = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
     // ---------- Helpers ----------
     function setAlert(text, polite=false) {
       try {
         alerts.textContent = text;
-        // also show minimal visual feedback in profile msg if polite
         if (polite && profileMsg) {
           profileMsg.textContent = text;
           profileMsg.style.display = '';
@@ -278,24 +296,29 @@
       try {
         await signOut(auth);
         setAlert('Sesión cerrada', true);
-        // optional: redirect to home
         location.href = 'index.html';
       } catch(err) { console.warn(err); alert('Error cerrando sesión'); }
     });
 
     // ---------- Auth state sync + data loading ----------
     onAuthStateChanged(auth, async (user) => {
-      // show skeletons/loader while we fetch
       try {
         if (user) {
           userNameEl.textContent = user.displayName || 'Usuario';
           userEmailEl.textContent = user.email || (user.isAnonymous ? 'Invitado' : 'Sin email');
+
+          // safer avatar rendering (no innerHTML)
+          avatarEl.innerHTML = '';
           if (user.photoURL) {
-            avatarEl.innerHTML = `<img src="${user.photoURL}" alt="Avatar de usuario">`;
+            const img = document.createElement('img');
+            img.src = user.photoURL;
+            img.alt = 'Avatar de usuario';
+            avatarEl.appendChild(img);
           } else {
             const initials = (user.displayName || user.email || 'LX').split(' ')[0].slice(0,2).toUpperCase();
             avatarEl.textContent = initials;
           }
+
           btnSignOut.style.display = '';
           btnSignIn.style.display = 'none';
           signedOutBox.style.display = 'none';
@@ -386,15 +409,45 @@
           const o = docSnap.data();
           const el = document.createElement('div');
           el.className = 'order';
-          el.innerHTML = `
-            <div style="flex:1">
-              <div class="title">${o.title || ('Pedido ' + docSnap.id)}</div>
-              <div class="small-muted">Fecha: ${o.createdAt ? new Date(o.createdAt).toLocaleString() : '—'}</div>
-              <div class="small-muted">Estado: ${o.status || 'Pendiente'}</div>
-              <div style="margin-top:8px">${o.items ? o.items.map(it => `<div>${it.qty||1} × ${it.name}</div>`).join('') : ''}</div>
-            </div>
-            <div style="min-width:140px;text-align:right;font-weight:700">${o.total ? (Number(o.total).toFixed(2) + ' €') : ''}</div>
-          `;
+
+          const left = document.createElement('div');
+          left.style.flex = '1';
+
+          const title = document.createElement('div');
+          title.className = 'title';
+          title.textContent = o.title || ('Pedido ' + docSnap.id);
+
+          const date = document.createElement('div');
+          date.className = 'small-muted';
+          date.textContent = 'Fecha: ' + (o.createdAt ? new Date(o.createdAt).toLocaleString() : '—');
+
+          const status = document.createElement('div');
+          status.className = 'small-muted';
+          status.textContent = 'Estado: ' + (o.status || 'Pendiente');
+
+          const itemsContainer = document.createElement('div');
+          itemsContainer.style.marginTop = '8px';
+          if (Array.isArray(o.items) && o.items.length) {
+            o.items.forEach(it => {
+              const itEl = document.createElement('div');
+              itEl.textContent = `${it.qty || 1} × ${it.name || 'Artículo'}`;
+              itemsContainer.appendChild(itEl);
+            });
+          }
+
+          left.appendChild(title);
+          left.appendChild(date);
+          left.appendChild(status);
+          left.appendChild(itemsContainer);
+
+          const right = document.createElement('div');
+          right.style.minWidth = '140px';
+          right.style.textAlign = 'right';
+          right.style.fontWeight = '700';
+          right.textContent = o.total ? CURRENCY.format(Number(o.total)) : '';
+
+          el.appendChild(left);
+          el.appendChild(right);
           frag.appendChild(el);
         });
         ordersList.appendChild(frag);
@@ -415,33 +468,61 @@
           const f = docSnap.data();
           const el = document.createElement('div');
           el.className = 'fav';
-          el.innerHTML = `
-            <div style="flex:1">
-              <div class="title">${f.name || docSnap.id}</div>
-              <div class="small-muted">${f.price || ''}</div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-              <button class="btn ghost removeFav" data-id="${docSnap.id}" aria-label="Eliminar favorito ${f.name || ''}">Eliminar</button>
-              <button class="btn primary viewProd" data-id="${f.id || docSnap.id}" aria-label="Ver producto ${f.name || ''}">Ver</button>
-            </div>
-          `;
+
+          const left = document.createElement('div');
+          left.style.flex = '1';
+          const title = document.createElement('div');
+          title.className = 'title';
+          title.textContent = f.name || docSnap.id;
+          const mut = document.createElement('div');
+          mut.className = 'small-muted';
+          mut.textContent = f.price || '';
+
+          left.appendChild(title);
+          left.appendChild(mut);
+
+          const right = document.createElement('div');
+          right.style.display = 'flex';
+          right.style.flexDirection = 'column';
+          right.style.gap = '8px';
+          right.style.alignItems = 'flex-end';
+
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'btn ghost removeFav';
+          removeBtn.setAttribute('data-id', docSnap.id);
+          removeBtn.setAttribute('aria-label', `Eliminar favorito ${f.name || ''}`);
+          removeBtn.textContent = 'Eliminar';
+
+          const viewBtn = document.createElement('button');
+          viewBtn.className = 'btn primary viewProd';
+          viewBtn.setAttribute('data-id', f.id || docSnap.id);
+          viewBtn.setAttribute('aria-label', `Ver producto ${f.name || ''}`);
+          viewBtn.textContent = 'Ver';
+
+          right.appendChild(removeBtn);
+          right.appendChild(viewBtn);
+
+          el.appendChild(left);
+          el.appendChild(right);
           frag.appendChild(el);
         });
         favsList.appendChild(frag);
 
-        // attach handlers
-        Array.from(favsList.querySelectorAll('.removeFav')).forEach(b => {
+        // attach handlers (delegated safe approach)
+        favsList.querySelectorAll('.removeFav').forEach(b => {
           b.onclick = async () => {
             const id = b.getAttribute('data-id');
             if (!confirm('Eliminar favorito?')) return;
             try {
-              await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'favorites', id));
+              const uid = auth.currentUser && auth.currentUser.uid;
+              if (!uid) throw new Error('No autenticado');
+              await deleteDoc(doc(db, 'users', uid, 'favorites', id));
               setAlert('Favorito eliminado', true);
-              await loadFavs(auth.currentUser.uid);
+              await loadFavs(uid);
             } catch(err) { console.warn(err); alert('No se pudo eliminar'); }
           };
         });
-        Array.from(favsList.querySelectorAll('.viewProd')).forEach(b => {
+        favsList.querySelectorAll('.viewProd').forEach(b => {
           b.onclick = () => {
             const pid = b.getAttribute('data-id');
             window.location.href = 'producto.html?id=' + encodeURIComponent(pid);
@@ -460,6 +541,19 @@
         setAlert(msg, true);
       }
     }, 3500);
+
+    // Accessibility: focus management when panels become visible (ensure keyboard users land in panel)
+    const panelObserver = new MutationObserver(muts => {
+      muts.forEach(m => {
+        if (m.type === 'attributes' && m.attributeName === 'hidden') {
+          const panel = m.target;
+          if (panel && panel.hidden === false) {
+            try { panel.focus(); } catch(e) {}
+          }
+        }
+      });
+    });
+    [panelInfo, panelOrders, panelFavs].forEach(p => { if (p) panelObserver.observe(p, { attributes: true }); });
 
   </script>
 </body>
