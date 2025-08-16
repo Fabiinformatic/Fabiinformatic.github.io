@@ -52,6 +52,8 @@
     a.anchor{color:var(--accent);text-decoration:none}
     .toc a:hover, .toc a:focus, nav a:hover { color:var(--text) }
     .print-hide{display:inline-block}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border:1px solid rgba(255,255,255,0.02);padding:8px;text-align:left;color:var(--muted)}
     @media print{ header, .toc, .print-hide{display:none} body{padding:0} }
   </style>
 </head>
@@ -72,7 +74,7 @@
 
     <div class="hero">
       <h1>Términos y condiciones de uso</h1>
-      <p class="small">Última actualización: <strong id="updatedDate">2025-01-01</strong>. Lee con atención — aquí se recogen las condiciones que rigen el uso del sitio web <span class="kbd">www.lixby.com</span>.</p>
+      <p class="small">Última actualización: <strong id="updatedDate">2025-01-01</strong>. Estas Condiciones regulan tu uso de <span class="kbd">www.lixby.com</span>.</p>
     </div>
 
     <div class="layout" role="main">
@@ -80,137 +82,131 @@
       <aside class="toc" aria-label="Índice de contenidos">
         <h3>Índice</h3>
         <nav aria-label="Índice de términos">
-          <a href="#propiedad">Propiedad del Sitio y aceptación</a>
+          <a href="#def">Definiciones</a>
+          <a href="#propiedad">Propiedad y aceptación</a>
           <a href="#contenido">Contenido</a>
           <a href="#uso">Uso del Sitio</a>
-          <a href="#compras">Compras y condiciones</a>
+          <a href="#cookies">Cookies y seguimiento</a>
+          <a href="#compras">Compras y garantías</a>
           <a href="#cuentas">Cuentas y seguridad</a>
-          <a href="#privacidad">Privacidad</a>
-          <a href="#enlaces">Enlaces de terceros</a>
-          <a href="#exenciones">Exenciones de responsabilidad</a>
-          <a href="#limitacion">Limitación de responsabilidad</a>
-          <a href="#indemnizacion">Indemnización</a>
-          <a href="#incumplimiento">Incumplimiento</a>
+          <a href="#privacidad">Privacidad / GDPR</a>
+          <a href="#retencion">Retención de datos</a>
+          <a href="#terceros">Servicios de terceros</a>
+          <a href="#accesibilidad">Accesibilidad</a>
+          <a href="#exenciones">Exenciones y limitación</a>
           <a href="#ley">Ley aplicable</a>
-          <a href="#otros">Otras disposiciones</a>
           <a href="#contacto">Contacto legal</a>
+          <a href="#changes">Registro de cambios</a>
         </nav>
       </aside>
 
       <!-- MAIN CONTENT -->
       <main class="card" id="mainContent" tabindex="-1">
-        <!-- 1 -->
-        <section id="propiedad" aria-labelledby="propiedad-h">
-          <h2 id="propiedad-h">Propiedad del Sitio y aceptación de las Condiciones de uso</h2>
-          <p>Los presentes Términos y condiciones de uso (las «Condiciones de uso») se aplican al sitio web de <strong>LIXBY</strong>, cuya dirección es <span class="kbd">www.lixby.com</span> (el «Sitio»), y a los sitios asociados enlazados desde el mismo. El Sitio es propiedad de <strong>LIXBY</strong> (la «Empresa»). AL UTILIZAR EL SITIO, ACEPTAS ESTAS CONDICIONES; SI NO LAS ACEPTAS, NO DEBES UTILIZARLO.</p>
-          <p class="note">LIXBY podrá, a su entera discreción, modificar, añadir o eliminar partes de estas Condiciones de uso en cualquier momento. Tu uso continuado después de dichas modificaciones implica tu aceptación.</p>
+        <section id="def" aria-labelledby="def-h">
+          <h2 id="def-h">Definiciones</h2>
+          <p>En estos Términos: <strong>"Sitio"</strong> = www.lixby.com y sitios asociados; <strong>"Usuario"</strong> = la persona que accede o utiliza el Sitio; <strong>"Contenido"</strong> = textos, imágenes, código, multimedia y demás elementos publicados en el Sitio.</p>
         </section>
 
-        <!-- 2 -->
+        <section id="propiedad" aria-labelledby="propiedad-h">
+          <h2 id="propiedad-h">Propiedad del Sitio y aceptación</h2>
+          <p>El Sitio es propiedad de <strong>LIXBY</strong>. AL UTILIZAR EL SITIO, ACEPTAS ESTAS CONDICIONES; SI NO LAS ACEPTAS, NO DEBES UTILIZARLO. LIXBY podrá modificar estas Condiciones mediante publicación en el Sitio; el uso continuado implica aceptación de los cambios.</p>
+        </section>
+
         <section id="contenido" aria-labelledby="contenido-h">
           <h2 id="contenido-h">Contenido</h2>
-          <p>Todo el texto, gráficos, interfaces, imágenes, marcas, logos, sonidos, música, ilustraciones y código (el «Contenido») que aparece en el Sitio es propiedad de LIXBY o de sus licenciantes y está protegido por las leyes de propiedad intelectual aplicables.</p>
-          <p>Salvo autorización expresa, no podrás copiar, reproducir, republicar, cargar, transmitir, distribuir ni explotar el Contenido con fines comerciales ni crear obras derivadas sin el consentimiento por escrito de LIXBY.</p>
-          <p>Puedes descargar y usar material publicado para fines informativos y personales siempre que: (1) conserves los avisos de propiedad; (2) no lo uses con fines comerciales; (3) no lo modifiques; y (4) no realices manifestaciones adicionales sobre el material.</p>
+          <p>Todo el contenido es propiedad de LIXBY o licenciado. Salvo autorización expresa, no puede utilizarse para fines comerciales ni distribuirse sin permiso. Puedes descargar material para uso personal siempre que mantengas los avisos de propiedad y lo uses de forma no comercial.</p>
         </section>
 
-        <!-- 3 -->
         <section id="uso" aria-labelledby="uso-h">
           <h2 id="uso-h">Uso del Sitio</h2>
-          <p>Queda prohibido emplear técnicas automatizadas (robots, scrapers, spiders), enlaces profundos, o cualquier método que reproduzca o eluda la estructura de navegación del Sitio para obtener materiales, datos o información que no estén disponibles públicamente.</p>
-          <p>No debes acceder, intentar acceder, ni provocar el acceso no autorizado a sistemas, servidores o datos de LIXBY o de terceros. Está prohibido analizar vulnerabilidades, interferir con el rendimiento del Sitio o intentar suplantar la identidad de otros usuarios o la propia Empresa.</p>
-          <p>Aceptas no realizar acciones que supongan una carga desproporcionada para la infraestructura del Sitio ni emplear dispositivos o programas para interferir en su correcto funcionamiento.</p>
+          <p>Queda prohibido emplear robots, scrapers, enlaces profundos o cualquier método que reproduzca o eluda la navegación para obtener materiales no disponibles públicamente. No debes acceder sin autorización a sistemas, explotar vulnerabilidades ni interferir con la prestación del servicio.</p>
         </section>
 
-        <!-- 4 -->
+        <section id="cookies" aria-labelledby="cookies-h">
+          <h2 id="cookies-h">Cookies y seguimiento</h2>
+          <p>LIXBY utiliza cookies y tecnologías similares para mejorar la experiencia, analizar tráfico y servir contenido relevante. Al usar el Sitio aceptas el uso de cookies según nuestra <a href="privacidad.html" class="anchor">Política de Privacidad y Cookies</a>. Puedes configurar el consentimiento y rechazar cookies no esenciales desde tu navegador.</p>
+          <table>
+            <thead><tr><th>Tipo</th><th>Propósito</th></tr></thead>
+            <tbody>
+              <tr><td>Esenciales</td><td>Mantener sesión y seguridad.</td></tr>
+              <tr><td>Analítica</td><td>Medir uso y rendimiento.</td></tr>
+              <tr><td>Publicidad</td><td>Personalizar anuncios (si aplica).</td></tr>
+            </tbody>
+          </table>
+        </section>
+
         <section id="compras" aria-labelledby="compras-h">
-          <h2 id="compras-h">Compras; términos y condiciones adicionales</h2>
-          <p>Algunas secciones del Sitio o servicios concretos (incluidos concursos, promociones o ventas) pueden regirse por términos y condiciones adicionales que complementan las presentes Condiciones de uso. En caso de conflicto, prevalecerán las condiciones específicas de la prestación o servicio en cuestión.</p>
-          <p>Las obligaciones relativas a productos y servicios se rigen por los contratos de venta o prestación correspondientes; nada de lo publicado en el Sitio debe interpretarse como modificación de dichos acuerdos.</p>
-          <p>LIXBY se reserva el derecho a cambiar productos, servicios y precios en cualquier momento sin previo aviso.</p>
+          <h2 id="compras-h">Compras, garantías y devoluciones</h2>
+          <p>Las condiciones específicas de venta (garantía, devoluciones, plazos) se indican en las páginas de producto y en las Condiciones de Venta separadas. A grandes rasgos:</p>
+          <ul>
+            <li>Garantía legal mínima según la legislación aplicable (p. ej. 2 años en la UE) más cualquier garantía comercial expresamente ofrecida.</li>
+            <li>Para devoluciones, sigue el procedimiento publicado en la sección de <a href="envios.html" class="anchor">Envíos y devoluciones</a>.</li>
+            <li>Los reembolsos se tramitan tras recepción y verificación del producto según la política aplicable.</li>
+          </ul>
         </section>
 
-        <!-- 5 -->
         <section id="cuentas" aria-labelledby="cuentas-h">
           <h2 id="cuentas-h">Cuentas, contraseñas y seguridad</h2>
-          <p>Para utilizar determinados servicios puede ser necesario crear una cuenta. Eres responsable de mantener la confidencialidad de tu ID y contraseña y de todas las actividades que se realicen con tu cuenta. Debes notificar inmediatamente a LIXBY cualquier uso no autorizado.</p>
-          <p>No utilices la cuenta, ID o contraseña de otra persona; LIXBY no se hace responsable de las consecuencias del uso indebido de las credenciales por parte del usuario.</p>
+          <p>Si creas una cuenta eres responsable de mantener la confidencialidad de tus credenciales. Notifica inmediatamente a LIXBY cualquier uso no autorizado.</p>
         </section>
 
-        <!-- 6 -->
         <section id="privacidad" aria-labelledby="privacidad-h">
-          <h2 id="privacidad-h">Privacidad</h2>
-          <p>El uso del Sitio también se rige por la Política de privacidad de LIXBY, que forma parte de estas Condiciones de uso. Ten en cuenta que las transmisiones por Internet no son completamente privadas o seguras, por lo que LIXBY no garantiza la privacidad absoluta de las comunicaciones.</p>
-          <p>Consulta nuestra política de privacidad o contáctanos para más información sobre el tratamiento de tus datos.</p>
+          <h2 id="privacidad-h">Privacidad y protección de datos (GDPR)</h2>
+          <p>El tratamiento de datos personales se realiza conforme a nuestra <a href="privacidad.html" class="anchor">Política de Privacidad</a>. Allí explicamos: finalidades, base legal, destinatarios, derechos del interesado (acceso, rectificación, supresión, oposición, limitación, portabilidad y retirada del consentimiento) y cómo ejercerlos.</p>
+          <p>Si eres residente en la UE, tienes derechos adicionales bajo el GDPR; para ejercerlos contacta a <a href="mailto:privacy@lixby.com" class="anchor">privacy@lixby.com</a>.</p>
         </section>
 
-        <!-- 7 -->
-        <section id="enlaces" aria-labelledby="enlaces-h">
-          <h2 id="enlaces-h">Enlaces a sitios de terceros</h2>
-          <p>El Sitio puede incluir enlaces a sitios externos no controlados por LIXBY. Dichos enlaces se facilitan por conveniencia; LIXBY no se responsabiliza del contenido ni de las prácticas de privacidad de sitios de terceros.</p>
+        <section id="retencion" aria-labelledby="retencion-h">
+          <h2 id="retencion-h">Conservación de datos</h2>
+          <p>LIXBY conservará tus datos solo el tiempo necesario para cumplir la finalidad por la que se recabaron, a menos que la ley exija la conservación por más tiempo. Los criterios de retención se describen en la Política de Privacidad.</p>
         </section>
 
-        <!-- 8 -->
+        <section id="terceros" aria-labelledby="terceros-h">
+          <h2 id="terceros-h">Servicios de terceros</h2>
+          <p>El Sitio puede integrar servicios de terceros (p. ej. proveedores de correo, pasarelas de pago, analítica, EmailJS para notificaciones). El uso de dichos servicios puede implicar la transferencia de datos a proveedores externos; LIXBY selecciona proveedores con medidas de seguridad adecuadas.</p>
+        </section>
+
+        <section id="accesibilidad" aria-labelledby="accesibilidad-h">
+          <h2 id="accesibilidad-h">Accesibilidad</h2>
+          <p>LIXBY se esfuerza por que el Sitio sea accesible. Si detectas barreras de accesibilidad, por favor informa a <a href="mailto:accesibilidad@lixby.com" class="anchor">accesibilidad@lixby.com</a> detallando la página y el problema para que podamos corregirlo.</p>
+        </section>
+
         <section id="exenciones" aria-labelledby="exenciones-h">
-          <h2 id="exenciones-h">Exenciones de responsabilidad</h2>
-          <p>LIXBY no garantiza que el Sitio, su contenido o sus servicios estén libres de errores o interrupciones, ni que la información esté siempre actualizada. EL SITIO SE PROPORCIONA «TAL CUAL» Y «SEGÚN DISPONIBILIDAD». LIXBY NO OFRECE GARANTÍAS EXPRESAS O IMPLÍCITAS SOBRE COMERCIABILIDAD, ADECUACIÓN O NO INFRACCIÓN.</p>
-          <p>LIXBY tampoco será responsable de los actos u omisiones de terceros relacionados con el uso del Sitio.</p>
+          <h2 id="exenciones-h">Exenciones de responsabilidad y limitación</h2>
+          <p>El Sitio se proporciona «tal cual». LIXBY no garantiza disponibilidad continua ni ausencia de errores. En la máxima medida permitida por la ley, LIXBY excluye responsabilidades por daños indirectos o lucro cesante.</p>
         </section>
 
-        <!-- 9 -->
-        <section id="limitacion" aria-labelledby="limitacion-h">
-          <h2 id="limitacion-h">Limitación de responsabilidad</h2>
-          <p>Excepto en los casos en que la ley lo prohíba, LIXBY no será responsable por daños indirectos, consecuenciales, punitivos o por pérdida de beneficios derivados del uso del Sitio, incluso si se le informó de la posibilidad de dichos daños.</p>
-          <p>Si por mandato legal LIXBY tuviera que indemnizarte, la responsabilidad total no excederá, en todo caso, de las cantidades pagadas por ti a LIXBY en los seis (6) meses anteriores a la reclamación o de una cantidad simbólica establecida en la ley aplicable. Algunas jurisdicciones no permiten estas limitaciones; en dichos casos, las limitaciones anteriores no serán aplicables.</p>
-        </section>
-
-        <!-- 10 -->
-        <section id="indemnizacion" aria-labelledby="indemnizacion-h">
-          <h2 id="indemnizacion-h">Indemnización</h2>
-          <p>Aceptas indemnizar y eximir de responsabilidad a LIXBY, sus empleados, directores, agentes y afiliados frente a cualquier reclamación, pérdida o gasto (incluidos honorarios legales) derivados de tu uso del Sitio, tu incumplimiento de estas Condiciones o la violación de derechos de terceros.</p>
-        </section>
-
-        <!-- 11 -->
-        <section id="incumplimiento" aria-labelledby="incumplimiento-h">
-          <h2 id="incumplimiento-h">Incumplimiento de estas Condiciones</h2>
-          <p>Si LIXBY sospecha que has incumplido estas Condiciones, podrá revelar información personal relevante para investigar o responder a reclamaciones, y podrá suspender o cancelar tu acceso al Sitio sin previo aviso.</p>
-          <p>LIXBY podrá cooperar con autoridades y otras entidades para prevenir fraudes o delitos y para exigir responsabilidades en los términos legalmente aplicables.</p>
-        </section>
-
-        <!-- 12 -->
         <section id="ley" aria-labelledby="ley-h">
-          <h2 id="ley-h">Ley aplicable; resolución de conflictos</h2>
-          <p>Estas Condiciones se regirán por la legislación del país en que LIXBY esté constituida, salvo que se acuerde expresamente otra jurisdicción. En caso de conflicto, las partes intentarán resolverlo de buena fe. Si no se alcanza un acuerdo en un plazo razonable, las partes podrán someter la controversia a mediación o a los tribunales competentes conforme a la legislación aplicable.</p>
-          <p><em>Nota:</em> Si deseas que indiquemos una jurisdicción concreta (por ejemplo: España — tribunales de Madrid), indícalo y lo incorporo en el texto.</p>
+          <h2 id="ley-h">Ley aplicable y resolución de conflictos</h2>
+          <p>Estas Condiciones se rigen por la legislación del país donde LIXBY tenga su sede (actualmente: <strong>España</strong>, salvo que indiques otra jurisdicción). Para consumidores en la UE, podrás ejercer tus derechos ante las autoridades y tribunales locales conforme a la normativa aplicable.</p>
         </section>
 
-        <!-- 13 -->
-        <section id="otros" aria-labelledby="otros-h">
-          <h2 id="otros-h">Nulidad, integridad y otros</h2>
-          <p>Si alguna disposición de estas Condiciones es declarada inválida, dicha disposición se limitará o eliminará en la mínima medida necesaria, y las restantes disposiciones permanecerán plenamente válidas.</p>
-          <p>Estas Condiciones constituyen el acuerdo íntegro entre tú y LIXBY en relación con el uso del Sitio y sustituyen cualquier otro acuerdo previo relacionado con el mismo objeto.</p>
-        </section>
-
-        <!-- 14 -->
         <section id="contacto" aria-labelledby="contacto-h">
-          <h2 id="contacto-h">Comentarios e información / Contacto legal</h2>
-          <p>Cualquier comentario que publiques en el Sitio se considerará no confidencial y LIXBY podrá utilizarlo sin restricción.</p>
+          <h2 id="contacto-h">Contacto legal y reclamaciones</h2>
+          <p>Para cuestiones legales o reclamaciones: <strong>LIXBY S.L.</strong><br>
+             Dirección: Calle Ejemplo 1, 28000 Madrid, España<br>
+             Email legal: <a href="mailto:legal@lixby.com" class="anchor">legal@lixby.com</a><br>
+             Atención al cliente: <a href="mailto:soporte@lixby.com" class="anchor">soporte@lixby.com</a></p>
+        </section>
 
-          <h3>Datos de contacto (legal)</h3>
-          <p class="small">
-            <strong>Razón social:</strong> LIXBY S.L. (sustituye por tu razón social real)<br>
-            <strong>Dirección:</strong> Calle Ejemplo 1, 28000 Madrid, España<br>
-            <strong>Correo legal:</strong> <a href="mailto:legal@lixby.com" class="anchor">legal@lixby.com</a><br>
-            <strong>Última actualización:</strong> <span id="datePublished">2025-01-01</span>
-          </p>
+        <section id="changes" aria-labelledby="changes-h">
+          <h2 id="changes-h">Registro de cambios / Fecha de vigencia</h2>
+          <p class="small">Última actualización: <span id="updatedDate2">2025-01-01</span>. Historial (resumen):</p>
+          <ul>
+            <li><strong>2025-01-01</strong> — Versión inicial adaptada a LIXBY con ampliación sobre cookies, privacidad y accesibilidad.</li>
+          </ul>
+        </section>
 
-          <p class="small">Copyright © <span id="yearNow"></span> LIXBY. Todos los derechos reservados.</p>
+        <section id="otros" aria-labelledby="otros-h">
+          <h2 id="otros-h">Disposiciones finales</h2>
+          <p>Si alguna disposición de estas Condiciones es inválida, las demás permanecerán en vigor. Estas Condiciones suponen el acuerdo íntegro entre tú y LIXBY respecto al uso del Sitio.</p>
+          <p class="small">Antes de publicar, te recomiendo: (1) revisar y adaptar la sección de datos de la empresa, (2) añadir o vincular la Política de Privacidad y Cookies completa, y (3) pedir revisión legal si tu actividad tiene implicaciones comerciales o de consumo relevantes.</p>
         </section>
       </main>
     </div>
 
     <footer role="contentinfo">
-      <div class="small">Si necesitas adaptar alguna cláusula (jurisdicción, dirección, límites de responsabilidad o datos de la empresa), dímelo y lo ajusto.</div>
+      <div class="small">Si quieres que incluya una <strong>Política de Cookies</strong> completa, una cláusula de <strong>Arbitraje</strong> o el texto adaptado para un país concreto (p.ej. Estados Unidos, España), lo puedo añadir ya mismo.</div>
     </footer>
   </div>
 
@@ -218,11 +214,8 @@
     // Fecha dinámica
     (function(){
       const d = new Date();
-      document.getElementById('yearNow').textContent = d.getFullYear();
-      // Asignar las mismas fechas como ejemplo; cambiar según convenga
-      const formatted = d.toISOString().slice(0,10);
-      document.getElementById('updatedDate').textContent = formatted;
-      document.getElementById('datePublished').textContent = formatted;
+      document.getElementById('updatedDate').textContent = d.toISOString().slice(0,10);
+      document.getElementById('updatedDate2').textContent = d.toISOString().slice(0,10);
     })();
   </script>
 </body>
