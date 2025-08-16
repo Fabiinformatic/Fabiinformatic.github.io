@@ -136,12 +136,16 @@
       <aside aria-labelledby="ticket-title">
         <h2 id="ticket-title">Abrir un ticket</h2>
 
-        <!-- Nota: el input file necesita name="attachments" para que emailjs.sendForm lo incluya -->
         <form id="ticketForm" class="ticket-form" aria-label="Formulario para abrir ticket" enctype="multipart/form-data" onsubmit="return false;">
-          <!-- hidden ticket_id (se actualizará antes de enviar) -->
-          <input type="hidden" id="ticketIdHidden" name="ticket_id" value="">
+          <!-- Hidden fields required by template -->
+          <!-- Cambia soporte@lixby.com por el correo real de soporte si lo deseas -->
+          <input type="hidden" name="to_email" value="soporte@lixby.com" />
+          <input type="hidden" name="to" value="soporte@lixby.com" />
+          <input type="hidden" name="reply_to" id="replyToHidden" value="" />
+          <input type="hidden" name="from_name" id="fromNameHidden" value="" />
+          <input type="hidden" name="ticket_id" id="ticketIdHidden" value="" />
 
-          <input id="t-name" name="from_name" type="text" placeholder="Tu nombre" required autocomplete="name" />
+          <input id="t-name" name="from_name_visible" type="text" placeholder="Tu nombre" required autocomplete="name" />
           <input id="t-email" name="from_email" type="email" placeholder="tu@correo.com" required autocomplete="email" />
           <select id="t-product" name="product" aria-label="Selecciona producto">
             <option value="">Producto (opcional)</option>
@@ -153,7 +157,7 @@
 
           <!-- Attachments: drag & drop + file input -->
           <label for="fileInput" class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Area para adjuntar archivos">
-            <div class="dz-info">Arrastra archivos aquí o haz clic para añadir (máx 5 archivos, 5MB total)</div>
+            <div class="dz-info">Arrastra archivos aquí o haz clic para añadir (máx 5 archivos, 10MB total)</div>
             <div class="muted">Adjuntos</div>
             <input id="fileInput" name="attachments" type="file" accept=".png,.jpg,.jpeg,.webp,.txt,.log,.zip,.pdf" multiple style="display:none" />
           </label>
@@ -173,7 +177,7 @@
           </div>
 
           <div id="ticketInfo" class="ticket-meta" aria-live="polite"></div>
-          <div id="ticketSuccess" class="ticket-success" role="status" aria-live="polite">Ticket creado — ID: <span id="ticketIdDisplay"></span></div>
+          <div id="ticketSuccess" class="ticket-success" role="status" aria-live="polite">Ticket creado — ID: <span id="ticketId"></span></div>
         </form>
       </aside>
     </div>
@@ -186,34 +190,22 @@
     </div>
   </footer>
 
-  <!-- EmailJS SDK (cargar antes de usar) -->
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
-
+  <!-- EmailJS SDK (lazy load inside script) -->
   <script>
   (function(){
-    // ========== CONFIG EMAILJS ==========
-    const EMAILJS_USERID = 'xsKpaFjbRsS95AK3i';       // tu User ID (proporcionado)
-    const EMAILJS_SERVICE_ID = 'service_tagcpgm';     // tu service id
-    const EMAILJS_TEMPLATE_ID = 'template_oxwjyfc';   // tu template id (proporcionado)
+    // ---------- CONFIG: pon aquí tus credenciales EmailJS ----------
+    const EMAILJS_USER_ID = 'xsKpaFjbRsS95AK3i';        // tu USER ID
+    const EMAILJS_SERVICE_ID = 'service_tagcpgm';       // tu SERVICE ID
+    const EMAILJS_TEMPLATE_ID = 'template_oxwjyfc';     // tu TEMPLATE ID (has dicho template_oxwjyfc)
+    const SUPPORT_EMAIL = 'soporte@lixby.com';          // correo destino que recibirá los tickets (puedes cambiar)
+    // ----------------------------------------------------------------
 
-    // límites para evitar 413
+    // Máximos y tipos permitidos (coincide con tu UI)
     const MAX_FILES = 5;
-    const MAX_TOTAL_BYTES = 5 * 1024 * 1024; // 5MB total
-    const MAX_FILE_BYTES = 3 * 1024 * 1024;  // 3MB por archivo
+    const MAX_TOTAL_BYTES = 10 * 1024 * 1024; // 10 MB
+    const ALLOWED_EXT = ['png','jpg','jpeg','webp','txt','log','zip','pdf'];
 
-    // inicializa EmailJS
-    try {
-      if (window.emailjs && typeof window.emailjs.init === 'function') {
-        window.emailjs.init(EMAILJS_USERID);
-        console.log('EmailJS inicializado');
-      } else {
-        console.warn('EmailJS SDK no disponible al init');
-      }
-    } catch(e) {
-      console.error('Error inicializando EmailJS', e);
-    }
-
-    // Elementos
+    // Elementos DOM
     const fileInput = document.getElementById('fileInput');
     const dropzone = document.getElementById('dropzone');
     const attachmentsEl = document.getElementById('attachments');
@@ -222,17 +214,21 @@
     const clearBtn = document.getElementById('clearForm');
     const infoEl = document.getElementById('ticketInfo');
     const successEl = document.getElementById('ticketSuccess');
-    const ticketIdDisplay = document.getElementById('ticketIdDisplay');
-    const ticketIdHidden = document.getElementById('ticketIdHidden');
+    const ticketIdSpan = document.getElementById('ticketId');
     const progressWrap = document.getElementById('uploadProgressWrap');
     const progressBar = document.getElementById('uploadProgressBar');
     const ticketsList = document.getElementById('ticketsList');
-    const formEl = document.getElementById('ticketForm');
+    const ticketForm = document.getElementById('ticketForm');
+
+    // Hidden inputs we added
+    const replyToHidden = document.getElementById('replyToHidden');
+    const fromNameHidden = document.getElementById('fromNameHidden');
+    const ticketIdHidden = document.getElementById('ticketIdHidden');
 
     // State
-    let attachedFiles = []; // array of File
+    let attachedFiles = [];
 
-    // Helpers
+    // Utilities
     function fmtBytes(n){ if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(2)+' MB'; }
     function genTicketId(){ const d = new Date(); const y = String(d.getFullYear()).slice(2); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); const rnd = Math.random().toString(36).slice(2,6).toUpperCase(); return `LXB-${y}${mm}${dd}-${rnd}`; }
     function sanitizeFilename(name){ return name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,120); }
@@ -242,10 +238,13 @@
       attachmentsEl.innerHTML = '';
       if (attachedFiles.length === 0) return;
       attachedFiles.forEach((f, idx) => {
-        const item = document.createElement('div'); item.className = 'attach-item';
-        const meta = document.createElement('div'); meta.className = 'attach-meta';
+        const item = document.createElement('div');
+        item.className = 'attach-item';
+        const meta = document.createElement('div');
+        meta.className = 'attach-meta';
         if (f.type && f.type.startsWith('image/')) {
-          const img = document.createElement('img'); img.className = 'attach-thumb'; img.alt = f.name; img.src = f.objectURL || URL.createObjectURL(f);
+          const img = document.createElement('img'); img.className = 'attach-thumb'; img.alt = f.name;
+          img.src = f.objectURL || URL.createObjectURL(f);
           meta.appendChild(img);
         } else {
           const placeholder = document.createElement('div'); placeholder.className = 'attach-thumb'; placeholder.style.display='flex'; placeholder.style.alignItems='center'; placeholder.style.justifyContent='center'; placeholder.textContent = '📄';
@@ -254,52 +253,48 @@
         const txt = document.createElement('div');
         txt.innerHTML = `<div style="font-weight:700">${sanitizeFilename(f.name)}</div><div class="muted">${fmtBytes(f.size)} • ${f.type||'—'}</div>`;
         meta.appendChild(txt);
+
         const right = document.createElement('div');
         const remove = document.createElement('button'); remove.className='btn-outline'; remove.type='button'; remove.textContent='Eliminar';
-        remove.addEventListener('click', ()=>{ if (f.objectURL) URL.revokeObjectURL(f.objectURL); attachedFiles.splice(idx,1); renderAttachments(); });
+        remove.addEventListener('click', ()=>{ 
+          // revoke urls
+          if (f.objectURL) try { URL.revokeObjectURL(f.objectURL); } catch(e){}
+          attachedFiles.splice(idx,1); renderAttachments(); 
+        });
         right.appendChild(remove);
-        item.appendChild(meta); item.appendChild(right);
+
+        item.appendChild(meta);
+        item.appendChild(right);
         attachmentsEl.appendChild(item);
       });
+
       const totalBytes = attachedFiles.reduce((s,f)=> s + (f.size || 0), 0);
-      const totalNote = document.createElement('div'); totalNote.className = 'muted';
+      const totalNote = document.createElement('div');
+      totalNote.className = 'muted';
       totalNote.textContent = `Archivos: ${attachedFiles.length} — Total: ${fmtBytes(totalBytes)}`;
       attachmentsEl.appendChild(totalNote);
     }
 
-    // Validate sizes before adding
-    function canAddFiles(files){
-      const arr = Array.from(files);
-      if (attachedFiles.length + arr.length > MAX_FILES) {
-        alert(`Máximo ${MAX_FILES} archivos.`);
-        return false;
-      }
+    // Add files (validate)
+    function addFiles(files){
+      let arr = Array.from(files || []);
       const totalNow = attachedFiles.reduce((s,f)=> s + (f.size||0), 0);
       const totalIncoming = arr.reduce((s,f)=> s + (f.size||0), 0);
+      if (attachedFiles.length + arr.length > MAX_FILES) {
+        alert(`Máximo ${MAX_FILES} archivos.`);
+        return;
+      }
       if (totalNow + totalIncoming > MAX_TOTAL_BYTES) {
-        alert(`Tamaño total excede ${fmtBytes(MAX_TOTAL_BYTES)}. Reduce o elimina archivos grandes.`);
-        return false;
+        alert(`Tamaño total excede ${fmtBytes(MAX_TOTAL_BYTES)}.`);
+        return;
       }
-      for (const f of arr) {
-        if (f.size > MAX_FILE_BYTES) {
-          alert(`El archivo "${f.name}" excede el límite por archivo (${fmtBytes(MAX_FILE_BYTES)}).`);
-          return false;
-        }
-      }
-      return true;
-    }
-
-    function addFiles(files){
-      let arr = Array.from(files);
-      // filter by extension if type is empty
       arr = arr.filter(f => {
-        // accept many types, fallback by extension
-        const allowedExt = ['png','jpg','jpeg','webp','txt','log','zip','pdf'];
-        if (f.type && f.type !== '' ) return true;
         const ext = (f.name.split('.').pop() || '').toLowerCase();
-        return allowedExt.includes(ext);
+        if (ALLOWED_EXT.includes(ext)) return true;
+        // Accept also common mime types
+        if (f.type && (f.type.startsWith('image/') || f.type === 'text/plain' || f.type === 'application/pdf' || f.type === 'application/zip')) return true;
+        return false;
       });
-      if (!canAddFiles(arr)) return;
       arr.forEach(f => {
         f.objectURL = URL.createObjectURL(f);
         attachedFiles.push(f);
@@ -307,23 +302,23 @@
       renderAttachments();
     }
 
-    // dropzone handlers
+    // Dropzone
     dropzone.addEventListener('click', ()=> fileInput.click());
     dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+
     dropzone.addEventListener('dragover', (e)=>{ e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; });
     dropzone.addEventListener('dragleave', (e)=>{ dropzone.style.borderColor = ''; });
     dropzone.addEventListener('drop', (e)=>{ e.preventDefault(); dropzone.style.borderColor = ''; addFiles(e.dataTransfer.files); });
 
     fileInput.addEventListener('change', (e)=> addFiles(e.target.files));
 
-    // demo attach log
+    // Attach demo log
     attachLogBtn.addEventListener('click', () => {
       const now = new Date().toISOString();
       const content = `Log demo LIXBY\nFecha: ${now}\nNivel: INFO\nMensaje: Ejemplo de registro para diagnóstico.\n`;
       const blob = new Blob([content], { type:'text/plain' });
       const f = new File([blob], `lixby-log-${Date.now()}.txt`, { type:'text/plain' });
       f.objectURL = URL.createObjectURL(f);
-      if (!canAddFiles([f])) return;
       attachedFiles.push(f);
       renderAttachments();
       infoEl.textContent = 'Registro de diagnóstico adjuntado (demo).';
@@ -340,7 +335,7 @@
       infoEl.textContent = '';
     });
 
-    // Local tickets storage (fallback)
+    // Local storage for tickets (fallback)
     const STORAGE_KEY = 'lixby_support_tickets_v2';
     function loadTickets(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch(e){ return []; } }
     function saveTickets(arr){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch(e){} }
@@ -355,35 +350,71 @@
                           <div class="ticket-meta-compact">ID: ${t.id} • ${t.status} • ${new Date(t.createdAt).toLocaleString()}</div>`;
         const right = document.createElement('div');
         const view = document.createElement('button'); view.className='btn-outline'; view.textContent='Ver';
-        view.addEventListener('click', ()=> {
-          alert(`ID: ${t.id}\nNombre: ${t.name||'—'}\nEmail: ${t.email||'—'}\nProducto: ${t.product||'—'}\nEstado: ${t.status}\nCreado: ${new Date(t.createdAt).toLocaleString()}\n\nDescripción:\n${t.description}`);
-        });
+        view.addEventListener('click', ()=> showTicketDetail(t.id));
         right.appendChild(view);
         card.appendChild(left); card.appendChild(right);
         ticketsList.appendChild(card);
       });
     }
 
-    // SEND via EmailJS (sendForm) -> incluye attachments si el input file tiene name="attachments"
-    async function sendViaEmailJS(formElement, onProgress){
-      // Añadimos un field ticket_id dinámico (ya existe hidden en el form)
+    function showTicketDetail(id){
+      const arr = loadTickets();
+      const t = arr.find(x=>x.id===id);
+      if (!t) return alert('Ticket no encontrado (demo).');
+      const detail = `
+ID: ${t.id}
+Nombre: ${t.name || '—'}
+Email: ${t.email || '—'}
+Producto: ${t.product || '—'}
+Estado: ${t.status}
+Creado: ${new Date(t.createdAt).toLocaleString()}
+
+Descripción:
+${t.description}
+
+Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
+`;
+      alert(detail);
+    }
+
+    // ---------- EmailJS ----------
+
+    // Load EmailJS SDK lazily and init
+    let emailJsLoaded = false;
+    async function ensureEmailJs(){
+      if (emailJsLoaded && window.emailjs && typeof window.emailjs.sendForm === 'function') return;
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js';
+        s.crossOrigin = 'anonymous';
+        s.onload = res;
+        s.onerror = () => rej(new Error('EmailJS load failed'));
+        document.head.appendChild(s);
+      });
       try {
-        // emailjs.sendForm usa XHR interno; no proporciona progreso de upload en su API pública,
-        // así que solo damos fallback visual. Aquí llamamos a sendForm y devolvemos su promesa.
-        const res = await window.emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, formElement);
-        return res;
+        if (window.emailjs && typeof emailjs.init === 'function') {
+          emailjs.init(EMAILJS_USER_ID);
+          emailJsLoaded = true;
+        }
       } catch(e){
-        // rethrow para manejo externo
-        throw e;
+        console.warn('EmailJS init failed', e);
       }
+    }
+
+    // Send using emailjs.sendForm (works with file inputs inside the form)
+    async function sendViaEmailJs(formEl){
+      await ensureEmailJs();
+      if (!window.emailjs || typeof emailjs.sendForm !== 'function') {
+        throw new Error('EmailJS SDK no disponible');
+      }
+      // emailjs.sendForm(serviceID, templateID, formElement)
+      return emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, formEl);
     }
 
     // Submit handler
     submitBtn.addEventListener('click', async () => {
       infoEl.textContent = '';
       successEl.style.display = 'none';
-      ticketIdDisplay.textContent = '';
-
       const name = document.getElementById('t-name').value.trim();
       const email = document.getElementById('t-email').value.trim();
       const product = document.getElementById('t-product').value;
@@ -395,116 +426,135 @@
         return;
       }
 
-      // validate attachments one last time
-      const totalBytes = attachedFiles.reduce((s,f)=> s + (f.size || 0), 0);
-      if (attachedFiles.length > MAX_FILES) { alert(`Máximo ${MAX_FILES} archivos.`); return; }
-      if (totalBytes > MAX_TOTAL_BYTES) { alert(`Tamaño total excesivo: ${fmtBytes(totalBytes)} > ${fmtBytes(MAX_TOTAL_BYTES)}`); return; }
-      for (const f of attachedFiles) {
-        if (f.size > MAX_FILE_BYTES) { alert(`Archivo demasiado grande: ${f.name} > ${fmtBytes(MAX_FILE_BYTES)}`); return; }
+      // Prevent overly large attachments (double-check)
+      const totalBytes = attachedFiles.reduce((s,f)=> s + (f.size||0), 0);
+      if (totalBytes > MAX_TOTAL_BYTES) {
+        infoEl.style.color = '#ffb4b4';
+        infoEl.textContent = `Tamaño total de adjuntos excede ${fmtBytes(MAX_TOTAL_BYTES)}.`;
+        return;
       }
 
+      // Prepare hidden/template fields
+      const ticketId = genTicketId();
+      if (replyToHidden) replyToHidden.value = email;
+      if (fromNameHidden) fromNameHidden.value = name;
+      if (ticketIdHidden) ticketIdHidden.value = ticketId;
+      if (ticketIdSpan) ticketIdSpan.textContent = ticketId;
+
+      // Append files to the actual form input element (fileInput already has files if chosen)
+      // But we handled files with attachedFiles; to ensure sendForm picks them we need a file input with files.
+      // We'll create a temporary input that contains the attached Files (only for this send).
+      // Note: Some browsers may not allow programmatically setting FileList. Instead we use the existing file input
+      // which is already bound when user selected files; but when we create demo logs we've pushed them into attachedFiles
+      // so we need to add them into a hidden input. The common approach: append files directly to FormData is not usable with sendForm,
+      // so we fallback: create a FormData and call emailjs.send (not sendForm) using emailjs.send with raw params -> but EmailJS file attachments work only via sendForm.
+      // Simpler: if attachedFiles differ from fileInput.files, we create a DataTransfer and assign fileInput.files (works in modern browsers).
+
+      // Sync fileInput.files with attachedFiles if needed (attempt DataTransfer)
+      try {
+        if (attachedFiles.length > 0) {
+          const dt = new DataTransfer();
+          attachedFiles.forEach(f => dt.items.add(new File([f], f.name, { type: f.type })));
+          fileInput.files = dt.files;
+        }
+      } catch (e) {
+        // If browser forbids, we proceed; attachments may not be included — user will be warned after failure.
+        console.warn('No se pudo sincronizar fileInput con attachedFiles', e);
+      }
+
+      // Disable UI
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enviando...';
       progressWrap.style.display = 'block';
-      progressBar.style.width = '10%';
+      progressWrap.setAttribute('aria-hidden','false');
+      progressBar.style.width = '4%';
 
-      // Preparamos form: tenemos el elemento formEl, y el input file (name="attachments")
-      // Como emailjs.sendForm leerá los inputs del form, necesitamos asegurarnos
-      // de que los archivos a enviar estén presentes en fileInput.files.
-      // Por seguridad, si hemos construido archivos dinámicamente (attachedFiles),
-      // vamos a construir un DataTransfer y asignarlo al file input si es necesario.
+      // Prepare localTicket (fallback)
+      const localTicket = {
+        id: ticketId,
+        name, email, product, description,
+        attachments: attachedFiles.map(f => ({ name: sanitizeFilename(f.name), size: f.size, type: f.type })),
+        createdAt: new Date().toISOString(),
+        status: 'pendiente-offline'
+      };
+
+      // Try send via EmailJS
       try {
-        // sincroniza fileInput.files con attachedFiles (solo es posible mediante DataTransfer)
-        if (attachedFiles.length > 0) {
-          const dt = new DataTransfer();
-          attachedFiles.forEach(f => dt.items.add(f));
-          fileInput.files = dt.files;
-        } else {
-          // aseguramos que fileInput esté vacío
-          fileInput.value = '';
-        }
+        // Ensure the form has the correct hidden fields and support email present
+        // Also ensure template receives variables used in your template (from_name, from_email, description, ticket_id, to_email, etc.)
+        // Set the 'to' fields on the form to guarantee recipient presence
+        const hiddenToA = ticketForm.querySelector('input[name="to_email"]');
+        const hiddenToB = ticketForm.querySelector('input[name="to"]');
+        if (hiddenToA) hiddenToA.value = SUPPORT_EMAIL;
+        if (hiddenToB) hiddenToB.value = SUPPORT_EMAIL;
 
-        // generamos ticket id y lo ponemos en hidden
-        const ticketId = genTicketId();
-        ticketIdHidden.value = ticketId;
+        // Update small progress
+        progressBar.style.width = '12%';
 
-        // Guardado local provisional
-        const localTicket = {
-          id: ticketId,
-          name, email, product, description,
-          attachments: attachedFiles.map(f => ({ name: sanitizeFilename(f.name), size: f.size, type: f.type })),
-          createdAt: new Date().toISOString(),
-          status: 'pendiente-emailjs'
-        };
+        // IMPORTANT: EmailJS sendForm doesn't expose progress for upload; we fake small progress steps for UX
+        progressBar.style.width = '28%';
 
-        // Intentamos enviar por EmailJS
-        let resp;
-        try {
-          resp = await sendViaEmailJS(formEl);
-          console.log('EmailJS response:', resp);
-        } catch(sendErr) {
-          console.error('EmailJS send failed — full error:', sendErr);
-          // Si el servidor respondió 413, lo mostramos claramente
-          let pretty = 'Error desconocido';
-          try {
-            if (sendErr && sendErr.status) pretty = `HTTP ${sendErr.status} — ${sendErr.text || sendErr.message || JSON.stringify(sendErr)}`;
-            else if (sendErr && sendErr.text) pretty = sendErr.text || sendErr.message;
-            else if (sendErr && sendErr.message) pretty = sendErr.message;
-            else pretty = JSON.stringify(sendErr);
-          } catch(e){ pretty = String(sendErr); }
-          // fallback: guardar localmente y notificar
-          const arr = loadTickets();
-          arr.unshift(localTicket); saveTickets(arr); renderTickets();
-          ticketIdDisplay.textContent = ticketId;
-          successEl.style.display = 'block';
-          infoEl.style.color = '#ffb4b4';
-          // Mensaje específico para 413 (payload too large)
-          if (pretty.indexOf('413') !== -1 || pretty.toLowerCase().includes('too large') || pretty.toLowerCase().includes('request entity too large')) {
-            infoEl.textContent = 'No se pudo enviar por email (EmailJS). Adjuntos demasiado grandes (413). Reduce el tamaño/numero de archivos y reintenta. Ticket guardado localmente.';
-          } else {
-            infoEl.textContent = 'No se pudo enviar por email (EmailJS). Ticket guardado localmente. Error: ' + pretty;
-          }
-          return;
-        }
+        const resp = await sendViaEmailJs(ticketForm);
 
-        // Si llega aquí, EmailJS devovió éxito
-        // persistimos con status 'recibido-emailjs'
+        // success
+        progressBar.style.width = '100%';
+        // EmailJS returns an object (depends on SDK); assume success if resolved
+        const serverId = (resp && resp.text) ? resp.text : ticketId; // resp.text may contain message
         const ticketSaved = {
           ...localTicket,
-          id: (resp && (resp.statusText || resp.text || resp.message)) ? (resp.statusText || resp.text || resp.message) : ticketId,
-          status: 'recibido-emailjs',
+          id: serverId || ticketId,
+          status: 'enviado-emailjs',
           serverResponse: resp
         };
-        const arr = loadTickets(); arr.unshift(ticketSaved); saveTickets(arr); renderTickets();
 
-        ticketIdDisplay.textContent = ticketSaved.id;
+        const arr = loadTickets();
+        arr.unshift(ticketSaved);
+        saveTickets(arr);
+        renderTickets();
+
+        ticketIdSpan.textContent = ticketSaved.id;
         successEl.style.display = 'block';
         infoEl.style.color = 'var(--muted)';
-        infoEl.textContent = 'Ticket enviado correctamente por email. Te llegará un correo de confirmación (si tu plantilla lo configura).';
+        infoEl.textContent = 'Ticket enviado correctamente. Recibirás email con el seguimiento.';
+      } catch (err) {
+        // Error: save local fallback
+        console.error('EmailJS send failed — full error:', err);
+        const arr = loadTickets();
+        arr.unshift(localTicket);
+        saveTickets(arr);
+        renderTickets();
+        ticketIdSpan.textContent = localTicket.id;
+        successEl.style.display = 'block';
+        infoEl.style.color = '#ffb4b4';
+        // Compose clearer message depending on error
+        let message = 'No se pudo enviar por email (EmailJS). Ticket guardado localmente.';
+        // Try to surface a helpful message from error object
+        try {
+          if (err && err.status === 413) message = 'No se pudo enviar por email (EmailJS): archivo demasiado grande.';
+          else if (err && err.text) message = `No se pudo enviar por email (EmailJS). Respuesta: ${err.text}`;
+          else if (err && err.response && err.response.errors) message = `No se pudo enviar por email (EmailJS). ${JSON.stringify(err.response.errors)}`;
+        } catch(e){}
+        infoEl.textContent = message + ' Revisa adjuntos y tamaño total.';
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Enviar ticket';
-        progressBar.style.width = '100%';
-        setTimeout(()=> {
-          progressWrap.style.display = 'none';
-          progressBar.style.width = '0%';
-        }, 400);
-        // limpiar attached files (en demo)
+        progressWrap.style.display = 'none';
+        progressBar.style.width = '0%';
+        // clear attachments objectURLs and fields
         attachedFiles.forEach(f => f.objectURL && URL.revokeObjectURL(f));
         attachedFiles = [];
         renderAttachments();
-        // limpiar descripción pero mantengo email por conveniencia
         document.getElementById('t-desc').value = '';
-        // ocultar success después de unos segundos
-        setTimeout(()=> { successEl.style.display = 'none'; ticketIdDisplay.textContent = ''; }, 8000);
+        // keep email & name for convenience
+        setTimeout(()=> { successEl.style.display = 'none'; ticketIdSpan.textContent = ''; }, 7000);
       }
     });
 
-    // Inicialización UI
+    // Initialize UI and saved tickets
     document.getElementById('yearSupport').textContent = new Date().getFullYear();
     renderTickets();
 
-    // Reintentar pendientes cuando vuelva conexión (intenta reenviar metadata sin attachments)
+    // Retry pending local tickets when online: try to send via EmailJS without attachments (attachments cannot be retried unless you store binary)
     window.addEventListener('online', async () => {
       const arr = loadTickets();
       const pending = arr.filter(t => t.status && t.status.startsWith('pendiente'));
@@ -513,31 +563,31 @@
       infoEl.textContent = `Hay ${pending.length} ticket(s) pendientes. Reintentando envío...`;
       for (const t of pending) {
         try {
-          // reconstruimos un FormData mínimo (attachments no disponibles)
-          const form = new FormData();
-          form.append('from_name', t.name || '');
-          form.append('from_email', t.email || '');
-          form.append('product', t.product || '');
-          form.append('description', t.description || '');
-          form.append('ticket_id', t.id);
-          // no podemos adjuntar archivos desde localStorage en este demo
-          // Usamos emailjs.send (no archivos) usando same template params (si tu template requiere archivos, fallo)
-          try {
-            const resp = await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-              from_name: t.name || '',
-              from_email: t.email || '',
-              product: t.product || '',
-              description: t.description || '',
-              ticket_id: t.id
-            });
-            t.status = 'recibido-emailjs';
-            t.serverResponse = resp;
-          } catch(e){
-            console.warn('Reintento EmailJS falló para', t.id, e);
-          }
-        } catch(e){}
+          // Build a simple form-like object using emailjs.send (send accepts template params)
+          await ensureEmailJs();
+          if (!window.emailjs || typeof emailjs.send !== 'function') continue;
+          const params = {
+            from_name: t.name || '',
+            from_email: t.email || '',
+            description: t.description || '',
+            ticket_id: t.id || genTicketId(),
+            product: t.product || '',
+            to_email: SUPPORT_EMAIL,
+            to: SUPPORT_EMAIL,
+            reply_to: t.email || ''
+          };
+          // emailjs.send(service, template, params)
+          const resp = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+          t.status = 'recibido';
+          t.serverResponse = resp;
+        } catch(e){
+          // no-op; leave as pendiente
+          console.warn('Retry ticket failed', e);
+        }
       }
-      try { saveTickets(arr); renderTickets(); infoEl.textContent = 'Reintento completado (demo).'; } catch(e){}
+      saveTickets(arr);
+      renderTickets();
+      infoEl.textContent = 'Reintento completado (demo).';
     });
 
     // theme toggle
