@@ -60,6 +60,23 @@
       .contact-min { flex-direction:column; } .contact-min .form{ width:100% }
     }
   </style>
+
+  <!-- Añadir: glass util (liquid glass styling consistente) -->
+  <style id="lixby-glass-style">
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 6px 26px rgba(2,6,12,0.48);
+      color: inherit;
+    }
+    .btn, .icon-btn {
+      transition: transform .14s cubic-bezier(.2,.9,.3,1), box-shadow .14s ease;
+    }
+    .btn:focus, .icon-btn:focus, button:focus { outline: 3px solid rgba(10,132,255,0.14); outline-offset: 3px; }
+  </style>
 </head>
 <body>
   <!-- skip link para accesibilidad -->
@@ -335,7 +352,12 @@
       item.style.display = 'flex'; item.style.gap='10px'; item.style.alignItems='center'; item.style.padding='8px'; item.style.borderRadius='8px';
       const img = document.createElement('img'); img.src = it.image || 'https://via.placeholder.com/80x80?text=Img'; img.alt = it.name; img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
       img.loading='lazy'; img.decoding='async';
-      const meta = document.createElement('div'); meta.className='meta'; meta.innerHTML = `<div style="font-weight:700">${it.name}</div><div style="color:var(--muted)">${it.price} x${it.qty||1}</div>`;
+      const meta = document.createElement('div'); meta.className='meta';
+      // RENDER SEGURO: no usar innerHTML con contenido dinámico
+      const title = document.createElement('div'); title.style.fontWeight = '700'; title.textContent = it.name || '';
+      const subtitle = document.createElement('div'); subtitle.style.color = 'var(--muted)'; subtitle.textContent = `${it.price} x${it.qty||1}`;
+      meta.appendChild(title); meta.appendChild(subtitle);
+
       const remove = document.createElement('button'); remove.className='remove'; remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
       remove.addEventListener('click', ()=>{ cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
       item.appendChild(img); item.appendChild(meta); item.appendChild(remove);
@@ -547,6 +569,79 @@
 <!-- <script type="module" src="/auth-firebase.js"></script> -->
 <!-- tu script principal (defer) -->
 <script src="script.js" defer></script>
+
+<!-- Mejoras: sanitización y accesibilidad del mini-cart (añadido, no borra nada) -->
+<script>
+(function(){
+  'use strict';
+  const CURRENCY = new Intl.NumberFormat('es-ES',{ style:'currency', currency:'EUR' });
+
+  // 1) Sanitize mini-cart nodes produced by the inline script (prevenir innerHTML XSS)
+  const miniCartItems = document.getElementById('miniCartItems');
+  if (miniCartItems) {
+    const sanitizeNode = (node) => {
+      const meta = node.querySelector('.meta');
+      if (!meta) return;
+      // extraer texto seguro y recomponer elementos
+      const nameText = meta.textContent || '';
+      const parts = nameText.split('\n').map(s => s.trim()).filter(Boolean);
+      const title = document.createElement('div'); title.style.fontWeight = '700'; title.textContent = parts[0] || '';
+      const sub = document.createElement('div'); sub.style.color = 'var(--muted)'; sub.textContent = parts.slice(1).join(' ') || '';
+      meta.innerHTML = '';
+      meta.appendChild(title);
+      meta.appendChild(sub);
+    };
+
+    const observer = new MutationObserver((muts) => {
+      muts.forEach(m => {
+        m.addedNodes.forEach(n => {
+          if (n.nodeType !== 1) return;
+          if (n.classList && n.classList.contains('mini-cart-item')) sanitizeNode(n);
+          n.querySelectorAll && n.querySelectorAll('.mini-cart-item').forEach(el => sanitizeNode(el));
+        });
+      });
+    });
+    observer.observe(miniCartItems, { childList: true, subtree: true });
+  }
+
+  // 2) Mejorar foco y escape (cerrar mini-cart con Esc)
+  const cartBtn = document.getElementById('cartBtn');
+  const miniCart = document.getElementById('miniCart');
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
+        miniCart.setAttribute('aria-hidden','true');
+        cartBtn && cartBtn.setAttribute('aria-expanded','false');
+        cartBtn && cartBtn.focus();
+      }
+    }
+  });
+  // al abrir, focusar primer control del miniCart (delegado: cuando se haga visible)
+  const showObserver = new MutationObserver(() => {
+    try {
+      if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
+        const focusable = miniCart.querySelector('button, [tabindex], a, input');
+        if (focusable) focusable.focus();
+      }
+    } catch(e) {}
+  });
+  if (miniCart) showObserver.observe(miniCart, { attributes: true, attributeFilter: ['aria-hidden'] });
+
+  // 3) Forzar formato monetario en el total del miniCart (si el script original escribe números crudos)
+  const miniCartTotal = document.getElementById('miniCartTotal');
+  if (miniCartTotal) {
+    const reformat = () => {
+      const raw = miniCartTotal.textContent || '';
+      const num = parseFloat(String(raw).replace(/[^\d.-]/g,'')) || 0;
+      miniCartTotal.textContent = CURRENCY.format(num);
+    };
+    // formatear ahora y cada vez que cambie
+    reformat();
+    const totObs = new MutationObserver(reformat);
+    totObs.observe(miniCartTotal, { childList: true, characterData: true, subtree: true });
+  }
+})();
+</script>
 
 </body>
 </html>
