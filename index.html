@@ -374,7 +374,13 @@
       <div class="legal-links" style="margin-left:12px;">
         <a href="privacidad.html">Política de privacidad</a>
         <a href="terminos.html">Términos y condiciones</a>
-        <a href="accessibility.html">Accesibilidad</a>
+        <a id="accessibilityLink"
+           href="accessibility.html"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Abrir página de accesibilidad (se abrirá en una ventana nueva)">
+          Accesibilidad
+        </a>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
@@ -1077,333 +1083,55 @@
     const pass = (document.getElementById('authPass')||{}).value || '';
     if (!email || !pass) { alert('Introduce email y contraseña'); return; }
 
-    if (window.appAuth && typeof window.appAuth.createUserWithEmail === 'function') {
+    if (window.appAuth && typeof window.appAuth.signUpWithEmail === 'function') {
       try {
-        await window.appAuth.createUserWithEmail(email, pass);
+        await window.appAuth.signUpWithEmail(email, pass);
         closeAuthOverlay();
         return;
       } catch (err) {
-        console.warn('appAuth.emailCreate failed', err);
+        console.warn('appAuth.emailSignUp failed', err);
         alert(err && err.message ? err.message : 'Error al registrarse');
         return;
       }
     }
 
-    // fallback demo
-    const name = email ? email.split('@')[0] : 'Nuevo';
-    const user = { uid: 'email_' + Date.now(), name: name, email: email || null, photoURL: 'https://via.placeholder.com/64x64?text=N' };
+    const name = email ? email.split('@')[0] : 'Usuario';
+    const user = { uid: 'email_' + Date.now(), name: name, email: email || null, photoURL: 'https://via.placeholder.com/64x64?text=U' };
     setLocalUser(user); closeAuthOverlay();
   });
-
-  // allow clicking accountBtn to open auth overlay when unauthenticated
-  document.addEventListener('click', (e) => {
-    const target = e.target;
-    // if original accountBtn exists and was clicked
-    if (target && target.id === 'accountBtn') {
-      e.preventDefault();
-      const user = getLocalUser();
-      if (!user) openAuthOverlay();
-      else renderHeaderUser(user);
-    }
-  });
-
-  // If appAuth not present, expose a signOut that clears local storage
-  window.lixby = window.lixby || {};
-  window.lixby.auth = {
-    getUser: getLocalUser,
-    signOut: async function(){
-      // prefer appAuth signOut
-      if (window.appAuth && typeof window.appAuth.signOut === 'function') {
-        try { await window.appAuth.signOut(); return; } catch(e){ console.warn('appAuth.signOut failed', e); }
-      }
-      clearLocalUser();
-      try { location.reload(); } catch(e){}
-    }
-  };
-
-  // react to external auth changes (if some external module updates localStorage)
-  window.addEventListener('storage', (e) => {
-    if (e.key === ACCOUNT_KEY) {
-      try { const u = JSON.parse(e.newValue); renderHeaderUser(u); } catch(e){}
-    }
-  });
-
 })();
 </script>
 
-<!-- Footer: newsletter handling + back-to-top behaviour -->
+<!-- Mejora accesibilidad del enlace de accesibilidad en el footer (no destructivo) -->
 <script>
+/* Mejora no destructiva para el enlace de accesibilidad en el footer.
+   - Asegura atributos accesibles
+   - Abre la página en una nueva pestaña (window.open) como refuerzo
+*/
 (function(){
-  const newsForm = document.getElementById('newsletterForm');
-  const newsInput = document.getElementById('newsletterEmail');
-  const newsBtn = document.getElementById('newsletterBtn');
-  const newsMsg = document.getElementById('newsletterMsg');
-  const storageKey = 'lixby_news_emails_v1';
-  function validEmail(e){ return typeof e === 'string' && e.includes('@') && e.indexOf('.') > e.indexOf('@'); }
+  const a = document.getElementById('accessibilityLink');
+  if (!a) return;
 
-  if (newsForm && newsInput && newsBtn) {
-    newsForm.addEventListener('submit', (ev) => {
-      ev.preventDefault();
-      const email = (newsInput.value || '').trim().toLowerCase();
-      if (!validEmail(email)) {
-        newsMsg.style.color = '#ffb4b4';
-        newsMsg.textContent = 'Introduce un correo válido.';
-        newsInput.focus();
-        return;
-      }
-      // store locally as demo
-      try {
-        const arr = JSON.parse(localStorage.getItem(storageKey) || '[]');
-        if (!arr.includes(email)) arr.push(email);
-        localStorage.setItem(storageKey, JSON.stringify(arr));
-      } catch(e){}
-      newsMsg.style.color = 'var(--accent)';
-      newsMsg.textContent = '¡Gracias! Ya estás suscrito.';
-      newsInput.value = '';
-      setTimeout(()=> { newsMsg.textContent = ''; }, 5000);
-    });
-  }
+  // Asegurar atributos (no sobrescribimos si ya existen)
+  if (!a.hasAttribute('target')) a.setAttribute('target', '_blank');
+  if (!a.hasAttribute('rel')) a.setAttribute('rel', 'noopener noreferrer');
+  if (!a.hasAttribute('aria-label')) a.setAttribute('aria-label', 'Abrir página de accesibilidad (se abrirá en una ventana nueva)');
 
-  // Back-to-top
-  const back = document.getElementById('backToTop');
-  function scrollHandler(){
-    if (window.scrollY > 300) back.style.display = 'inline-flex'; else back.style.display = 'none';
-  }
-  if (back) {
-    back.style.display = 'none';
-    back.addEventListener('click', (e)=>{
-      e.preventDefault();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(()=> document.querySelector('.brand')?.focus(), 600);
-    });
-    document.addEventListener('scroll', scrollHandler, { passive:true });
-    // initial
-    scrollHandler();
-  }
+  // Refuerzo: abrir con window.open si el navegador impide target=_blank en algún contexto
+  a.addEventListener('click', function(e){
+    // Si el usuario usa Ctrl/Cmd/Shift/Alt (quiere abrir en otra forma), respetar su intención
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
 
-  // Ensure footer FAQ link navigates correctly (enhanced for analytics/event tracking)
-  const footerFaq = document.getElementById('footerFaqLink');
-  if (footerFaq) {
-    footerFaq.addEventListener('click', (ev) => {
-      // keep default anchor behavior but also provide a reliable navigation fallback/respect target
-      try {
-        const href = footerFaq.getAttribute('href') || 'faq.html';
-        // example: could send analytics event here (omitted) then navigate:
-        // prevent double navigation when href is same-origin and anchor default will handle it,
-        // but to be explicit we use location.assign which keeps history.
-        ev.preventDefault();
-        // small timeout could be used if doing analytics, but we navigate immediately:
-        location.assign(href);
-      } catch(e){
-        // fallback: do nothing special
-      }
-    });
-  }
-})();
-</script>
-
-<!-- tu script principal global (si existe) -->
-<script src="script.js" defer></script>
-
-<!-- AÑADIDO: incluir tu gist (haste / snippet) -->
-<!-- El script del gist puede contener añadidos, snippets o utilidades que quieras inyectar.
-     Si tu gist exporta JS, se ejecutará aquí. -->
-<script src="https://gist.github.com/Fabiinformatic/5bad9397bee30659c5cbd57861abf1bf.js"></script>
-
-<!-- =============================
-     COOKIE BANNER (insertado en index)
-     - Coloca scripts que quieras condicionar con data-cookie="analytics" o "marketing"
-     - EmailJS y scripts necesarios deben dejarse sin data-cookie para funcionar siempre
-   ============================= -->
-<style id="lixby-cookie-style">
-  #lixbyCookieBanner{position:fixed;left:16px;right:16px;bottom:16px;z-index:99999;display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;box-shadow:0 8px 26px rgba(2,6,12,0.28);background:linear-gradient(180deg,#fff 6%, #f8fafb 100%);color:#07101a;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-  #lixbyCookieBanner .text{flex:1;font-size:0.95rem}
-  #lixbyCookieBanner .actions{display:flex;gap:8px;align-items:center}
-  #lixbyCookieBanner button{padding:8px 10px;border-radius:8px;border:1px solid rgba(2,6,12,0.06);background:transparent;cursor:pointer}
-  #lixbyCookieBanner .primary{background:var(--accent);color:#00121a;border:0;font-weight:700}
-  #lixbyCookiePrefs{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:100000;padding:18px;border-radius:12px;max-width:520px;width:94%;box-shadow:0 18px 40px rgba(2,6,12,0.32);background:#fff;color:#07101a}
-  #lixbyCookiePrefs h3{margin:0 0 8px}
-  #lixbyCookiePrefs .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(2,6,12,0.04)}
-  #lixbyCookieOverlay{position:fixed;inset:0;background:rgba(2,6,12,0.28);z-index:99999;display:none}
-  @media (max-width:640px){ #lixbyCookieBanner{flex-direction:column;align-items:flex-start} #lixbyCookieBanner .actions{width:100%;justify-content:flex-end} }
-</style>
-
-<div id="lixbyCookieOverlay" aria-hidden="true"></div>
-
-<div id="lixbyCookieBanner" role="dialog" aria-live="polite" aria-label="Aviso cookies">
-  <div class="text">
-    Usamos cookies para mejorar la experiencia. Puedes aceptar todo o elegir preferencias. No bloqueamos funciones esenciales.
-  </div>
-  <div class="actions" role="group" aria-label="Acciones cookies">
-    <button id="lixbyCookiePrefsBtn" type="button">Preferencias</button>
-    <button id="lixbyCookieReject" type="button">Rechazar</button>
-    <button id="lixbyCookieAccept" class="primary" type="button">Aceptar todo</button>
-  </div>
-</div>
-
-<div id="lixbyCookiePrefs" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lixbyCookieTitle">
-  <h3 id="lixbyCookieTitle">Preferencias de cookies</h3>
-  <p class="muted" style="margin:6px 0 12px">Activa o desactiva categorías. Las cookies funcionales son necesarias para que el sitio funcione y no se pueden desactivar.</p>
-  <div class="row"><div>Funcionales (necesarias)</div><div aria-hidden="true">Siempre activas</div></div>
-  <div class="row">
-    <div>Analítica</div>
-    <div><label><input id="cookie_analytics" type="checkbox"> Permitir</label></div>
-  </div>
-  <div class="row">
-    <div>Marketing</div>
-    <div><label><input id="cookie_marketing" type="checkbox"> Permitir</label></div>
-  </div>
-  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-    <button id="lixbyCookieCancel" type="button">Cancelar</button>
-    <button id="lixbyCookieSave" class="primary" type="button">Guardar</button>
-  </div>
-</div>
-
-<script>
-(function(){
-  const KEY = 'lixby_cookie_consent_v1';
-  const banner = document.getElementById('lixbyCookieBanner');
-  const overlay = document.getElementById('lixbyCookieOverlay');
-  const prefs = document.getElementById('lixbyCookiePrefs');
-  const btnPrefs = document.getElementById('lixbyCookiePrefsBtn');
-  const btnAccept = document.getElementById('lixbyCookieAccept');
-  const btnReject = document.getElementById('lixbyCookieReject');
-  const btnSave = document.getElementById('lixbyCookieSave');
-  const btnCancel = document.getElementById('lixbyCookieCancel');
-  const chkAnalytics = document.getElementById('cookie_analytics');
-  const chkMarketing = document.getElementById('cookie_marketing');
-
-  const DEFAULT = { functional: true, analytics: false, marketing: false };
-
-  function readConsent(){
+    // Normal: abrir en nueva ventana/pestaña mediante JS y prevenir el comportamiento por defecto para evitar duplicados
+    e.preventDefault();
+    const href = a.getAttribute('href') || 'accessibility.html';
     try {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch(e){ return null; }
-  }
-  function writeConsent(obj){
-    try { localStorage.setItem(KEY, JSON.stringify(obj)); } catch(e){ console.warn('No localStorage'); }
-  }
-  function hideBanner(){
-    if (banner) banner.style.display = 'none';
-    if (overlay) overlay.style.display = 'none';
-  }
-  function showBanner(){
-    if (banner) banner.style.display = '';
-  }
-  function openPrefs(){
-    if (!prefs || !overlay) return;
-    prefs.style.display = 'block';
-    prefs.setAttribute('aria-hidden','false');
-    overlay.style.display = 'block';
-    overlay.setAttribute('aria-hidden','false');
-    // populate checkboxes from stored consent
-    const c = readConsent() || DEFAULT;
-    chkAnalytics.checked = !!c.analytics;
-    chkMarketing.checked = !!c.marketing;
-  }
-  function closePrefs(){
-    if (!prefs || !overlay) return;
-    prefs.style.display = 'none';
-    prefs.setAttribute('aria-hidden','true');
-    overlay.style.display = 'none';
-    overlay.setAttribute('aria-hidden','true');
-  }
-
-  // Inject deferred scripts marked with data-cookie attribute
-  function injectDeferredScripts(consent){
-    // find all scripts with data-cookie
-    const nodes = document.querySelectorAll('script[data-cookie]');
-    nodes.forEach(node => {
-      const cat = node.getAttribute('data-cookie'); // 'analytics' or 'marketing'
-      if (!cat) return;
-      if (!consent[cat]) return; // not allowed
-      // if it already has been replaced, skip
-      if (node.getAttribute('data-cookie-loaded') === '1') return;
-      const src = node.getAttribute('data-src');
-      const isInline = node.getAttribute('data-cookie-inline') !== null || node.type === 'text/plain';
-      // create actual script
-      if (src) {
-        const s = document.createElement('script');
-        s.src = src;
-        if (node.hasAttribute('data-async')) s.async = true;
-        if (node.hasAttribute('data-defer')) s.defer = true;
-        // copy nonce if present
-        if (node.getAttribute('nonce')) s.setAttribute('nonce', node.getAttribute('nonce'));
-        s.onload = () => { node.setAttribute('data-cookie-loaded','1'); };
-        s.onerror = () => { node.setAttribute('data-cookie-loaded','err'); };
-        node.parentNode.insertBefore(s, node.nextSibling);
-      } else if (isInline) {
-        // re-create inline content
-        const s = document.createElement('script');
-        s.type = 'text/javascript';
-        s.text = node.textContent || node.innerText || '';
-        node.parentNode.insertBefore(s, node.nextSibling);
-        node.setAttribute('data-cookie-loaded','1');
-      }
-    });
-  }
-
-  // Apply consent: store and inject scripts
-  function applyConsent(obj){
-    const consent = Object.assign({}, DEFAULT, obj || {});
-    writeConsent(consent);
-    hideBanner();
-    try { window.LIXBY_Cookie = window.LIXBY_Cookie || {}; } catch(e) {}
-    window.LIXBY_Cookie._consent = consent;
-    // inject allowed deferred scripts
-    injectDeferredScripts(consent);
-  }
-
-  // Init: if consent exists -> apply and hide; else show banner
-  const existing = readConsent();
-  if (existing) {
-    // apply silently
-    applyConsent(existing);
-  } else {
-    showBanner();
-  }
-
-  // Buttons
-  btnAccept && btnAccept.addEventListener('click', ()=> {
-    applyConsent({ functional:true, analytics:true, marketing:true });
-  });
-  btnReject && btnReject.addEventListener('click', ()=> {
-    applyConsent({ functional:true, analytics:false, marketing:false });
-  });
-  btnPrefs && btnPrefs.addEventListener('click', ()=> openPrefs());
-  btnCancel && btnCancel.addEventListener('click', ()=> closePrefs());
-  btnSave && btnSave.addEventListener('click', ()=> {
-    const c = { functional:true, analytics: !!chkAnalytics.checked, marketing: !!chkMarketing.checked };
-    applyConsent(c);
-    closePrefs();
-  });
-
-  // Expose API
-  window.LIXBY_Cookie = {
-    get: function(){ return readConsent() || DEFAULT; },
-    set: function(obj){ applyConsent(obj); },
-    openPreferences: function(){ openPrefs(); }
-  };
-
-  // Accessibility: close prefs with Esc
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (prefs && prefs.style.display === 'block') closePrefs();
+      window.open(href, '_blank', 'noopener');
+    } catch(err) {
+      // Si window.open falla (bloqueador), fallback a navegación normal sin romper el DOM
+      window.location.href = href;
     }
-  });
-
-  // Small helper: auto-inject when consent changed by other tabs
-  window.addEventListener('storage', (e)=> {
-    if (e.key === KEY) {
-      const c = readConsent();
-      if (c) {
-        injectDeferredScripts(c);
-      }
-    }
-  });
-
+  }, { passive: false });
 })();
 </script>
 
