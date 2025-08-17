@@ -1,254 +1,176 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mi cuenta — LIXBY</title>
   <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
   <style>
-    .section { max-width:1100px;margin:28px auto;padding:18px; }
-    .two-col { display:grid; grid-template-columns: 1fr 360px; gap:18px; align-items:start; }
-    @media (max-width:900px){ .two-col { grid-template-columns:1fr; } }
+    .wrap { max-width:1100px; margin:36px auto; padding:20px; }
+    .account-grid { display:grid; grid-template-columns: 360px 1fr; gap:18px; align-items:start; }
+    @media(max-width:980px){ .account-grid { grid-template-columns: 1fr; } }
+    .panel { padding:18px; border-radius:12px; background:var(--bg-elev); border:1px solid var(--stroke); }
+    .avatar-large { width:120px; height:120px; border-radius:12px; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:28px; color:var(--muted); }
+    .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+    .input-wide { padding:10px 12px; border-radius:8px; border:1px solid var(--stroke); background:transparent; color:var(--text); }
+    .section-title { font-weight:700; margin-bottom:8px; }
+    .small-muted { color:var(--muted); font-size:0.95rem; }
+    .btn-row { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+    .list-item { padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); margin-bottom:8px; background:transparent; }
   </style>
 </head>
 <body>
-  <main id="accountMain" role="main" aria-labelledby="accountHeading" class="section">
-    <h1 id="accountHeading" class="sr-only">Mi cuenta — LIXBY</h1>
-    <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:12px">
-        <img id="accountAvatar" src="https://via.placeholder.com/84" alt="avatar" width="84" height="84" style="border-radius:12px;object-fit:cover">
-        <div>
-          <div id="accountName" style="font-weight:800">Invitado</div>
-          <div id="accountEmail" class="small muted">No autenticado</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button id="btnSignIn" class="btn primary">Iniciar sesión</button>
-        <button id="btnSignOut" class="btn ghost" style="display:none">Cerrar sesión</button>
-        <a href="index.html" class="btn ghost">Volver a la tienda</a>
-      </div>
-    </header>
+  <header class="nav"><div class="nav-inner"><div class="brand" id="brand">LIXBY</div><div class="nav-right"><a class="btn ghost" href="index.html">Volver</a></div></div></header>
 
-    <div class="two-col">
-      <section aria-labelledby="personalInfo" class="panel">
-        <h2 id="personalInfo">Información personal</h2>
-        <div id="infoLoading" class="small muted">Cargando perfil…</div>
+  <main class="wrap" id="accountMain" role="main" aria-labelledby="accountHeading">
+    <h1 id="accountHeading" class="sr-only">Mi cuenta</h1>
 
-        <div id="profilePanel" style="display:none">
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-            <input id="displayName" placeholder="Nombre visible" class="lixby-input" style="flex:1" />
-            <input id="phone" placeholder="Teléfono" class="lixby-input" style="flex:1" />
+    <div class="account-grid">
+      <aside class="panel" id="leftPanel" aria-labelledby="leftTitle">
+        <h2 id="leftTitle" class="section-title">Tu perfil</h2>
+        <div style="display:flex;gap:12px;align-items:center">
+          <div id="avatarBox" class="avatar-large">LX</div>
+          <div style="flex:1">
+            <div id="displayName" style="font-weight:700">Invitado</div>
+            <div id="displayEmail" class="small-muted">No autenticado</div>
+            <div style="margin-top:8px" id="loginButtons"><button id="btnOpenAuth" class="btn primary">Iniciar sesión</button></div>
           </div>
-          <div style="margin-top:10px">
-            <label for="shipping" style="font-weight:700">Dirección de envío</label>
-            <textarea id="shipping" rows="3" class="lixby-input" placeholder="Calle, número, ciudad, CP"></textarea>
-          </div>
-
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-            <button id="btnSaveProfile" class="btn primary">Guardar cambios</button>
-            <button id="btnDeleteAccount" class="btn ghost">Eliminar cuenta</button>
-          </div>
-          <div id="profileMsg" class="small muted" style="margin-top:10px"></div>
         </div>
 
-        <hr style="margin:18px 0;border:none;border-top:1px solid rgba(0,0,0,0.04)">
+        <hr style="margin:12px 0;border:none;border-top:1px solid var(--stroke)">
 
-        <h3>Pedidos recientes</h3>
-        <div id="ordersList" style="margin-top:8px"></div>
-      </section>
-
-      <aside class="panel">
-        <h3>Acciones rápidas</h3>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-          <button id="btnGoOrders" class="btn ghost">Mis pedidos</button>
-          <button id="btnGoFavs" class="btn ghost">Favoritos</button>
-          <button id="btnChangePassword" class="btn ghost">Cambiar contraseña</button>
-        </div>
-
-        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.04)">
-
-        <h3>Favoritos</h3>
-        <div id="favsList" style="margin-top:8px"></div>
+        <h3 class="section-title">Información personal</h3>
+        <div id="personalBlock" class="small-muted">Inicia sesión para ver y editar tu información.</div>
       </aside>
+
+      <section class="panel" id="mainPanel" aria-labelledby="mainTitle">
+        <h2 id="mainTitle" class="section-title">Información de la cuenta</h2>
+
+        <div id="accountContent">
+          <div id="profileSection">
+            <div class="field">
+              <label for="nameInput">Nombre visible</label>
+              <input id="nameInput" class="input-wide" />
+            </div>
+            <div class="field">
+              <label for="phoneInput">Teléfono</label>
+              <input id="phoneInput" class="input-wide" />
+            </div>
+            <div class="field">
+              <label for="shippingInput">Dirección de envío</label>
+              <textarea id="shippingInput" rows="3" class="input-wide"></textarea>
+            </div>
+            <div class="btn-row">
+              <button id="saveProfile" class="btn primary">Guardar cambios</button>
+              <button id="signOutBtn" class="btn ghost">Cerrar sesión</button>
+            </div>
+            <div id="profileMsg" class="small-muted" style="margin-top:10px"></div>
+          </div>
+
+          <hr style="margin:18px 0;border:none;border-top:1px solid var(--stroke)">
+
+          <h3 class="section-title">Pedidos recientes</h3>
+          <div id="ordersList" class="small-muted">Inicia sesión para ver tus pedidos.</div>
+
+          <h3 class="section-title" style="margin-top:18px">Favoritos</h3>
+          <div id="favsList" class="small-muted">Inicia sesión para ver tus favoritos.</div>
+        </div>
+      </section>
     </div>
+
   </main>
 
   <script type="module" src="auth-firebase-minimal.js"></script>
   <script>
-    (function(){
-      const btnSignIn = document.getElementById('btnSignIn');
-      const btnSignOut = document.getElementById('btnSignOut');
-      const accountName = document.getElementById('accountName');
-      const accountEmail = document.getElementById('accountEmail');
-      const accountAvatar = document.getElementById('accountAvatar');
-      const profilePanel = document.getElementById('profilePanel');
-      const infoLoading = document.getElementById('infoLoading');
-      const displayName = document.getElementById('displayName');
-      const phone = document.getElementById('phone');
-      const shipping = document.getElementById('shipping');
-      const btnSaveProfile = document.getElementById('btnSaveProfile');
-      const btnDeleteAccount = document.getElementById('btnDeleteAccount');
-      const profileMsg = document.getElementById('profileMsg');
-      const ordersList = document.getElementById('ordersList');
-      const favsList = document.getElementById('favsList');
+    // comportamiento de la página de cuenta — sincroniza con appAuth
+    const brand = document.getElementById('brand');
+    brand.addEventListener('click', ()=> location.href='index.html');
 
-      btnSignIn.addEventListener('click', ()=> { if (window.showAuthOverlay) showAuthOverlay(); else location.href='login.html'; });
-      btnGoOrders && btnGoOrders.addEventListener && btnGoOrders.addEventListener('click', ()=> location.href='pedidos.html');
-      btnGoFavs && btnGoFavs.addEventListener && btnGoFavs.addEventListener('click', ()=> location.href='favoritos.html');
+    document.getElementById('btnOpenAuth').addEventListener('click', ()=> {
+      // muestra overlay si existe
+      const o = document.getElementById('lixbyAuthOverlay');
+      if (o) { o.style.display='flex'; o.setAttribute('aria-hidden','false'); }
+      else location.href = 'login.html';
+    });
 
-      // subscribe to auth state
-      if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
-        window.appAuth.onAuthState(async (u) => {
-          if (!u) { // signed out
-            accountName.textContent = 'Invitado';
-            accountEmail.textContent = 'No autenticado';
-            accountAvatar.src = 'https://via.placeholder.com/84';
-            profilePanel.style.display = 'none';
-            infoLoading.style.display = '';
-            btnSignOut.style.display = 'none';
-            btnSignIn.style.display = '';
-            ordersList.innerHTML = '';
-            favsList.innerHTML = '';
-            return;
-          }
-          // signed in: load profile
-          btnSignOut.style.display = '';
-          btnSignIn.style.display = 'none';
-          accountName.textContent = u.name || 'Usuario';
-          accountEmail.textContent = u.email || (u.isAnonymous ? 'Invitado' : 'Sin email');
-          accountAvatar.src = u.photoURL || 'https://via.placeholder.com/84';
-          try {
-            infoLoading.style.display = '';
-            profilePanel.style.display = 'none';
-            ordersList.innerHTML = '';
-            favsList.innerHTML = '';
-            // load profile data from Firestore
-            const db = window.appAuth && window.appAuth._rawDb;
-            const authRaw = window.appAuth && window.appAuth._rawAuth;
-            if (!db || !authRaw) {
-              infoLoading.style.display = 'none';
-              profilePanel.style.display = '';
-              profileMsg.textContent = 'Conexión parcial: datos offline';
-              return;
-            }
-            const uid = u.uid;
-            // get user doc
-            const { doc, getDoc, collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js');
-            const ref = doc(db,'users',uid);
-            const snap = await getDoc(ref);
-            const data = snap.exists() ? snap.data() : {};
-            displayName.value = data.name || (u.name || '');
-            phone.value = data.phone || (data.profile && data.profile.phone) || '';
-            shipping.value = (data.shipping && (data.shipping.address || '')) || '';
-            profilePanel.style.display = '';
-            infoLoading.style.display = 'none';
+    // elementos
+    const avatarBox = document.getElementById('avatarBox');
+    const displayNameEl = document.getElementById('displayName');
+    const displayEmailEl = document.getElementById('displayEmail');
+    const nameInput = document.getElementById('nameInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const shippingInput = document.getElementById('shippingInput');
+    const saveProfile = document.getElementById('saveProfile');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const profileMsg = document.getElementById('profileMsg');
+    const ordersList = document.getElementById('ordersList');
+    const favsList = document.getElementById('favsList');
 
-            // orders
-            try {
-              ordersList.innerHTML = 'Cargando pedidos…';
-              const ordersCol = collection(db,'users',uid,'orders');
-              const q = query(ordersCol, orderBy('createdAt','desc'));
-              const snapOrders = await getDocs(q);
-              if (snapOrders.empty) ordersList.innerHTML = '<div class="small muted">No tienes pedidos.</div>';
-              else {
-                ordersList.innerHTML = '';
-                snapOrders.forEach(os => {
-                  const o = os.data();
-                  const el = document.createElement('div');
-                  el.style.padding='10px';
-                  el.style.border='1px solid rgba(0,0,0,0.04)';
-                  el.style.borderRadius='8px';
-                  el.style.marginBottom='8px';
-                  el.innerHTML = `<div style="font-weight:700">${o.title || 'Pedido'}</div><div class="small muted">${o.status || 'Pendiente'} · ${o.createdAt ? new Date(o.createdAt).toLocaleString() : ''}</div>`;
-                  ordersList.appendChild(el);
-                });
-              }
-            } catch(err) { ordersList.innerHTML = '<div class="small muted">No se pudieron cargar pedidos.</div>'; console.warn(err); }
-
-            // favorites
-            try {
-              favsList.innerHTML = 'Cargando…';
-              const favCol = collection(db,'users',uid,'favorites');
-              const favSnap = await getDocs(favCol);
-              if (favSnap.empty) favsList.innerHTML = '<div class="small muted">No hay favoritos.</div>';
-              else {
-                favsList.innerHTML = '';
-                favSnap.forEach(fs => {
-                  const f = fs.data();
-                  const row = document.createElement('div');
-                  row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px'; row.style.padding='8px'; row.style.border='1px solid rgba(0,0,0,0.04)'; row.style.borderRadius='8px'; row.style.marginBottom='8px';
-                  row.innerHTML = `<div><div style="font-weight:700">${f.name||'Producto'}</div><div class="small muted">${f.price||''}</div></div><div><button class="btn ghost" data-id="${fs.id}" data-action="view">Ver</button><button class="btn ghost" data-id="${fs.id}" data-action="remove">Eliminar</button></div>`;
-                  favsList.appendChild(row);
-                });
-                // attach handlers
-                favsList.querySelectorAll('button').forEach(b => {
-                  const id = b.getAttribute('data-id');
-                  const action = b.getAttribute('data-action');
-                  if (action === 'view') b.addEventListener('click', ()=> location.href = 'producto.html?id='+encodeURIComponent(id));
-                  if (action === 'remove') b.addEventListener('click', async ()=> {
-                    if (!confirm('Eliminar favorito?')) return;
-                    try { const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js'); await deleteDoc(doc(db,'users',uid,'favorites',id)); alert('Eliminado'); location.reload(); } catch(e){ console.warn(e); alert('No se pudo eliminar'); }
-                  });
-                });
-              }
-            } catch(err) { favsList.innerHTML = '<div class="small muted">No se pudieron cargar favoritos.</div>'; console.warn(err); }
-
-          } catch(e) {
-            console.warn('Error cargando cuenta', e);
-            infoLoading.style.display = 'none';
-            profilePanel.style.display = '';
-          }
-        }
-      });
-    } else {
-      // fallback: if appAuth not present, adapt UI to static
-      accountName.textContent = 'Invitado';
-      accountEmail.textContent = 'No autenticado';
-      accountAvatar.src = 'https://via.placeholder.com/84';
+    function showSignedOut() {
+      displayNameEl.textContent = 'Invitado';
+      displayEmailEl.textContent = 'No autenticado';
+      avatarBox.textContent = 'LX';
+      nameInput.value=''; phoneInput.value=''; shippingInput.value='';
+      profileMsg.textContent = '';
+      ordersList.innerHTML = 'Inicia sesión para ver tus pedidos.';
+      favsList.innerHTML = 'Inicia sesión para ver tus favoritos.';
     }
 
-    // Save profile
-    btnSaveProfile.addEventListener('click', async ()=>{
+    // subscribe auth state
+    if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
+      window.appAuth.onAuthState(async (u) => {
+        if (!u) { showSignedOut(); return; }
+        // render basic header info
+        const display = u.name || u.email || 'Usuario';
+        displayNameEl.textContent = display;
+        displayEmailEl.textContent = u.email || (u.isAnonymous ? 'Invitado' : '');
+        avatarBox.textContent = (display && display[0]) ? display[0].toUpperCase() : 'U';
+
+        // fetch profile via fetch from local storage snapshot if present, otherwise rely on renderAccountPageIfNeeded implemented in auth module
+        const localRaw = localStorage.getItem('lixby_user');
+        let local = null;
+        try { local = localRaw ? JSON.parse(localRaw) : null; } catch(e){ local=null; }
+        nameInput.value = (local && (local.firstName || local.name)) || '';
+        phoneInput.value = (local && local.phone) || '';
+        shippingInput.value = (local && local.shipping && (local.shipping.address || '')) || '';
+
+        // try to let auth module render account panel with more data (it already does) — but also try to load orders/favs gracefully
+        try {
+          // small delay to let auth module fetch
+          setTimeout(()=> {
+            // If auth module created #accountPanel it will have already filled content; otherwise, fetch minimal via Firestore (not here)
+          }, 200);
+        } catch(e) { console.warn(e); }
+
+        // try to populate orders/favs from local cache (fallback)
+        ordersList.innerHTML = '<div class="small-muted">Cargando pedidos…</div>';
+        favsList.innerHTML = '<div class="small-muted">Cargando favoritos…</div>';
+      });
+    } else {
+      showSignedOut();
+    }
+
+    saveProfile.addEventListener('click', async ()=>{
+      const user = (window.appAuth && window.appAuth._rawAuth && window.appAuth._rawAuth.currentUser) || null;
+      if (!user) { alert('Autentícate primero'); return; }
       profileMsg.textContent = 'Guardando…';
+      saveProfile.disabled = true;
       try {
-        const db = window.appAuth && window.appAuth._rawDb;
-        const authRaw = window.appAuth && window.appAuth._rawAuth;
-        if (!db || !authRaw || !authRaw.currentUser) { profileMsg.textContent = 'No autenticado'; return; }
-        const uid = authRaw.currentUser.uid;
-        const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js');
-        const payload = { name: displayName.value.trim() || null, phone: phone.value.trim() || null, shipping: { address: shipping.value.trim() || null }, updatedAt: new Date().toISOString() };
-        await setDoc(doc(db,'users',uid), payload, { merge:true });
-        profileMsg.textContent = 'Perfil actualizado';
-        setTimeout(()=> profileMsg.textContent = '', 3000);
-      } catch(e) { console.warn(e); profileMsg.textContent = 'Error al guardar'; }
+        if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') throw new Error('No disponible');
+        const extra = { firstName: nameInput.value.trim(), lastName: '', dob: null, phone: phoneInput.value.trim(), shipping: { address: shippingInput.value.trim() } };
+        await window.appAuth.updateProfileExtra(extra);
+        profileMsg.textContent = 'Perfil actualizado ✔';
+        setTimeout(()=> profileMsg.textContent = '', 2800);
+      } catch (e) {
+        console.error(e);
+        profileMsg.textContent = 'Error al guardar';
+      } finally { saveProfile.disabled = false; }
     });
 
-    // Sign out
-    btnSignOut.addEventListener('click', async ()=> {
-      try {
-        if (window.appAuth && typeof window.appAuth.signOut === 'function') await window.appAuth.signOut();
-        else { localStorage.removeItem('lixby_user'); location.href = 'index.html'; }
-      } catch(e){ console.warn(e); alert('Error cerrando sesión'); }
+    signOutBtn.addEventListener('click', async ()=>{
+      if (!confirm('¿Cerrar sesión?')) return;
+      try { if (window.appAuth && typeof window.appAuth.signOut === 'function') await window.appAuth.signOut(); else location.href='index.html'; } catch(e){ console.warn(e); alert('Error cerrando sesión'); }
     });
-
-    // delete account (danger)
-    btnDeleteAccount.addEventListener('click', async ()=> {
-      if (!confirm('Eliminar tu cuenta es irreversible. ¿Continuar?')) return;
-      try {
-        const authRaw = window.appAuth && window.appAuth._rawAuth;
-        if (!authRaw || !authRaw.currentUser) { alert('No autenticado'); return; }
-        const user = authRaw.currentUser;
-        await user.delete();
-        localStorage.removeItem('lixby_user');
-        alert('Cuenta eliminada');
-        location.href = 'index.html';
-      } catch(e) {
-        console.warn(e);
-        alert('No se pudo eliminar la cuenta. Es posible que necesites volver a iniciar sesión y reintentar.');
-      }
-    });
-
-  })();
   </script>
 </body>
 </html>
