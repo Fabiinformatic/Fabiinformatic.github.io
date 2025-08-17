@@ -1,5 +1,5 @@
 // auth-firebase-minimal.js
-// ES module. Inclúyelo como: <script type="module" src="auth-firebase-minimal.js"></script>
+// ES module — inclúyelo con: <script type="module" src="auth-firebase-minimal.js"></script>
 
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
 import {
@@ -9,16 +9,18 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signInAnonymously,
   onAuthStateChanged,
   signOut as fbSignOut,
-  sendPasswordResetEmail
+  RecaptchaVerifier,
+  PhoneAuthProvider,
+  PhoneMultiFactorGenerator,
+  getMultiFactorResolver,
+  multiFactor
 } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
-/* ====== CONFIG - usa tu config ====== */
+/* ===== CONFIG - reemplaza con la tuya si hace falta ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
   authDomain: "lixby-e0344.firebaseapp.com",
@@ -29,7 +31,7 @@ const firebaseConfig = {
   measurementId: "G-09SQL30MS8"
 };
 
-/* defensive init */
+/* Init firebase defensivo */
 let app;
 try { app = (getApps && getApps().length) ? getApp() : initializeApp(firebaseConfig); }
 catch(e) { try { app = initializeApp(firebaseConfig); } catch(e2) { console.error('Firebase init failed', e2); } }
@@ -41,534 +43,381 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
-/* helpers */
-const $id = (id) => document.getElementById(id);
-function safeJSONParse(raw){ try { return raw ? JSON.parse(raw) : null; } catch(e){ return null; } }
-function escapeHtml(str){ if (str === undefined || str === null) return ''; return String(str).replace(/[&<>"]+/g, (m)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]||m)); }
-function isEmail(v){ return typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-function mapErrorMessage(code, fallback){
-  const map = {
-    'auth/invalid-email': 'Correo inválido.',
-    'auth/user-not-found': 'No existe una cuenta con ese correo.',
-    'auth/wrong-password': 'Contraseña incorrecta.',
-    'auth/email-already-in-use': 'El correo ya está registrado.',
-    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
-    'auth/popup-blocked': 'El navegador bloqueó la ventana emergente. Se abrirá en la misma pestaña.',
-    'auth/popup-closed-by-user': 'La ventana emergente fue cerrada. Intenta de nuevo.',
-    'auth/cancelled-popup-request': 'Solicitud de popup cancelada. Intentando método alternativo...',
-    'auth/unauthorized-domain': 'Dominio no autorizado para OAuth. Añádelo en Firebase Console.',
-    'auth/operation-not-allowed': 'Método de acceso no permitido. Habilítalo en Firebase Console.'
-  };
-  return map[code] || fallback || 'Error al procesar la solicitud.';
-}
+/* Utils */
+const $id = id => document.getElementById(id);
+function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function isEmail(v){ return typeof v==='string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function showConsolePretty(err){ console.warn(err && err.code ? `${err.code} ${err.message||''}` : err); }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-/* Local snapshot helpers */
-function saveLocalUser(userObj){
+/* Simple local snapshot */
+function saveLocalUser(user){
   try{
-    if (!userObj) { localStorage.removeItem('lixby_user'); return; }
-    const u = { uid: userObj.uid, name: userObj.displayName || (userObj.email ? userObj.email.split('@')[0] : null), email: userObj.email || null, photoURL: userObj.photoURL || null, isAnonymous: !!userObj.isAnonymous, firstName: null, lastName: null, dob: null };
+    if (!user) { localStorage.removeItem('lixby_user'); return; }
+    const u = { uid:user.uid, name:user.displayName || (user.email? user.email.split('@')[0] : 'Usuario'), email:user.email||null, photoURL:user.photoURL||null, isAnonymous: !!user.isAnonymous };
     localStorage.setItem('lixby_user', JSON.stringify(u));
-  }catch(e){ console.warn('saveLocalUser', e); }
+  }catch(e){ console.warn(e); }
 }
 function clearLocalUser(){ try{ localStorage.removeItem('lixby_user'); }catch(e){} }
 
-/* UI helpers: modal styles/message area */
-function enforceModalStylesIfPresent(){
-  try {
-    const authModal = $id('authModal');
-    const authOverlay = $id('authOverlay');
-    const authBackdrop = $id('authBackdrop');
-
-    if (authOverlay) {
-      authOverlay.style.setProperty('z-index', '9998', 'important');
-      if (authBackdrop) {
-        authBackdrop.style.background = 'rgba(0,0,0,0.45)';
-        authBackdrop.style.backdropFilter = 'blur(4px)';
-      } else {
-        authOverlay.style.background = 'rgba(0,0,0,0.45)';
-      }
-    }
-    if (authModal) {
-      authModal.style.background = '#ffffff';
-      authModal.style.color = '#07101a';
-      authModal.style.boxShadow = '0 24px 60px rgba(2,6,12,0.48)';
-      authModal.style.border = '0';
-      authModal.style.borderRadius = '12px';
-      authModal.style.padding = authModal.style.padding || '20px';
-    }
-  } catch(e) { /* no crítico */ }
-}
-function ensureModalMessageArea(){
-  const authModal = $id('authModal');
-  if (!authModal) return null;
-  let msg = authModal.querySelector('.lixby-auth-msg');
-  if (!msg) {
-    msg = document.createElement('div');
-    msg.className = 'lixby-auth-msg';
-    msg.style.marginTop = '12px';
-    msg.style.padding = '10px';
-    msg.style.borderRadius = '8px';
-    msg.style.background = '#ffffff';
-    msg.style.color = '#07101a';
-    msg.style.fontWeight = '700';
-    msg.style.display = 'none';
-    msg.style.border = '1px solid rgba(0,0,0,0.06)';
-    authModal.appendChild(msg);
-  }
-  return msg;
-}
-function showModalMessage(text, autoHideMs){
-  const msg = ensureModalMessageArea();
-  if (!msg) { console.log('MSG:', text); return; }
-  msg.textContent = text;
-  msg.style.display = 'block';
-  if (autoHideMs && autoHideMs > 0) {
-    setTimeout(()=> { try { msg.style.display = 'none'; } catch(e){} }, autoHideMs);
-  }
+/* Small error mapping for user messages */
+function mapError(code, fallback='Error') {
+  const M = {
+    'auth/popup-blocked':'Popup bloqueado. El navegador ha impedido abrir ventanas emergentes.',
+    'auth/popup-closed-by-user':'Popup cerrado por el usuario.',
+    'auth/cancelled-popup-request':'Solicitud de popup cancelada.',
+    'auth/unauthorized-domain':'Dominio no autorizado para OAuth (añádelo en Firebase Console).',
+    'auth/operation-not-allowed':'Método de acceso no permitido (activar en Firebase Console).',
+    'auth/invalid-phone-number':'Número de teléfono inválido.',
+    'auth/missing-phone-number':'Falta número de teléfono.',
+    'auth/too-many-requests':'Demasiadas solicitudes. Intenta más tarde.',
+    'auth/user-disabled':'Cuenta deshabilitada.'
+  };
+  return M[code] || fallback || code;
 }
 
-/* upsert user profile safe */
-async function upsertUserProfile(user, extra={}){
-  if (!user || !user.uid) return;
-  try{
-    const ref = doc(db,'users',user.uid);
-    const snapshot = await getDoc(ref);
-    const base = { uid:user.uid, name:user.displayName||null, email:user.email||null, photoURL:user.photoURL||null, provider:user.providerData && user.providerData[0] && user.providerData[0].providerId || null, createdAt: snapshot.exists() ? snapshot.data().createdAt : new Date().toISOString() };
-    await setDoc(ref, { ...base, ...extra }, { merge:true });
-  }catch(e){ console.warn('upsertUserProfile', e); }
+/* Inject minimal styles for the modal (white + black, rounded, Apple-like minimal) */
+function injectMinimalAuthStyles(){
+  if (document.getElementById('lixby-auth-min-css')) return;
+  const s = document.createElement('style');
+  s.id = 'lixby-auth-min-css';
+  s.textContent = `
+    /* minimal modal */
+    .lixby-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.38); z-index:9999; }
+    .lixby-modal{ background:#fff; color:#07101a; width:420px; max-width:94%; border-radius:14px; padding:18px; box-shadow:0 18px 48px rgba(2,6,12,0.38); font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto; }
+    .lixby-title{ font-size:1.05rem; font-weight:700; margin:0 0 8px; }
+    .lixby-sub{ color:#556; font-size:0.95rem; margin:0 0 14px; }
+    .lixby-row{ display:flex; gap:10px; margin-top:8px; }
+    .lixby-btn{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; border:1px solid rgba(0,0,0,0.06); background:#fff; cursor:pointer; font-weight:700; color:#07101a; width:100%; justify-content:center; box-shadow: none; }
+    .lixby-btn img.icon { width:18px; height:18px; object-fit:contain; display:block; }
+    .lixby-divider{ display:flex; align-items:center; gap:12px; margin:12px 0; color:#888; }
+    .lixby-divider::before,.lixby-divider::after{ content:''; height:1px; background:#eee; flex:1; border-radius:2px; opacity:0.6; }
+    .lixby-actions{ display:flex; gap:10px; margin-top:12px; }
+    .lixby-link-btn{ background:transparent; color:#07101a; border:1px solid rgba(0,0,0,0.04); border-radius:12px; padding:9px 12px; cursor:pointer; font-weight:700; }
+    .lixby-small{ font-size:0.92rem; color:#445; margin-top:8px; text-align:center; }
+    .lixby-close{ position:absolute; right:14px; top:10px; background:transparent; border:0; cursor:pointer; color:#334; font-weight:700; }
+    #recaptcha-container { display:inline-block; }
+  `;
+  document.head.appendChild(s);
 }
 
-/* Handle sign-in uniformly */
-async function handleSignIn(user, { anonymous=false, redirectToIndex=true, showCongrats=true } = {}){
-  if (!user) return;
-  saveLocalUser(user);
-  try{ await upsertUserProfile(user, anonymous?{anonymous:true}:{}) }catch(e){}
-  updateHeaderSafe(user);
-  if (showCongrats) showModalMessage('Felicidades — has iniciado sesión', 1200);
-  // hide overlay + redirect
-  setTimeout(()=> {
-    hideAuthOverlay();
-    if (redirectToIndex) try { location.href = 'index.html'; } catch(e){}
-  }, 900);
-}
-
-/* popup/redirect OAuth with fallback */
-let popupInProgress = false;
-async function doOAuthSignInWithFallback(provider, providerName){
-  // disable concurrent popups
-  if (popupInProgress) return;
-  popupInProgress = true;
-  try{
-    // first attempt: popup
-    try {
-      const res = await signInWithPopup(auth, provider);
-      await handleSignIn(res.user, { anonymous:false, redirectToIndex:true, showCongrats:true });
-      window.dispatchEvent(new CustomEvent('lixby:auth:signin',{ detail: { uid: res.user.uid, provider: providerName } }));
-      return res.user;
-    } catch (errPopup) {
-      // If popup fails for reasons often related to cross-origin or blocked popups,
-      // fallback to redirect flow.
-      const code = errPopup && errPopup.code;
-      console.warn('Popup failed:', code, errPopup);
-      // If error is a popup-related one, do redirect
-      if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' || code === 'auth/unauthorized-domain') {
-        showModalMessage(mapErrorMessage(code, 'Popup falló. Usando método alternativo...'), 2200);
-        try {
-          await signInWithRedirect(auth, provider);
-          // redirect will unload page; getRedirectResult is handled in init()
-          return null;
-        } catch (errRedirect) {
-          console.error('redirect fallback failed', errRedirect);
-          showModalMessage(mapErrorMessage(errRedirect && errRedirect.code, 'No fue posible iniciar sesión con OAuth'), 4000);
-          throw errRedirect;
-        }
-      } else {
-        // other kinds of errors: show message
-        showModalMessage(mapErrorMessage(code, errPopup && errPopup.message), 4000);
-        throw errPopup;
-      }
-    }
-  } finally {
-    popupInProgress = false;
-  }
-}
-
-/* wire modal controls & inputs, with robust try/catch */
-function wireExistingModalButtons(){
-  const btnGoogle = $id('btnGoogle');
-  const btnGithub = $id('btnGitHub');
-  const btnEmailSignIn = $id('btnEmailSignIn');
-  const btnEmailSignUp = $id('btnEmailSignUp');
-  const btnAnonymous = $id('btnAnonymous');
-  const authClose = $id('authClose');
-  const authOverlay = $id('authOverlay');
-  const authBackdrop = $id('authBackdrop');
-
-  enforceModalStylesIfPresent();
-  ensureModalMessageArea();
-
-  if (btnGoogle) {
-    btnGoogle.addEventListener('click', async (e) => {
-      try { e.preventDefault(); btnGoogle.disabled = true; await doOAuthSignInWithFallback(googleProvider, 'Google'); }
-      catch(err){ console.warn('Google sign-in error', err); }
-      finally { try{ btnGoogle.disabled = false; }catch(e){} }
-    });
-  }
-  if (btnGithub) {
-    btnGithub.addEventListener('click', async (e) => {
-      try { e.preventDefault(); btnGithub.disabled = true; await doOAuthSignInWithFallback(githubProvider, 'GitHub'); }
-      catch(err){ console.warn('GitHub sign-in error', err); }
-      finally { try{ btnGithub.disabled = false; }catch(e){} }
-    });
-  }
-
-  if (btnEmailSignIn) {
-    btnEmailSignIn.addEventListener('click', async (ev) => {
-      try {
-        ev.preventDefault();
-        btnEmailSignIn.disabled = true;
-        const email = ($id('authEmail')||{}).value || '';
-        const pass = ($id('authPass')||{}).value || '';
-        if (!isEmail(email)) { showModalMessage('Introduce un correo válido', 2500); return; }
-        if (!pass || pass.length < 6) { showModalMessage('La contraseña debe tener al menos 6 caracteres', 2500); return; }
-        const res = await signInWithEmailAndPassword(auth, email, pass);
-        await handleSignIn(res.user, { anonymous:false, redirectToIndex:true, showCongrats:true });
-      } catch (err) {
-        console.warn('email signIn err', err);
-        showModalMessage(mapErrorMessage(err && err.code, err && err.message), 4000);
-      } finally {
-        try{ btnEmailSignIn.disabled = false; }catch(e){}
-      }
-    });
-  }
-
-  if (btnEmailSignUp) {
-    btnEmailSignUp.addEventListener('click', async (ev) => {
-      try {
-        ev.preventDefault();
-        btnEmailSignUp.disabled = true;
-        const email = ($id('authEmail')||{}).value || '';
-        const pass = ($id('authPass')||{}).value || '';
-        if (!isEmail(email)) { showModalMessage('Introduce un correo válido', 2500); return; }
-        if (!pass || pass.length < 6) { showModalMessage('La contraseña debe tener al menos 6 caracteres', 2500); return; }
-        const res = await createUserWithEmailAndPassword(auth, email, pass);
-        saveLocalUser(res.user);
-        try { await upsertUserProfile(res.user); } catch(e){ console.warn(e); }
-        showModalMessage('Felicidades — has creado una cuenta. Redirigiendo a iniciar sesión...', 2000);
-        setTimeout(()=> { hideAuthOverlay(); try{ location.href = 'login.html'; }catch(e){} }, 2000);
-      } catch (err) {
-        console.warn('signup err', err);
-        showModalMessage(mapErrorMessage(err && err.code, err && err.message), 4000);
-      } finally {
-        try{ btnEmailSignUp.disabled = false; }catch(e){}
-      }
-    });
-  }
-
-  if (btnAnonymous) {
-    btnAnonymous.addEventListener('click', async (ev) => {
-      try {
-        ev.preventDefault(); btnAnonymous.disabled = true;
-        const res = await signInAnonymously(auth);
-        await handleSignIn(res.user, { anonymous:true, redirectToIndex:true, showCongrats:true });
-      } catch(err){ console.warn('anon err', err); showModalMessage('No se pudo entrar como invitado', 2000); }
-      finally { try{ btnAnonymous.disabled = false; }catch(e){} }
-    });
-  }
-
-  if (authClose) {
-    authClose.addEventListener('click', () => {
-      hideAuthOverlay();
-      try { localStorage.setItem('lixby_seen_welcome','1'); } catch(e){}
-    });
-  }
-  if (authBackdrop) {
-    authBackdrop.addEventListener('click', () => { hideAuthOverlay(); });
-  }
-  if (authOverlay) {
-    authOverlay.addEventListener('click', (ev) => { if (ev.target === authOverlay) hideAuthOverlay(); });
-  }
-}
-
-/* show/hide overlay */
-function showAuthOverlay(){
-  enforceModalStylesIfPresent();
-  const overlay = $id('authOverlay');
-  const modal = $id('authModal');
-  const backdrop = $id('authBackdrop');
-  if (overlay && modal) {
-    overlay.style.display = 'block';
-    overlay.setAttribute('aria-hidden','false');
-    if (backdrop) backdrop.style.display = 'block';
-    try{ document.documentElement.style.overflow='hidden'; } catch(e){}
-    setTimeout(()=> {
-      const first = $id('authEmail') || $id('btnGoogle') || $id('btnAnonymous');
-      if (first && typeof first.focus === 'function') try{ first.focus(); }catch(e){}
-    }, 80);
-    return;
-  }
-  // No modal in page: create fallback (minimal)
-  createFallbackOverlay();
-}
-function hideAuthOverlay(){
-  const overlay = $id('authOverlay');
-  const backdrop = $id('authBackdrop');
-  if (overlay) {
-    overlay.style.display = 'none';
-    overlay.setAttribute('aria-hidden','true');
-  }
-  if (backdrop) backdrop.style.display = 'none';
-  const fb = $id('lixbyAuthOverlayFallback');
-  if (fb) fb.style.display = 'none';
-  try{ document.documentElement.style.overflow=''; } catch(e){}
-}
-
-/* fallback overlay helper (minimal; used only if your HTML doesn't include authModal) */
-function createFallbackOverlay(){
-  if ($id('lixbyAuthOverlayFallback')) return;
+/* Create the minimal modal (if the page doesn't have one) */
+function createAuthModalIfMissing(){
+  if ($id('lixbyAuthOverlay')) return;
+  injectMinimalAuthStyles();
   const overlay = document.createElement('div');
-  overlay.id = 'lixbyAuthOverlayFallback';
-  overlay.style.position = 'fixed';
-  overlay.style.inset = '0';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = 9999;
-  overlay.style.background = 'rgba(0,0,0,0.45)';
+  overlay.id = 'lixbyAuthOverlay';
+  overlay.className = 'lixby-overlay';
+  overlay.setAttribute('aria-hidden','true');
   overlay.innerHTML = `
-    <div style="background:#fff;color:#07101a;padding:20px;border-radius:12px;max-width:420px;width:100;">
-      <h3 style="margin:0 0 8px">Acceso</h3>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <button id="fb_google" style="padding:10px;border-radius:10px">Iniciar con Google</button>
-        <button id="fb_github" style="padding:10px;border-radius:10px">Iniciar con GitHub</button>
-        <input id="fb_email" placeholder="Correo" style="padding:10px;border-radius:8px;border:1px solid #ddd" />
-        <input id="fb_pass" placeholder="Contraseña" type="password" style="padding:10px;border-radius:8px;border:1px solid #ddd" />
-        <div style="display:flex;gap:8px">
-          <button id="fb_signin" style="flex:1;padding:10px;border-radius:10px">Iniciar sesión</button>
-          <button id="fb_signup" style="flex:1;padding:10px;border-radius:10px">Registrarse</button>
+    <div class="lixby-modal" role="dialog" aria-modal="true" aria-labelledby="lixTitle">
+      <button class="lixby-close" id="lixClose" aria-label="Cerrar">✕</button>
+      <h3 id="lixTitle" class="lixby-title">Acceso a Lixby</h3>
+      <div class="lixby-sub">Inicia sesión con tu cuenta</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button id="btnGoogle" class="lixby-btn" title="Iniciar sesión con Google">
+          <img class="icon" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%23EA4335' d='M44 24.2c0-1.6-.2-3.1-.6-4.5H24v8.6h11.9c-.5 2.8-2.3 5.1-4.9 6.7v5.5h8c4.7-4.3 7.5-10.7 7.5-16.3z'/><path fill='%2344AA53' d='M24 44c6 0 11-2.2 14.7-5.9l-7.1-5.1c-2 1.3-4.5 2.1-7.6 2.1-5.8 0-10.8-3.8-12.6-9.1H4v5.7C7.6 39.9 15.3 44 24 44z'/><path fill='%234A90E2' d='M9.4 27.9A17.9 17.9 0 0 1 8 24c0-0.8.1-1.6.3-2.4L4 16.9C2.6 19.9 1.9 22.9 1.9 25.9c0 3 0.6 5.8 1.9 8.2l6-6.2z'/><path fill='%23FBBC05' d='M24 8c3.6 0 6.9 1.2 9.5 3.4l6.9-6.9C35 2 29.8 0 24 0 15.3 0 7.6 4.1 4 12.6l6 4.3C13.2 11.9 18.2 8 24 8z'/></svg>" alt="G">
+          <span>Iniciar con Google</span>
+        </button>
+
+        <button id="btnGitHub" class="lixby-btn" title="Iniciar sesión con GitHub">
+          <img class="icon" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000' d='M12 2C6.48 2 2 6.58 2 12.18c0 4.5 2.87 8.32 6.84 9.66.5.1.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.64-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05A9.24 9.24 0 0 1 12 6.8c.85.004 1.71.115 2.5.34 1.9-1.32 2.74-1.05 2.74-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.64 1.03 2.76 0 3.94-2.34 4.81-4.57 5.07.36.3.68.9.68 1.82 0 1.31-.01 2.36-.01 2.68 0 .26.18.59.69.49A10.2 10.2 0 0 0 22 12.18C22 6.58 17.52 2 12 2z'/></svg>" alt="GH">
+          <span>Iniciar con GitHub</span>
+        </button>
+
+        <div class="lixby-divider">o</div>
+
+        <div class="lixby-actions">
+          <button id="goLogin" class="lixby-link-btn">Iniciar sesión</button>
+          <button id="goRegister" class="lixby-link-btn">Registrarse</button>
         </div>
-        <div style="text-align:center"><button id="fb_anon" style="padding:8px;border-radius:8px">Entrar como invitado</button></div>
-        <div id="fb_msg" style="color:#333;font-weight:600;margin-top:6px"></div>
+
+        <button id="btnAnonymous" class="lixby-btn" style="margin-top:6px">Entrar como invitado</button>
+
+        <div id="lixMsg" class="lixby-small" aria-live="polite"></div>
+        <div id="recaptcha-container" style="display:none"></div>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
-  // wire fallback
-  $id('fb_google')?.addEventListener('click', ()=> doOAuthSignInWithFallback(googleProvider,'Google').catch(()=>{}));
-  $id('fb_github')?.addEventListener('click', ()=> doOAuthSignInWithFallback(githubProvider,'GitHub').catch(()=>{}));
-  $id('fb_signin')?.addEventListener('click', async ()=>{
-    const e = $id('fb_email') ? $id('fb_email').value : '';
-    const p = $id('fb_pass') ? $id('fb_pass').value : '';
-    if (!isEmail(e)) { $id('fb_msg').textContent = 'Correo inválido'; return; }
-    if (!p || p.length < 6) { $id('fb_msg').textContent = 'Contraseña débil'; return; }
-    try { await signInWithEmailAndPassword(auth,e,p); } catch(err){ $id('fb_msg').textContent = mapErrorMessage(err && err.code, err && err.message); }
-  });
-  $id('fb_signup')?.addEventListener('click', async ()=>{
-    const e = $id('fb_email') ? $id('fb_email').value : '';
-    const p = $id('fb_pass') ? $id('fb_pass').value : '';
-    if (!isEmail(e)) { $id('fb_msg').textContent = 'Correo inválido'; return; }
-    if (!p || p.length < 6) { $id('fb_msg').textContent = 'Contraseña débil (>=6)'; return; }
-    try { await createUserWithEmailAndPassword(auth,e,p); $id('fb_msg').textContent='Felicidades — cuenta creada'; setTimeout(()=> location.href='login.html', 2000); } catch(err){ $id('fb_msg').textContent = mapErrorMessage(err && err.code, err && err.message); }
-  });
-  $id('fb_anon')?.addEventListener('click', async ()=> { try{ await signInAnonymously(auth); }catch(e){ console.warn(e); }});
+
+  $id('lixClose')?.addEventListener('click', hideAuthOverlay);
+  $id('goLogin')?.addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'login.html'; });
+  $id('goRegister')?.addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'register.html'; });
 }
 
-/* Minimal header/account update (existing logic reused) */
+/* show/hide */
+function showAuthOverlay(){ createAuthModalIfMissing(); const o = $id('lixbyAuthOverlay'); if(!o) return; o.setAttribute('aria-hidden','false'); o.style.display='flex'; try{ document.documentElement.style.overflow='hidden' }catch(e){} }
+function hideAuthOverlay(){ const o = $id('lixbyAuthOverlay'); if(!o) return; o.setAttribute('aria-hidden','true'); o.style.display='none'; try{ document.documentElement.style.overflow='' }catch(e){} }
+
+/* Modal message */
+function setModalMsg(txt, autoHideMs=3000){
+  const el = $id('lixMsg'); if(!el) return;
+  el.textContent = txt || '';
+  if (autoHideMs) { setTimeout(()=> { if(el) el.textContent=''; }, autoHideMs); }
+}
+
+/* OAuth sign-in with popup + redirect fallback */
+let oauthLock = false;
+async function doPopupSignInWithFallback(provider, providerName){
+  if (oauthLock) return;
+  oauthLock = true;
+  try {
+    try {
+      const res = await signInWithPopup(auth, provider);
+      if (res && res.user) {
+        saveLocalUser(res.user);
+        setModalMsg('Felicidades — has iniciado sesión',1200);
+        await sleep(800);
+        hideAuthOverlay();
+        location.href = 'index.html';
+      }
+    } catch(err) {
+      // If popup blocked or COOP issues, fallback to redirect
+      showConsolePretty(err);
+      const code = err && err.code;
+      if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' || code === 'auth/unauthorized-domain') {
+        setModalMsg(mapError(code,'Usando método alternativo...'),2000);
+        await signInWithRedirect(auth, provider);
+        // redirect flow will continue on getRedirectResult in init()
+      } else {
+        setModalMsg(mapError(code, err && err.message),4000);
+        throw err;
+      }
+    }
+  } finally { oauthLock = false; }
+}
+
+/* Anónimo */
+async function doAnonymousSignIn(){
+  try {
+    $id('btnAnonymous').disabled = true;
+    const res = await signInAnonymously(auth);
+    saveLocalUser(res.user);
+    setModalMsg('Entrando como invitado...',1000);
+    await sleep(800);
+    hideAuthOverlay();
+    location.href = 'index.html';
+  } catch(err) {
+    showConsolePretty(err);
+    setModalMsg('No se pudo entrar como invitado',3000);
+  } finally {
+    try{ $id('btnAnonymous').disabled = false; } catch(e){}
+  }
+}
+
+/* --- reCAPTCHA & Phone MFA helpers --- */
+let recaptchaVerifierInstance = null;
+function ensureRecaptcha(){
+  if (recaptchaVerifierInstance) return recaptchaVerifierInstance;
+  // invisible reCAPTCHA bound to the #recaptcha-container element
+  try{
+    recaptchaVerifierInstance = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'invisible'
+    });
+    // Render immediately so widget available
+    recaptchaVerifierInstance.render().catch(()=>{/* ignore render errors */});
+    return recaptchaVerifierInstance;
+  }catch(e){ console.warn('recaptcha init err', e); return null; }
+}
+
+/* Enrolar teléfono como segundo factor para currentUser */
+async function enrollPhoneMultiFactor(displayNameForFactor = 'Teléfono'){
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error('No hay usuario autenticado para inscribir segundo factor');
+    setModalMsg('Obteniendo sesión MFA...', 2000);
+    const mfaUser = multiFactor(user);
+    const session = await mfaUser.getSession(); // MultiFactorSession
+    // pedir número de teléfono (prompt para beta rápida; reemplaza por UI bonita si quieres)
+    const phoneNumber = prompt('Introduce tu número con prefijo internacional (ej. +34123456789):');
+    if (!phoneNumber) { setModalMsg('Inscripción cancelada'); return; }
+    const rec = ensureRecaptcha();
+    const phoneAuthProvider = new PhoneAuthProvider(auth);
+    // phoneInfoOptions: { phoneNumber, session }
+    const verificationId = await phoneAuthProvider.verifyPhoneNumber({ phoneNumber, session }, rec);
+    const code = prompt('Introduce el código SMS que has recibido:');
+    if (!code) { setModalMsg('Código no introducido. Inscripción cancelada.'); return; }
+    const cred = PhoneAuthProvider.credential(verificationId, code);
+    const assertion = PhoneMultiFactorGenerator.assertion(cred);
+    await mfaUser.enroll(assertion, displayNameForFactor);
+    setModalMsg('Segundo factor añadido ✔', 2500);
+  } catch(err) {
+    showConsolePretty(err);
+    setModalMsg(err && err.message ? err.message : 'Error al inscribir segundo factor', 4000);
+    try{ if (recaptchaVerifierInstance && typeof recaptchaVerifierInstance.clear === 'function') recaptchaVerifierInstance.clear(); }catch(e){}
+  }
+}
+
+/* Resolver sign-in cuando el primer factor requiere MFA (web) */
+async function handleMultiFactorRequired(error){
+  try{
+    if (!error || !error.code) { throw error || new Error('Unknown MFA error'); }
+    if (error.code !== 'auth/multi-factor-auth-required') { throw error; }
+    const resolver = getMultiFactorResolver(auth, error);
+    // Si hay hints, buscamos el primero de tipo phone
+    const hints = resolver.hints || [];
+    let phoneHintIndex = hints.findIndex(h=> h && h.factorId === PhoneMultiFactorGenerator.FACTOR_ID);
+    // Si no hay phone, pedir al usuario que elija; aquí elegimos el primero de la lista
+    if (phoneHintIndex === -1 && hints.length>0) phoneHintIndex = 0;
+    if (phoneHintIndex === -1) { setModalMsg('No hay factores disponibles para MFA'); return; }
+    const hint = hints[phoneHintIndex];
+    // Inicia reCAPTCHA y envío SMS
+    const rec = ensureRecaptcha();
+    const phoneAuthProvider = new PhoneAuthProvider(auth);
+    const verificationId = await phoneAuthProvider.verifyPhoneNumber({ multiFactorHint: hint, session: resolver.session }, rec);
+    const code = prompt(`Se ha enviado un SMS al ${hint.phoneNumber || 'tu teléfono'}. Introduce el código:`);
+    if (!code) { setModalMsg('Código no introducido.'); return; }
+    const cred = PhoneAuthProvider.credential(verificationId, code);
+    const assertion = PhoneMultiFactorGenerator.assertion(cred);
+    // resuelve el signIn
+    const userCredential = await resolver.resolveSignIn(assertion);
+    // sign-in completado
+    saveLocalUser(userCredential.user);
+    setModalMsg('Acceso completado ✔', 1200);
+    await sleep(800);
+    hideAuthOverlay();
+    location.href = 'index.html';
+  } catch(err) {
+    showConsolePretty(err);
+    setModalMsg(err && err.message ? err.message : 'Error en MFA', 4000);
+    try{ if (recaptchaVerifierInstance && typeof recaptchaVerifierInstance.clear === 'function') recaptchaVerifierInstance.clear(); }catch(e){}
+  }
+}
+
+/* Wire up created modal buttons and auth flows */
+function wireModalButtons(){
+  createAuthModalIfMissing();
+  // Google
+  $id('btnGoogle')?.addEventListener('click', async (e)=> {
+    e.preventDefault();
+    try { await doPopupSignInWithFallback(googleProvider,'Google'); }
+    catch(err){ 
+      // special case: if MFA required from popup/redirect, handle in init via getRedirectResult or here if error thrown
+      if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err);
+      else setModalMsg(mapError(err && err.code, err && err.message)); 
+    }
+  });
+  // GitHub
+  $id('btnGitHub')?.addEventListener('click', async (e)=> {
+    e.preventDefault();
+    try { await doPopupSignInWithFallback(githubProvider,'GitHub'); }
+    catch(err){
+      if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err);
+      else setModalMsg(mapError(err && err.code, err && err.message));
+    }
+  });
+  // Anonymous
+  $id('btnAnonymous')?.addEventListener('click', async (e)=>{
+    e.preventDefault();
+    await doAnonymousSignIn();
+  });
+  // recaptcha container is already in modal markup
+}
+
+/* Firestore upsert for user profile (safe merge) */
+async function upsertUserProfile(user, extra={}){
+  try{
+    if (!user || !user.uid) return;
+    const ref = doc(db,'users',user.uid);
+    const snap = await getDoc(ref);
+    const base = { uid:user.uid, name:user.displayName||null, email:user.email||null, photoURL:user.photoURL||null, provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || null, createdAt: snap.exists() ? snap.data().createdAt : new Date().toISOString() };
+    await setDoc(ref, { ...base, ...extra }, { merge:true });
+  }catch(e){ console.warn('upsertUserProfile err', e); }
+}
+
+/* Header/account minimal */
 function ensureHeader(){
   if ($id('lixbyHeader')) return $id('lixbyHeader');
-  injectCSSForHeader();
-  const accountContainer = document.getElementById('accountContainer');
-  if (accountContainer) {
-    if (!$id('lixbyAccountBtn')) {
-      const btn = document.createElement('button');
-      btn.id = 'lixbyAccountBtn';
-      btn.className = 'lixby-btn';
-      btn.type = 'button';
-      btn.textContent = 'Cuenta';
-      btn.addEventListener('click', () => showAuthOverlay());
-      accountContainer.appendChild(btn);
-    }
-    return accountContainer;
-  }
   const header = document.createElement('div');
   header.id = 'lixbyHeader';
-  header.style.display = 'flex';
-  header.style.alignItems = 'center';
-  header.style.justifyContent = 'space-between';
-  header.style.gap = '12px';
-  header.style.padding = '10px 18px';
+  header.style.display='flex'; header.style.alignItems='center'; header.style.justifyContent='space-between';
+  header.style.padding='10px 18px'; header.style.gap='12px';
   header.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;cursor:pointer;" id="lixby_logo">
-      <img src="https://i.imgur.com/dOCYmkx.jpeg" alt="Lixby" style="width:36px;height:36px;border-radius:8px;object-fit:cover"/>
-      <div style="font-weight:800;font-size:1rem;">LIXBY</div>
+    <div style="display:flex;align-items:center;gap:12px;cursor:pointer" id="lix_logo">
+      <img src="https://i.imgur.com/dOCYmkx.jpeg" style="width:36px;height:36px;border-radius:8px;object-fit:cover">
+      <div style="font-weight:800">LIXBY</div>
     </div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-      <button id="lixbyAccountBtn" class="lixby-btn" type="button">Cuenta</button>
+    <div style="margin-left:auto">
+      <button id="lixOpenAuth" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:#fff;color:#07101a;font-weight:700">Cuenta</button>
     </div>
   `;
   document.body.prepend(header);
-  $id('lixbyAccountBtn')?.addEventListener('click', ()=> showAuthOverlay());
-  $id('lixby_logo')?.addEventListener('click', ()=> location.href = 'index.html');
+  $id('lixOpenAuth')?.addEventListener('click', ()=> showAuthOverlay());
+  $id('lix_logo')?.addEventListener('click', ()=> location.href='index.html');
   return header;
-}
-function injectCSSForHeader(){
-  if ($id('lixby-minimal-css')) return;
-  const MINIMAL_CSS = `
-    .lixby-glass{ background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); backdrop-filter: blur(10px) saturate(120%); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color:inherit; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto;}
-    .lixby-btn{ display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.04); background:transparent; font-weight:700; }
-  `;
-  const s = document.createElement('style'); s.id = 'lixby-minimal-css'; s.textContent = MINIMAL_CSS; document.head.appendChild(s);
 }
 function updateHeaderSafe(user){
   ensureHeader();
-  const prev = $id('lixbyAccountHolder'); if (prev) prev.remove();
-  if (!user){ return; }
-  const holder = document.createElement('div'); holder.id = 'lixbyAccountHolder'; holder.style.display='flex'; holder.style.alignItems='center'; holder.style.gap='12px';
-  const name = escapeHtml(user.displayName || (user.email? user.email.split('@')[0] : 'Usuario'));
-  const photo = user.photoURL ? escapeHtml(user.photoURL) : `https://via.placeholder.com/64x64?text=${encodeURIComponent((name||'U').charAt(0))}`;
-  holder.innerHTML = `
-    <img style="width:44px;height:44px;border-radius:10px;object-fit:cover" src="${photo}" alt="avatar">
-    <div style="display:flex;flex-direction:column;align-items:flex-end;">
-      <div style="font-weight:700">${name}</div>
-      <div style="display:flex;gap:8px;margin-top:6px;">
-        <button id="lixbyViewAccount" class="lixby-btn" type="button">Mi cuenta</button>
-        <button id="lixbySignOut" class="lixby-btn" type="button">Cerrar sesión</button>
-      </div>
-    </div>
-  `;
-  const header = $id('lixbyHeader'); header.appendChild(holder);
-  $id('lixbyViewAccount')?.addEventListener('click', ()=> { location.href='cuenta.html'; });
-  $id('lixbySignOut')?.addEventListener('click', async ()=>{ try{ await fbSignOut(auth); clearLocalUser(); window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ signedIn:false } })); location.href='index.html'; }catch(e){ console.warn(e); } });
+  const prev = $id('lixbyAccountHolder'); if(prev) prev.remove();
+  if (!user) return;
+  const holder = document.createElement('div'); holder.id='lixbyAccountHolder';
+  holder.style.display='flex'; holder.style.alignItems='center'; holder.style.gap='10px';
+  const name = escapeHtml(user.displayName || (user.email ? user.email.split('@')[0] : 'Usuario'));
+  const avatar = user.photoURL ? user.photoURL : `https://via.placeholder.com/64?text=${encodeURIComponent(name.charAt(0)||'U')}`;
+  holder.innerHTML = `<img src="${avatar}" style="width:44px;height:44px;border-radius:10px;object-fit:cover"><div style="display:flex;flex-direction:column;align-items:flex-end"><div style="font-weight:700">${name}</div><div style="display:flex;gap:6px;margin-top:6px"><button id="viewAcc" style="padding:6px 8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff">Mi cuenta</button><button id="signOutBtn" style="padding:6px 8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff">Cerrar</button></div></div>`;
+  $id('lixbyHeader').appendChild(holder);
+  $id('viewAcc')?.addEventListener('click', ()=> location.href='cuenta.html');
+  $id('signOutBtn')?.addEventListener('click', async ()=> { try { await fbSignOut(auth); clearLocalUser(); location.href='index.html'; } catch(e){ console.warn(e); } });
 }
 
-/* Account page renderer (kept similar) */
-async function renderAccountPageIfNeeded(user){
-  const isCuenta = location.pathname.endsWith('cuenta.html') || !!$id('accountPanel');
-  if (!isCuenta) return;
-  const main = document.querySelector('main') || document.body;
-  let target = $id('accountPanel'); if (!target){ target = document.createElement('div'); target.id='accountPanel'; main.prepend(target); }
-  let profile = {};
-  if (user && user.uid){
-    try{ const snap = await getDoc(doc(db,'users',user.uid)); if (snap.exists()){ const d = snap.data(); profile = d.profile || { firstName: d.name? d.name.split(' ')[0] : '', lastName:'', dob: d.dob || '' }; profile.email = d.email || user.email; } }
-    catch(e){ console.warn('load profile', e); }
-  } else {
-    profile = safeJSONParse(localStorage.getItem('lixby_user')) || {};
+/* INIT: handle redirect result (OAuth redirect) and auth state */
+async function init(){
+  // handle redirect result if present
+  try {
+    const rr = await getRedirectResult(auth);
+    if (rr && rr.user) {
+      // Successful sign in via redirect
+      saveLocalUser(rr.user);
+      setModalMsg('Inicio mediante redirect completado',1000);
+      await sleep(700);
+      hideAuthOverlay();
+      location.href='index.html';
+    }
+  } catch(e) {
+    // If redirect failed due to MFA requirement, e may be multi-factor error
+    if (e && e.code === 'auth/multi-factor-auth-required') {
+      await handleMultiFactorRequired(e);
+    } else {
+      console.warn('getRedirectResult err', e);
+    }
   }
 
-  const fn = escapeHtml(profile.firstName||profile.name||'');
-  const ln = escapeHtml(profile.lastName||'');
-  const dob = escapeHtml(profile.dob||'');
-  const email = escapeHtml(profile.email || (user && user.email) || '');
-  target.innerHTML = '';
-  const panel = document.createElement('div'); panel.className='lixby-glass'; panel.style.padding='18px'; panel.style.maxWidth='1100px'; panel.style.margin='28px auto';
-  panel.innerHTML = `
-    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-      <div style="flex:0 0 120px;">
-        <div style="width:120px;height:120px;border-radius:14px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px">${(fn||'U').charAt(0).toUpperCase()}</div>
-      </div>
-      <div style="flex:1;min-width:260px;">
-        <h2>Información personal</h2>
-        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
-          <input id="pf_firstName" placeholder="Nombre" class="lixby-input" value="${fn}">
-          <input id="pf_lastName" placeholder="Apellidos" class="lixby-input" value="${ln}">
-        </div>
-        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
-          <label for="pf_dob" style="min-width:120px">Fecha de nacimiento</label>
-          <input id="pf_dob" type="date" class="lixby-input" value="${dob}" />
-        </div>
-        <div style="margin-top:10px;">
-          <label style="display:block;font-weight:700">Correo</label>
-          <div class="lixby-small">${email || '<span style="color:rgba(255,255,255,0.6)">No definido</span>'}</div>
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-          <button id="btnSaveProfile" class="lixby-btn" type="button">Guardar</button><button id="btnCancelProfile" class="lixby-btn" type="button">Cancelar</button>
-        </div>
-        <div id="profileMsg" class="lixby-small" style="margin-top:8px"></div>
-      </div>
-    </div>
+  // create modal & wire
+  createAuthModalIfMissing();
+  wireModalButtons();
 
-    <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)" />
-
-    <div style="display:grid;grid-template-columns:1fr 360px;gap:18px;">
-      <div>
-        <h3>Información de envíos</h3>
-        <div id="shippingInfo" class="lixby-small" style="margin-top:8px">Cargando...</div>
-
-        <h3 style="margin-top:18px">Pedidos recientes</h3>
-        <div id="ordersList" style="margin-top:8px"></div>
-      </div>
-
-      <aside>
-        <h3>Favoritos</h3>
-        <div id="favsList" style="margin-top:8px"></div>
-      </aside>
-    </div>
-  `;
-
-  target.appendChild(panel);
-
-  $id('btnCancelProfile')?.addEventListener('click', ()=> location.reload());
-  $id('btnSaveProfile')?.addEventListener('click', async ()=>{ 
-    const firstName = ($id('pf_firstName')||{}).value || '';
-    const lastName = ($id('pf_lastName')||{}).value || '';
-    const dobVal = ($id('pf_dob')||{}).value || '';
-    const msg = $id('profileMsg'); if (msg) msg.textContent='Guardando...';
-    try{ if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') throw new Error('updateProfileExtra no disponible'); await window.appAuth.updateProfileExtra({ firstName, lastName, dob: dobVal }); if (msg) msg.textContent='Guardado ✔';
-      const local = safeJSONParse(localStorage.getItem('lixby_user')) || {}; local.firstName = firstName || local.firstName; local.lastName = lastName || local.lastName; local.dob = dobVal || local.dob; try{ localStorage.setItem('lixby_user', JSON.stringify(local)); }catch(e){}
-      updateHeaderSafe({ displayName: (firstName ? (firstName + (lastName? ' '+lastName:'')) : local.name), email: local.email, photoURL: local.photoURL });
-    }catch(e){ console.error('save profile', e); if (msg) msg.textContent='Error al guardar. Revisa consola.'; }
+  // Subscribe auth state changes
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try{ saveLocalUser(user); updateHeaderSafe(user); await upsertUserProfile(user); } catch(e){ console.warn(e); }
+    } else {
+      updateHeaderSafe(null);
+      // show overlay the first time (optional)
+      const seen = localStorage.getItem('lixby_seen_welcome');
+      if (!seen) { setTimeout(()=> showAuthOverlay(), 300); localStorage.setItem('lixby_seen_welcome','1'); }
+    }
   });
 
-  // ... orders/favs loading remains same as previous (omitted for brevity here)
+  // expose functions to window for manual testing & UI custom pages
+  window.lixbyAuth = {
+    show: showAuthOverlay,
+    hide: hideAuthOverlay,
+    enrollPhoneMFA: enrollPhoneMultiFactor,
+    ensureRecaptcha
+  };
 }
 
-/* Init / getRedirectResult and subscribe */
-async function init(){
-  try{
-    // if user came via redirect, try to handle
-    try {
-      const redirectRes = await getRedirectResult(auth);
-      if (redirectRes && redirectRes.user) {
-        // handle sign-in success from redirect
-        await handleSignIn(redirectRes.user, { anonymous:false, redirectToIndex:true, showCongrats:true });
-      }
-    } catch (redirErr) {
-      // redirect may throw when no result found: ignore but log
-      if (redirErr && redirErr.code) console.warn('getRedirectResult err', redirErr.code);
-    }
-
-    // wire UI if it exists
-    try { wireExistingModalButtons(); } catch(e) { console.warn('wireExistingModalButtons failed', e); }
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user){
-        try{ saveLocalUser(user); updateHeaderSafe(user); await renderAccountPageIfNeeded(user); window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ uid:user.uid, signedIn:true } })); }
-        catch(e){ console.warn(e); }
-      } else {
-        clearLocalUser();
-        updateHeaderSafe(null);
-        const shouldShow = !localStorage.getItem('lixby_seen_welcome');
-        if (shouldShow) setTimeout(()=> showAuthOverlay(), 300);
-        window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ signedIn:false } }));
-      }
-    });
-  } catch(e){
-    console.error('init auth module err', e);
-  }
-}
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
-/* expose API */
+/* Expose simple API (programático) */
 window.appAuth = {
-  signInWithGoogle: () => doOAuthSignInWithFallback(googleProvider,'Google'),
-  signInWithGitHub: () => doOAuthSignInWithFallback(githubProvider,'GitHub'),
-  signInWithEmail: async (email,password)=>{ if(!email||!password) throw new Error('email+password required'); if (!isEmail(email)) throw new Error('email invalid'); if (password.length<6) throw new Error('weak password'); try{ const res = await signInWithEmailAndPassword(auth,email,password); saveLocalUser(res.user); await upsertUserProfile(res.user); updateHeaderSafe(res.user); return res.user; }catch(e){ throw e; } },
-  createUserWithEmail: async (email,password, extraProfile={})=>{ if(!email||!password) throw new Error('email+password required'); if (!isEmail(email)) throw new Error('email invalid'); if (password.length<6) throw new Error('weak password'); const res = await createUserWithEmailAndPassword(auth,email,password); saveLocalUser(res.user); await upsertUserProfile(res.user, extraProfile); updateHeaderSafe(res.user); return res.user; },
-  signInAnonymously: async ()=>{ const res = await signInAnonymously(auth); saveLocalUser(res.user); await upsertUserProfile(res.user,{anonymous:true}); updateHeaderSafe({ uid: res.user.uid, displayName:'Invitado', email:'', photoURL:''}); return res.user; },
-  signOut: async ()=>{ try{ await fbSignOut(auth); }catch(e){ console.warn(e); } try{ localStorage.removeItem('lixby_seen_welcome'); localStorage.removeItem('lixby_user'); }catch(e){} try{ location.href='index.html'; }catch(e){} },
-  onAuthState: (cb)=>{ if(typeof cb!=='function') return ()=>{}; const unsub = onAuthStateChanged(auth,(u)=>{ cb(u ? { uid:u.uid, name:u.displayName || (u.email? u.email.split('@')[0] : null), email:u.email, photoURL:u.photoURL, isAnonymous: u.isAnonymous } : null); }); return unsub; },
-  updateProfileExtra: async (extra={})=>{ const u = auth.currentUser; if(!u) throw new Error('No authenticated user'); try{ const ref = doc(db,'users',u.uid); await setDoc(ref,{ profile: extra, updatedAt: new Date().toISOString() },{ merge:true }); try{ const raw = localStorage.getItem('lixby_user'); const local = raw? JSON.parse(raw): {}; local.firstName = extra.firstName || local.firstName; local.lastName = extra.lastName || local.lastName; local.dob = extra.dob || local.dob; localStorage.setItem('lixby_user', JSON.stringify(local)); }catch(e){} return true; }catch(e){ console.error('updateProfileExtra err', e); throw e; } },
-  resetPassword: async (email)=>{ if(!email) throw new Error('email required'); try { await sendPasswordResetEmail(auth, email); return true; } catch(e) { throw e; } },
+  signInWithGoogle: () => doPopupSignInWithFallback(googleProvider,'Google'),
+  signInWithGitHub: () => doPopupSignInWithFallback(githubProvider,'GitHub'),
+  signInAnonymously: () => doAnonymousSignIn(),
+  enrollPhoneMFA: (displayName) => enrollPhoneMultiFactor(displayName),
+  signOut: async ()=> { try{ await fbSignOut(auth); clearLocalUser(); location.href='index.html'; } catch(e){ console.warn(e); } },
   _rawAuth: auth,
   _rawDb: db
 };
