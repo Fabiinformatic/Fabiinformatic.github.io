@@ -43,13 +43,26 @@
     .pay-card { padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); cursor:pointer; min-width:140px; text-align:center; }
     .pay-card.active { border-color:var(--accent); box-shadow:0 12px 30px rgba(10,132,255,0.06); transform:translateY(-4px); }
 
-    .care-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .care-input { display:inline-flex; gap:8px; align-items:center; cursor:pointer; }
+    .term-select-wrap { display:flex; gap:8px; align-items:center; margin-left:8px; }
+    .term-select { padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; }
 
+    /* LixbyCare as square cards (like capacities) */
+    .care-grid { display:flex; gap:12px; flex-wrap:wrap; align-items:stretch; }
+    .care-card {
+      min-width:160px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      cursor:pointer; display:flex; flex-direction:column; gap:8px;
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .care-card.active { border-color:var(--accent); transform:translateY(-6px); box-shadow:0 18px 36px rgba(10,132,255,0.06); }
+    .care-card small { color:var(--muted); font-size:0.92rem; }
+
+    /* small responsive adjustments */
     @media (max-width:700px) {
       .color-dot { width:34px;height:34px; }
       .cap-card { min-width:48%; padding:12px;border-radius:12px; }
       .big { font-size:1.08rem; }
+      .term-select-wrap { margin-left:0; margin-top:8px; flex-direction:column; align-items:flex-start; }
     }
 
     /* Mini-cart show/hide safety */
@@ -96,16 +109,14 @@
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <!-- Script: render product + price logic (LixbyCare + pago único / plazos) -->
   <script>
   (function(){
     'use strict';
-    // Helpers
-    const $ = sel => document.querySelector(sel);
+    // Util helpers
     const nf = v => (Math.round((Number(v)||0)*100)/100).toFixed(2).replace('.',',') + ' €';
     const proxied = url => { try { return 'https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//,'')) + '&w=900&q=80'; } catch(e){ return url; } };
 
-    // Mocked product list (puedes sustituir por tu fuente real)
+    // Product dataset
     const products = {
       "lixby-one": {
         id:'lixby-one', name:'Lixby One',
@@ -116,23 +127,23 @@
       }
     };
 
-    // Care pricing (base monthly). We'll treat single-payment care as monthly*12 upfront approx.
+    // Care options: monthly base
     const CARE = {
       none: { id:'none', label:'Sin LixbyCare+', monthly:0 },
       standard: { id:'standard', label:'LixbyCare+ (estándar)', monthly:3.00 },
       theft: { id:'theft', label:'LixbyCare+ (robo y pérdida)', monthly:5.00 }
     };
 
-    // Terms available for monthly financing
-    const TERMS = [6,12,18,24];
+    // Terms allowed (now including 30,36)
+    const TERMS = [6,12,18,24,30,36];
 
-    // Cart (localStorage)
+    // Cart storage helpers (unchanged)
     const CART_KEY = 'lixby_cart_v1';
     function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY))||[]; } catch(e){ return []; } }
     function saveCart(c){ try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
-
-    // Mini-cart elements
     let cart = loadCart();
+
+    // Mini-cart UI
     const cartBtn = document.getElementById('cartBtn');
     const miniCart = document.getElementById('miniCart');
     const miniCartItems = document.getElementById('miniCartItems');
@@ -151,7 +162,7 @@
           if (cartCount) cartCount.textContent = '0';
           return;
         }
-        let total = 0; let qty = 0;
+        let total = 0, qty = 0;
         cart.forEach((it, idx) => {
           const row = document.createElement('div'); row.style.display='flex'; row.style.gap='10px'; row.style.padding='8px'; row.style.alignItems='center';
           const img = document.createElement('img'); img.src = it.image || 'https://via.placeholder.com/80'; img.alt = it.name || ''; img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
@@ -172,7 +183,7 @@
     if (cartBtn && miniCart) {
       cartBtn.addEventListener('click', () => {
         const shown = miniCart.getAttribute('aria-hidden') === 'false';
-        miniCart.setAttribute('aria-hidden', String(shown));
+        miniCart.setAttribute('aria-hidden', String(!shown));
         cartBtn.setAttribute('aria-expanded', String(!shown));
       });
       document.addEventListener('click', (ev) => {
@@ -187,7 +198,6 @@
     if (miniClear) miniClear.addEventListener('click', ()=> { cart=[]; saveCart(cart); updateMiniCartUI(); });
     if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (!cart.length) return alert('El carrito está vacío'); alert('Simulación checkout — ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
 
-    // Expose addToCart
     window.addToCart = function(product){
       try {
         if (!product) return;
@@ -198,17 +208,12 @@
         else cart.push(Object.assign({}, product));
         saveCart(cart);
         updateMiniCartUI();
-        // show mini cart briefly
         try { miniCart.setAttribute('aria-hidden','false'); cartBtn.setAttribute('aria-expanded','true'); setTimeout(()=>{ miniCart.setAttribute('aria-hidden','true'); cartBtn.setAttribute('aria-expanded','false'); }, 2200); } catch(e){}
       } catch(e){ console.error('addToCart err', e); }
     };
 
-    // Product renderer + UI logic
-    function getProductIdFromUrl(){
-      try { const p = new URLSearchParams(location.search).get('id'); if (p) return p; } catch(e){}
-      return 'lixby-one';
-    }
-
+    // Render product + UI logic
+    function getProductIdFromUrl(){ try { const p = new URLSearchParams(location.search).get('id'); if (p) return p; } catch(e){} return 'lixby-one'; }
     function renderProduct(){
       const id = getProductIdFromUrl();
       const p = products[id] || Object.values(products)[0];
@@ -222,16 +227,15 @@
       img.addEventListener('error', ()=>{ img.src = p.image; });
       wrap.appendChild(img);
 
-      // info
+      // info column
       const info = document.createElement('div'); info.className='product-info';
       const title = document.createElement('h1'); title.textContent = p.name;
       const mini = document.createElement('p'); mini.textContent = p.mini || '';
       const priceEl = document.createElement('div'); priceEl.className='price'; priceEl.textContent = nf(Object.values(p.storage)[0]);
 
-      // options container
       const options = document.createElement('div'); options.className='options';
 
-      // Colors
+      // colors
       const colWrap = document.createElement('div'); const colTitle = document.createElement('div'); colTitle.className='option-title'; colTitle.textContent='Acabado. Elige tu favorito.'; colWrap.appendChild(colTitle);
       const colorsRow = document.createElement('div'); colorsRow.className='colors';
       const selColor = document.createElement('input'); selColor.type='hidden'; selColor.id='selColor';
@@ -249,7 +253,7 @@
       });
       colWrap.appendChild(colorsRow); colWrap.appendChild(selColor); options.appendChild(colWrap);
 
-      // Capacities
+      // capacities
       const capWrap = document.createElement('div'); const capTitle = document.createElement('div'); capTitle.className='option-title'; capTitle.textContent='Capacidad. ¿Cuánto espacio necesitas?'; capWrap.appendChild(capTitle);
       const capRow = document.createElement('div'); capRow.className='capacities';
       const selCap = document.createElement('input'); selCap.type='hidden'; selCap.id='selCap';
@@ -268,144 +272,152 @@
       });
       capWrap.appendChild(capRow); capWrap.appendChild(selCap); options.appendChild(capWrap);
 
-      // Payment options (Pago único / Pagos mensuales)
+      // payment options (Pago único / Pagos mensuales)
       const payWrap = document.createElement('div'); const payTitle = document.createElement('div'); payTitle.className='option-title'; payTitle.textContent='Opciones de pago. Elige lo que más te convenga.'; payWrap.appendChild(payTitle);
       const payRow = document.createElement('div'); payRow.className='pay-options';
       const paySingle = document.createElement('div'); paySingle.className='pay-card active'; paySingle.setAttribute('data-pay','single'); paySingle.textContent='Pago único';
       const payPlazo = document.createElement('div'); payPlazo.className='pay-card'; payPlazo.setAttribute('data-pay','plazo'); payPlazo.textContent='Pagos mensuales';
       payRow.appendChild(paySingle); payRow.appendChild(payPlazo);
-      const selTerm = document.createElement('input'); selTerm.type='hidden'; selTerm.id='selTerm'; selTerm.value = '1';
-      payWrap.appendChild(payRow); payWrap.appendChild(selTerm); options.appendChild(payWrap);
 
-      // months modal (created on demand)
-      function createMonthsModal(){
-        if (document.getElementById('monthsModal')) return;
-        const bd = document.createElement('div'); bd.id='monthsModal'; bd.className='modal-backdrop';
-        bd.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="monthsTitle">
-            <h3 id="monthsTitle">Elige la duración del pago a plazo</h3>
-            <div class="months" id="monthsContainer" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>
-            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
-              <button id="monthsCancel" class="text-btn">Cancelar</button>
-            </div>
-          </div>`;
-        document.body.appendChild(bd);
-        const container = bd.querySelector('#monthsContainer');
-        TERMS.forEach(m => {
-          const btn = document.createElement('button'); btn.type='button'; btn.className='month-btn'; btn.dataset.month = m; btn.textContent = `${m} meses`;
-          btn.addEventListener('click', function(){ selTerm.value = String(m); payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active')); payPlazo.classList.add('active'); closeMonthsModal(); updateSummary(); });
-          container.appendChild(btn);
-        });
-        bd.addEventListener('click', (ev)=>{ if (ev.target === bd) closeMonthsModal(); });
-        bd.querySelector('#monthsCancel').addEventListener('click', closeMonthsModal);
-      }
-      function openMonthsModal(){ createMonthsModal(); document.getElementById('monthsModal').classList.add('open'); }
-      function closeMonthsModal(){ const m = document.getElementById('monthsModal'); if (m) m.classList.remove('open'); }
+      // term select dropdown (visible only when plazo active)
+      const termWrap = document.createElement('div'); termWrap.className='term-select-wrap';
+      const termSelect = document.createElement('select'); termSelect.className='term-select'; termSelect.id = 'selTerm';
+      // options: 6,12,18,24,30,36
+      [6,12,18,24,30,36].forEach(m => {
+        const o = document.createElement('option'); o.value = String(m); o.textContent = `${m} meses`;
+        termSelect.appendChild(o);
+      });
+      // price badge next to select (base/mes)
+      const termBadge = document.createElement('div'); termBadge.id = 'termBadge'; termBadge.className = 'muted';
+      termWrap.appendChild(termSelect); termWrap.appendChild(termBadge);
 
-      paySingle.addEventListener('click', ()=> { payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active')); paySingle.classList.add('active'); selTerm.value='1'; updateSummary(); });
-      payPlazo.addEventListener('click', ()=> { openMonthsModal(); });
+      // initially hide termWrap (Pago único default)
+      termWrap.style.display = 'none';
 
-      // LixbyCare / AppleCare selection (checkbox style)
+      payWrap.appendChild(payRow); payWrap.appendChild(termWrap); options.appendChild(payWrap);
+
+      // LixbyCare as square cards
       const careWrap = document.createElement('div'); const careTitle = document.createElement('div'); careTitle.className='option-title'; careTitle.textContent='AppleCare+. Protege tu nuevo Lixby.'; careWrap.appendChild(careTitle);
-      const careRow = document.createElement('div'); careRow.className='care-row';
-      const careSelect = document.createElement('select'); careSelect.id='selCare'; const optNone = document.createElement('option'); optNone.value='none'; optNone.textContent='Sin LixbyCare+'; careSelect.appendChild(optNone);
-      const optStd = document.createElement('option'); optStd.value='standard'; optStd.textContent='LixbyCare+ (estándar) — 3,00 € / mes (estim.)'; careSelect.appendChild(optStd);
-      const optTheft = document.createElement('option'); optTheft.value='theft'; optTheft.textContent='LixbyCare+ (robo y pérdida) — 5,00 € / mes (estim.)'; careSelect.appendChild(optTheft);
-      careRow.appendChild(careSelect);
-      const careCheckboxDiv = document.createElement('label'); careCheckboxDiv.className='care-input'; const careCheckbox = document.createElement('input'); careCheckbox.type='checkbox'; careCheckbox.id='careToggle'; careCheckboxDiv.appendChild(careCheckbox); careCheckboxDiv.appendChild(document.createTextNode(' Añadir LixbyCare+'));
-      careRow.appendChild(careCheckboxDiv);
-      careWrap.appendChild(careRow); options.appendChild(careWrap);
+      const careGrid = document.createElement('div'); careGrid.className = 'care-grid';
+      const careSavedKey = 'lixby_sel_care_' + p.id;
+      const savedCare = localStorage.getItem(careSavedKey) || 'none';
+      // build cards from CARE map
+      Object.values(CARE).forEach(c => {
+        const card = document.createElement('button'); card.type='button'; card.className='care-card'; card.setAttribute('data-care', c.id);
+        if (savedCare === c.id) card.classList.add('active');
+        card.innerHTML = `<div style="font-weight:700">${c.label === 'Sin LixbyCare+' ? 'Sin LixbyCare+' : c.label}</div><small>${c.monthly > 0 ? (nf(c.monthly) + ' / mes (estim.)') : 'Sin coste'}</small>`;
+        card.addEventListener('click', ()=> {
+          careGrid.querySelectorAll('.care-card').forEach(x=>x.classList.remove('active'));
+          card.classList.add('active');
+          localStorage.setItem(careSavedKey, c.id);
+          updateSummary();
+        });
+        careGrid.appendChild(card);
+      });
+      careWrap.appendChild(careGrid);
+      options.appendChild(careWrap);
 
       // summary
       const summary = document.createElement('div'); summary.className='summary';
       summary.innerHTML = `<div><div class="muted">Precio</div><div class="big" id="totalPrice">--</div></div><div style="text-align:right"><div id="perMonth" class="muted">--</div><div id="careInfo" class="muted">--</div></div>`;
       options.appendChild(summary);
 
-      // actions
+      // actions (add to cart / fav)
       const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='10px'; actions.style.marginTop='12px';
       const addBtn = document.createElement('button'); addBtn.className='btn btn-buy'; addBtn.textContent='Añadir al carrito';
       const favBtn = document.createElement('button'); favBtn.className='btn'; favBtn.textContent='♡ Favorito';
       actions.appendChild(addBtn); actions.appendChild(favBtn);
 
-      // assemble columns
+      // assemble info
       info.appendChild(title); info.appendChild(mini); info.appendChild(priceEl); info.appendChild(options); info.appendChild(actions);
       container.appendChild(wrap); container.appendChild(info);
 
-      // initialize values
-      const initialColor = localStorage.getItem(savedColorKey) || p.colors[0]; selColor.value = initialColor;
-      const initialCap = localStorage.getItem(savedCapKey) || keys[0]; selCap.value = initialCap;
-      selTerm.value = '1';
-      careSelect.value = 'none';
-      careCheckbox.checked = false;
+      // initialize hidden values
+      selColor.value = savedColor || (p.colors[0]||'');
+      selCap.value = savedCap || keys[0];
+      termSelect.value = '12'; // default when switching to plazo
+      // init care active state
+      const activeCareId = savedCare || 'none';
+      careGrid.querySelectorAll('.care-card').forEach(card => {
+        if (card.dataset.care === activeCareId) card.classList.add('active'); else card.classList.remove('active');
+      });
 
-      // Update summary logic
+      // Payment toggles
+      paySingle.addEventListener('click', ()=> {
+        payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
+        paySingle.classList.add('active');
+        termWrap.style.display = 'none';
+        updateSummary();
+      });
+      payPlazo.addEventListener('click', ()=> {
+        payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
+        payPlazo.classList.add('active');
+        termWrap.style.display = 'flex';
+        updateSummary();
+      });
+
+      termSelect.addEventListener('change', updateSummary);
+      // capacity and color interactions already wired via localStorage listeners when cards clicked
+
+      // care card click handled earlier — add keyboard support
+      careGrid.querySelectorAll('.care-card').forEach(c=> c.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); c.click(); }}));
+
+      // update summary function
       function updateSummary(){
         try {
           const cap = selCap.value || keys[0];
           const base = Number(p.storage[cap] || 0);
-          const careId = careCheckbox.checked ? (careSelect.value || 'none') : 'none';
+          // detect term selection
+          const isPlazo = payPlazo.classList.contains('active');
+          const term = isPlazo ? Number(termSelect.value || 12) : 1;
+          // care selected
+          const careId = (careGrid.querySelector('.care-card.active') || {}).dataset?.care || 'none';
           const careMonthly = CARE[careId] ? CARE[careId].monthly : 0;
-          // if pago único selected (term === '1'), compute upfront care as monthly*12
-          const term = Number(selTerm.value || 1);
 
-          // compute displayed values
-          const careUpfront = Math.round(careMonthly * 12 * 100) / 100;
-          const totalSingle = Math.round((base + careUpfront) * 100) / 100;
-          const monthlyForTerm = Math.round(((base / Math.max(term,1)) + careMonthly) * 100) / 100;
+          // compute values
+          const deviceTotal = base;
+          const deviceMonthly = Math.round((deviceTotal / Math.max(term,1)) * 100) / 100;
+          const careUpfront = Math.round(careMonthly * 12 * 100) / 100; // upfront cost for single payment approximated as 12*monthly
+          const totalSingle = Math.round((deviceTotal + careUpfront) * 100) / 100;
+          const perMonthTotal = Math.round((deviceMonthly + careMonthly) * 100) / 100;
 
-          // Big price logic:
-          // - If Pago único selected (term===1), big shows total single (base + careUpfront)
-          // - If Pagos mensuales selected (term>1), big shows "Desde {base} €" (total device price) but we also show prominent monthly value
           const totalEl = document.getElementById('totalPrice');
           const perMonthEl = document.getElementById('perMonth');
           const careInfoEl = document.getElementById('careInfo');
+          const termBadgeEl = document.getElementById('termBadge');
 
-          if (term <= 1) {
+          if (!isPlazo) {
+            // show full total (device + upfront care)
             totalEl.textContent = nf(totalSingle);
-            perMonthEl.textContent = `o ${nf(Math.round((base / 24)*100)/100)} /mes (ej.: 24 meses)`;
+            perMonthEl.textContent = `Pago único. Ejemplo: ${nf(Math.round((deviceTotal/24)*100)/100)} /mes (si financias a 24 meses)`;
+            termBadgeEl.textContent = ''; // hide badge when not plazo
           } else {
-            // show device total as "Desde X €" (without care upfront) and monthly prominently
-            totalEl.textContent = 'Desde ' + nf(base);
-            perMonthEl.textContent = `${nf(monthlyForTerm)} /mes durante ${term} meses (estim.)`;
+            totalEl.textContent = 'Desde ' + nf(deviceTotal);
+            perMonthEl.textContent = `${nf(perMonthTotal)} /mes durante ${term} meses (estim.)`;
+            termBadgeEl.textContent = `Dispositivo: ${nf(deviceMonthly)} /mes`; // badge shows device-only monthly price
           }
 
-          if (careId === 'none' || !careCheckbox.checked) careInfoEl.textContent = 'Sin LixbyCare+';
-          else {
+          if (!careId || careId === 'none') {
+            careInfoEl.textContent = 'Sin LixbyCare+';
+          } else {
             careInfoEl.textContent = `${CARE[careId].label} — ${nf(careMonthly)} /mes (estim.)`;
           }
+
         } catch(e){ console.warn('updateSummary err', e); }
       }
+
+      // initial update
       updateSummary();
 
-      // events
-      // when capacity change via UI we already set selCap; ensure we call updateSummary after small delay
-      container.querySelectorAll('.cap-card').forEach(c=> c.addEventListener('click', ()=> setTimeout(updateSummary,50)));
-      container.querySelectorAll('.color-dot').forEach(d=> d.addEventListener('click', ()=> setTimeout(updateSummary,50)));
-      // care interactions
-      careCheckbox.addEventListener('change', ()=> {
-        // if unchecked force select none
-        if (!careCheckbox.checked) {
-          careSelect.value = 'none';
-        } else {
-          if (careSelect.value === 'none') careSelect.value = 'standard';
-        }
-        updateSummary();
-      });
-      careSelect.addEventListener('change', ()=> {
-        if (careSelect.value !== 'none') careCheckbox.checked = true;
-        updateSummary();
-      });
-
-      // months selection updates already call updateSummary in modal
-      // add to cart
+      // add to cart behavior
       addBtn.addEventListener('click', ()=>{
         const cap = selCap.value || keys[0];
         const base = Number(p.storage[cap] || 0);
-        const careId = careCheckbox.checked ? (careSelect.value || 'none') : 'none';
-        const careMonthly = CARE[careId] ? CARE[careId].monthly : 0;
-        const term = Number(selTerm.value || 1);
+        const careId = (careGrid.querySelector('.care-card.active') || {}).dataset?.care || 'none';
+        const term = payPlazo.classList.contains('active') ? Number(termSelect.value || 12) : 1;
         const productData = {
           id: p.id,
-          name: `${p.name} — ${cap}GB — ${selColor.value || 'color'}`,
+          name: `${p.name} — ${cap} GB — ${selColor.value || 'color'}`,
           price: nf(base),
           priceNum: base,
           qty: 1,
@@ -425,13 +437,14 @@
         if (confirm('Para guardar favoritos debes iniciar sesión. ¿Ir a la página de cuenta?')) location.href='cuenta.html';
       });
 
+      // ensure keyboard accessibility on cap/color
+      capRow.querySelectorAll('.cap-card').forEach(c=> c.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); c.click(); }}));
+      colorsRow.querySelectorAll('.color-dot').forEach(d=> d.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); d.click(); }}));
     } // end renderProduct
 
-    // render on load
     renderProduct();
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Theme toggle (simple)
+    try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
+    // theme toggle (simple)
     try {
       const tbtn = document.getElementById('themeToggle');
       tbtn && tbtn.addEventListener('click', ()=> {
