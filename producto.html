@@ -4,11 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LIXBY — Detalle de producto</title>
-  <meta name="description" content="Ficha del producto Lixby — detalles, precio y especificaciones." />
   <link rel="stylesheet" href="style.css">
-  <!-- Minimal helper CSS para opciones (redondeado, minimal) -->
+  <meta name="description" content="Ficha del producto Lixby — detalles, precio y especificaciones." />
   <style>
-    /* Minimal product UI overrides (keeps look Apple-like) */
+    /* Minimal product UI overrides (redondeado + minimal) */
     .options { gap:18px; display:flex; flex-direction:column; }
     .option-title { font-weight:700; font-size:1.02rem; color:color-mix(in oklab, var(--text) 88%, var(--muted) 12%); margin-bottom:8px; }
     .colors { display:flex; gap:12px; align-items:center; }
@@ -17,7 +16,6 @@
       display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .14s ease,box-shadow .14s ease;
       box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset; outline:none;
     }
-    .color-dot::after{ content:""; width:22px;height:22px;border-radius:50%; background:transparent; transition:transform .12s ease; }
     .color-dot[data-color="blue"]{ background:#2f6bff }
     .color-dot[data-color="green"]{ background:#9fe0d4 }
     .color-dot[data-color="pink"]{ background:#f1b6d9 }
@@ -38,16 +36,23 @@
     .cap-card:focus{ outline:none; box-shadow: 0 0 0 6px rgba(10,132,255,0.08); }
 
     .summary { margin-top:12px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03); display:flex;justify-content:space-between;align-items:center; }
-    .big { font-weight:800; font-size:1.16rem; }
+    .big { font-weight:800; font-size:1.28rem; color:var(--accent); }
     .muted { color:var(--muted); font-size:0.95rem; }
 
-    /* Responsive minor tweaks */
+    .pay-options { display:flex; gap:10px; align-items:center; }
+    .pay-card { padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.04); cursor:pointer; min-width:140px; text-align:center; }
+    .pay-card.active { border-color:var(--accent); box-shadow:0 12px 30px rgba(10,132,255,0.06); transform:translateY(-4px); }
+
+    .care-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .care-input { display:inline-flex; gap:8px; align-items:center; cursor:pointer; }
+
     @media (max-width:700px) {
       .color-dot { width:34px;height:34px; }
       .cap-card { min-width:48%; padding:12px;border-radius:12px; }
+      .big { font-size:1.08rem; }
     }
 
-    /* Make mini-cart pointer interactions safe */
+    /* Mini-cart show/hide safety */
     .mini-cart[aria-hidden="true"] { display:none !important; pointer-events:none; }
     .mini-cart[aria-hidden="false"] { display:flex !important; pointer-events:auto; }
   </style>
@@ -91,316 +96,338 @@
     <p>© <span id="year"></span> LIXBY — Todos los derechos reservados</p>
   </footer>
 
-  <!-- core JS: render product + robust mini-cart + favorites (with defensive handling) -->
+  <!-- Script: render product + price logic (LixbyCare + pago único / plazos) -->
   <script>
   (function(){
     'use strict';
+    // Helpers
+    const $ = sel => document.querySelector(sel);
+    const nf = v => (Math.round((Number(v)||0)*100)/100).toFixed(2).replace('.',',') + ' €';
+    const proxied = url => { try { return 'https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//,'')) + '&w=900&q=80'; } catch(e){ return url; } };
 
-    // ---------- Utilities ----------
-    const el = sel => document.querySelector(sel);
-    const els = sel => Array.from(document.querySelectorAll(sel));
-    const nf = v => (Math.round((Number(v)||0)*100)/100).toFixed(2).replace('.',',') + '€';
-    const proxied = url => {
-      try { return 'https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//,'')) + '&w=900&q=80'; }
-      catch(e){ return url; }
-    };
-
-    // ---------- Product data (mock) ----------
+    // Mocked product list (puedes sustituir por tu fuente real)
     const products = {
-      "lixby-one": { id:'lixby-one', name:'Lixby One', mini:'Ultraligero, potente', image:'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg', colors:['blue','green','pink','white','black'], storage:{'128':349,'256':429,'512':549,'1024':699} },
-      "lixby-one-pro": { id:'lixby-one-pro', name:'Lixby One Pro', mini:'Audio & rendimiento', image:'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg', colors:['blue','white','black'], storage:{'256':899,'512':1099,'1024':1299} }
+      "lixby-one": {
+        id:'lixby-one', name:'Lixby One',
+        mini:'Ultraligero, potente',
+        image:'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg',
+        colors:['blue','green','pink','white','black'],
+        storage:{ '128':349, '256':429, '512':549, '1024':699 }
+      }
     };
 
-    // ---------- CART localStorage keys ----------
+    // Care pricing (base monthly). We'll treat single-payment care as monthly*12 upfront approx.
+    const CARE = {
+      none: { id:'none', label:'Sin LixbyCare+', monthly:0 },
+      standard: { id:'standard', label:'LixbyCare+ (estándar)', monthly:3.00 },
+      theft: { id:'theft', label:'LixbyCare+ (robo y pérdida)', monthly:5.00 }
+    };
+
+    // Terms available for monthly financing
+    const TERMS = [6,12,18,24];
+
+    // Cart (localStorage)
     const CART_KEY = 'lixby_cart_v1';
-    function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e){ return []; } }
+    function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY))||[]; } catch(e){ return []; } }
     function saveCart(c){ try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
 
-    // ---------- Mini-cart UI (robusto) ----------
+    // Mini-cart elements
     let cart = loadCart();
-    const cartBtn = el('#cartBtn');
-    const miniCart = el('#miniCart');
-    const miniCartItems = el('#miniCartItems');
-    const miniCartTotal = el('#miniCartTotal');
-    const cartCount = el('#cartCount');
-    const miniClear = el('#miniClear');
-    const checkoutBtn = el('#checkoutBtn');
+    const cartBtn = document.getElementById('cartBtn');
+    const miniCart = document.getElementById('miniCart');
+    const miniCartItems = document.getElementById('miniCartItems');
+    const miniCartTotal = document.getElementById('miniCartTotal');
+    const cartCount = document.getElementById('cartCount');
+    const miniClear = document.getElementById('miniClear');
+    const checkoutBtn = document.getElementById('checkoutBtn');
 
     function updateMiniCartUI(){
       try {
-        const totalQty = cart.reduce((s,i)=>s+(i.qty||0),0);
-        if (cartCount) cartCount.textContent = totalQty;
         if (!miniCartItems) return;
         miniCartItems.innerHTML = '';
-        if (cart.length === 0) {
+        if (!cart || cart.length === 0) {
           miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">Tu carrito está vacío.</div>';
-          if (miniCartTotal) miniCartTotal.textContent = '0€';
+          miniCartTotal.textContent = '0 €';
+          if (cartCount) cartCount.textContent = '0';
           return;
         }
-        let total = 0;
-        const frag = document.createDocumentFragment();
+        let total = 0; let qty = 0;
         cart.forEach((it, idx) => {
-          const item = document.createElement('div');
-          item.className = 'mini-cart-item';
-          item.style.display='flex'; item.style.gap='10px'; item.style.alignItems='center'; item.style.padding='8px'; item.style.borderRadius='8px';
-          const img = document.createElement('img'); img.src = it.image || 'https://via.placeholder.com/80'; img.alt = it.name || ''; img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px'; img.loading='lazy';
-          const meta = document.createElement('div'); meta.className='meta'; meta.style.flex='1'; meta.innerHTML = `<div style="font-weight:700">${it.name}</div><div style="color:var(--muted)">${it.price} x${it.qty||1}</div>`;
-          const remove = document.createElement('button'); remove.className='remove'; remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
-          remove.addEventListener('click', (ev) => { ev.stopPropagation(); cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
-          item.appendChild(img); item.appendChild(meta); item.appendChild(remove);
-          frag.appendChild(item);
-          total += (it.priceNum || Number((it.price||'0').replace(/[^\d.,-]/g,'')) ) * (it.qty||1);
+          const row = document.createElement('div'); row.style.display='flex'; row.style.gap='10px'; row.style.padding='8px'; row.style.alignItems='center';
+          const img = document.createElement('img'); img.src = it.image || 'https://via.placeholder.com/80'; img.alt = it.name || ''; img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
+          const meta = document.createElement('div'); meta.style.flex='1'; meta.innerHTML = `<div style="font-weight:700">${it.name}</div><div style="color:var(--muted)">${it.price} × ${it.qty||1}</div>`;
+          const remove = document.createElement('button'); remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
+          remove.addEventListener('click', ()=>{ cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); });
+          row.appendChild(img); row.appendChild(meta); row.appendChild(remove);
+          miniCartItems.appendChild(row);
+          total += (it.priceNum || 0) * (it.qty||1);
+          qty += (it.qty||1);
         });
-        miniCartItems.appendChild(frag);
-        if (miniCartTotal) miniCartTotal.textContent = nf(total);
-      } catch(e){ console.warn('updateMiniCartUI err', e); }
+        miniCartTotal.textContent = nf(total);
+        if (cartCount) cartCount.textContent = qty;
+      } catch(e){ console.warn('mini update err', e); }
     }
-
-    function openMiniCartTemporarily(){
-      try {
-        if (!miniCart || !cartBtn) return;
-        miniCart.setAttribute('aria-hidden','false');
-        cartBtn.setAttribute('aria-expanded','true');
-        // auto close after 2.2s
-        setTimeout(()=> {
-          try { miniCart.setAttribute('aria-hidden','true'); cartBtn.setAttribute('aria-expanded','false'); } catch(e){}
-        }, 2200);
-      } catch(e){}
-    }
+    updateMiniCartUI();
 
     if (cartBtn && miniCart) {
-      cartBtn.addEventListener('click', (ev) => {
-        try {
-          const shown = miniCart.getAttribute('aria-hidden') === 'false';
-          miniCart.setAttribute('aria-hidden', String(shown));
-          const expanded = shown ? 'false' : 'true';
-          cartBtn.setAttribute('aria-expanded', expanded);
-          // NOTE: toggle show/hide handled by aria-hidden attribute and CSS
-        } catch(e){ console.warn('cartBtn click err', e); }
+      cartBtn.addEventListener('click', () => {
+        const shown = miniCart.getAttribute('aria-hidden') === 'false';
+        miniCart.setAttribute('aria-hidden', String(shown));
+        cartBtn.setAttribute('aria-expanded', String(!shown));
       });
-      // close when clicking outside - safer using closest
-      document.addEventListener('click', (e) => {
-        try {
-          const tg = e.target;
-          if (!tg) return;
-          if (!tg.closest) return;
-          if (!cartBtn.contains(tg) && !miniCart.contains(tg)) {
-            miniCart.setAttribute('aria-hidden','true');
-            cartBtn.setAttribute('aria-expanded','false');
-          }
-        } catch(e){}
+      document.addEventListener('click', (ev) => {
+        const tg = ev.target;
+        if (!tg || !tg.closest) return;
+        if (!cartBtn.contains(tg) && !miniCart.contains(tg)) {
+          miniCart.setAttribute('aria-hidden','true');
+          cartBtn.setAttribute('aria-expanded','false');
+        }
       });
     }
+    if (miniClear) miniClear.addEventListener('click', ()=> { cart=[]; saveCart(cart); updateMiniCartUI(); });
+    if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (!cart.length) return alert('El carrito está vacío'); alert('Simulación checkout — ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
 
-    if (miniClear) miniClear.addEventListener('click', ()=> { cart = []; saveCart(cart); updateMiniCartUI(); });
-    if (checkoutBtn) checkoutBtn.addEventListener('click', ()=> { if (!cart.length) return alert('El carrito está vacío'); alert('Simulación de pago — ' + cart.reduce((s,i)=> s+(i.qty||0),0) + ' items'); });
-
-    // Expose addToCart global (defensivo)
+    // Expose addToCart
     window.addToCart = function(product){
       try {
         if (!product) return;
-        // normalize priceNum
-        if (!product.priceNum) {
-          const p = String(product.price||'0').replace(/[^\d\.,-]/g,'').replace(',', '.');
-          product.priceNum = parseFloat(p) || 0;
-        }
+        product.priceNum = product.priceNum || Number(String(product.price||'0').replace(/[^\d.-]/g,'').replace(',', '.')) || 0;
         product.qty = Number(product.qty || 1);
-        const existing = cart.find(p => p.id === product.id && p.color === product.color && p.storage === product.storage && p.term === product.term && p.care === product.care);
-        if (existing) existing.qty = (existing.qty||1) + 1;
+        const existing = cart.find(p => p.id === product.id && p.storage === product.storage && p.color === product.color && p.care === product.care && p.term === product.term);
+        if (existing) existing.qty = (existing.qty||1) + product.qty;
         else cart.push(Object.assign({}, product));
         saveCart(cart);
         updateMiniCartUI();
-        openMiniCartTemporarily();
-        // aria-live notification
-        try { const pd = document.getElementById('productDetail'); if (pd) pd.setAttribute('aria-live','polite'); } catch(e){}
+        // show mini cart briefly
+        try { miniCart.setAttribute('aria-hidden','false'); cartBtn.setAttribute('aria-expanded','true'); setTimeout(()=>{ miniCart.setAttribute('aria-hidden','true'); cartBtn.setAttribute('aria-expanded','false'); }, 2200); } catch(e){}
       } catch(e){ console.error('addToCart err', e); }
     };
 
-    updateMiniCartUI();
-
-    // ---------- product renderer (robusto y accesible) ----------
+    // Product renderer + UI logic
     function getProductIdFromUrl(){
-      try {
-        const params = new URLSearchParams(window.location.search);
-        const q = params.get('id'); if (q) return q;
-        const path = location.pathname.split('/').filter(Boolean).pop();
-        if (path && !path.endsWith('.html')) return path;
-      } catch(e){}
+      try { const p = new URLSearchParams(location.search).get('id'); if (p) return p; } catch(e){}
       return 'lixby-one';
     }
 
     function renderProduct(){
-      try {
-        const id = getProductIdFromUrl();
-        const p = products[id] || products['lixby-one'];
-        const container = el('#productDetail');
-        if (!container) return;
-        container.innerHTML = ''; // clear
+      const id = getProductIdFromUrl();
+      const p = products[id] || Object.values(products)[0];
+      const container = document.getElementById('productDetail');
+      if (!container) return;
+      container.innerHTML = '';
 
-        // image
-        const wrap = document.createElement('div'); wrap.className = 'image-wrap';
-        const img = document.createElement('img'); img.className = 'product-image'; img.alt = p.name; img.src = proxied(p.image);
-        img.loading='eager'; img.decoding='async';
-        img.addEventListener('error', function(){ try { this.src = p.image; } catch(e){} });
-        wrap.appendChild(img);
+      // image
+      const wrap = document.createElement('div'); wrap.className = 'image-wrap';
+      const img = document.createElement('img'); img.className='product-image'; img.alt = p.name; img.src = proxied(p.image); img.loading='eager';
+      img.addEventListener('error', ()=>{ img.src = p.image; });
+      wrap.appendChild(img);
 
-        // info
-        const info = document.createElement('div'); info.className = 'product-info';
-        const title = document.createElement('h1'); title.textContent = p.name;
-        const mini = document.createElement('p'); mini.textContent = p.mini || '';
-        const priceEl = document.createElement('div'); priceEl.className = 'price'; priceEl.textContent = nf(Object.values(p.storage)[0]);
+      // info
+      const info = document.createElement('div'); info.className='product-info';
+      const title = document.createElement('h1'); title.textContent = p.name;
+      const mini = document.createElement('p'); mini.textContent = p.mini || '';
+      const priceEl = document.createElement('div'); priceEl.className='price'; priceEl.textContent = nf(Object.values(p.storage)[0]);
 
-        // fav + add
-        const favBtn = document.createElement('button'); favBtn.id='favBtn'; favBtn.className='btn'; favBtn.innerHTML='♡ Favorito'; favBtn.title='Guardar favorito';
-        favBtn.addEventListener('click', () => {
-          // if not logged, redirect to cuenta.html (no popup here)
-          try {
-            // simple approach: go to cuenta
-            if (!confirm('Para guardar favoritos debes iniciar sesión. ¿Ir a la página de cuenta?')) return;
-            window.location.href = 'cuenta.html';
-          } catch(e){ console.warn(e); }
+      // options container
+      const options = document.createElement('div'); options.className='options';
+
+      // Colors
+      const colWrap = document.createElement('div'); const colTitle = document.createElement('div'); colTitle.className='option-title'; colTitle.textContent='Acabado. Elige tu favorito.'; colWrap.appendChild(colTitle);
+      const colorsRow = document.createElement('div'); colorsRow.className='colors';
+      const selColor = document.createElement('input'); selColor.type='hidden'; selColor.id='selColor';
+      const savedColorKey = 'lixby_sel_color_' + p.id;
+      const savedColor = localStorage.getItem(savedColorKey);
+      (p.colors||[]).forEach((c, i) => {
+        const b = document.createElement('button'); b.className='color-dot'; b.setAttribute('data-color', c); b.setAttribute('aria-label', c); b.tabIndex=0;
+        if (savedColor ? savedColor === c : i===0) b.classList.add('active');
+        b.addEventListener('click', function(){
+          colorsRow.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+          this.classList.add('active'); selColor.value = this.dataset.color; localStorage.setItem(savedColorKey, this.dataset.color); updateSummary();
         });
+        b.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); b.click(); }});
+        colorsRow.appendChild(b);
+      });
+      colWrap.appendChild(colorsRow); colWrap.appendChild(selColor); options.appendChild(colWrap);
 
-        const addBtn = document.createElement('button'); addBtn.className='btn btn-buy'; addBtn.textContent = 'Añadir al carrito';
+      // Capacities
+      const capWrap = document.createElement('div'); const capTitle = document.createElement('div'); capTitle.className='option-title'; capTitle.textContent='Capacidad. ¿Cuánto espacio necesitas?'; capWrap.appendChild(capTitle);
+      const capRow = document.createElement('div'); capRow.className='capacities';
+      const selCap = document.createElement('input'); selCap.type='hidden'; selCap.id='selCap';
+      const keys = Object.keys(p.storage).sort((a,b)=>Number(a)-Number(b));
+      const savedCapKey = 'lixby_sel_cap_' + p.id;
+      const savedCap = localStorage.getItem(savedCapKey);
+      keys.forEach((sz, idx) => {
+        const card = document.createElement('div'); card.className='cap-card'; card.setAttribute('data-cap', sz); card.tabIndex=0;
+        if (savedCap ? savedCap === sz : idx===0) card.classList.add('active');
+        const left = document.createElement('div'); left.textContent = (sz==='1024' ? '1 TB' : sz + ' GB'); left.style.fontWeight='700';
+        const right = document.createElement('div'); right.innerHTML = `${nf(p.storage[sz])}<div class="muted" style="margin-top:6px">o ${nf(Math.round((p.storage[sz]/24)*100)/100)} /mes (24 meses)</div>`;
+        card.appendChild(left); card.appendChild(right);
+        card.addEventListener('click', ()=>{ capRow.querySelectorAll('.cap-card').forEach(c=>c.classList.remove('active')); card.classList.add('active'); selCap.value = sz; localStorage.setItem(savedCapKey, sz); updateSummary(); });
+        card.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); card.click(); }});
+        capRow.appendChild(card);
+      });
+      capWrap.appendChild(capRow); capWrap.appendChild(selCap); options.appendChild(capWrap);
 
-        // options container
-        const options = document.createElement('div'); options.className = 'options';
+      // Payment options (Pago único / Pagos mensuales)
+      const payWrap = document.createElement('div'); const payTitle = document.createElement('div'); payTitle.className='option-title'; payTitle.textContent='Opciones de pago. Elige lo que más te convenga.'; payWrap.appendChild(payTitle);
+      const payRow = document.createElement('div'); payRow.className='pay-options';
+      const paySingle = document.createElement('div'); paySingle.className='pay-card active'; paySingle.setAttribute('data-pay','single'); paySingle.textContent='Pago único';
+      const payPlazo = document.createElement('div'); payPlazo.className='pay-card'; payPlazo.setAttribute('data-pay','plazo'); payPlazo.textContent='Pagos mensuales';
+      payRow.appendChild(paySingle); payRow.appendChild(payPlazo);
+      const selTerm = document.createElement('input'); selTerm.type='hidden'; selTerm.id='selTerm'; selTerm.value = '1';
+      payWrap.appendChild(payRow); payWrap.appendChild(selTerm); options.appendChild(payWrap);
 
-        // COLORS
-        const colWrap = document.createElement('div');
-        const colTitle = document.createElement('div'); colTitle.className='option-title'; colTitle.textContent = 'Color';
-        colWrap.appendChild(colTitle);
-        const colorsRow = document.createElement('div'); colorsRow.className = 'colors';
-        const hiddenColor = document.createElement('input'); hiddenColor.type='hidden'; hiddenColor.id='selColor';
-        const savedColorKey = 'lixby_sel_color_' + p.id;
-        const savedColor = localStorage.getItem(savedColorKey);
-        (p.colors||[]).forEach((c, idx) => {
-          const dot = document.createElement('button');
-          dot.className='color-dot';
-          dot.setAttribute('data-color', c);
-          dot.setAttribute('aria-label', c);
-          dot.tabIndex = 0;
-          if (savedColor ? savedColor === c : idx===0) dot.classList.add('active');
-          dot.addEventListener('click', function(){
-            colorsRow.querySelectorAll('.color-dot').forEach(d=>{ d.classList.remove('active'); d.setAttribute('aria-checked','false'); });
-            this.classList.add('active'); this.setAttribute('aria-checked','true');
-            hiddenColor.value = this.dataset.color || '';
-            try { localStorage.setItem(savedColorKey, this.dataset.color); } catch(e){}
-            updateSummary();
-          });
-          dot.addEventListener('keydown', (ev) => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); dot.click(); }});
-          colorsRow.appendChild(dot);
+      // months modal (created on demand)
+      function createMonthsModal(){
+        if (document.getElementById('monthsModal')) return;
+        const bd = document.createElement('div'); bd.id='monthsModal'; bd.className='modal-backdrop';
+        bd.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="monthsTitle">
+            <h3 id="monthsTitle">Elige la duración del pago a plazo</h3>
+            <div class="months" id="monthsContainer" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"></div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+              <button id="monthsCancel" class="text-btn">Cancelar</button>
+            </div>
+          </div>`;
+        document.body.appendChild(bd);
+        const container = bd.querySelector('#monthsContainer');
+        TERMS.forEach(m => {
+          const btn = document.createElement('button'); btn.type='button'; btn.className='month-btn'; btn.dataset.month = m; btn.textContent = `${m} meses`;
+          btn.addEventListener('click', function(){ selTerm.value = String(m); payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active')); payPlazo.classList.add('active'); closeMonthsModal(); updateSummary(); });
+          container.appendChild(btn);
         });
-        colWrap.appendChild(colorsRow);
-        colWrap.appendChild(hiddenColor);
-        options.appendChild(colWrap);
+        bd.addEventListener('click', (ev)=>{ if (ev.target === bd) closeMonthsModal(); });
+        bd.querySelector('#monthsCancel').addEventListener('click', closeMonthsModal);
+      }
+      function openMonthsModal(){ createMonthsModal(); document.getElementById('monthsModal').classList.add('open'); }
+      function closeMonthsModal(){ const m = document.getElementById('monthsModal'); if (m) m.classList.remove('open'); }
 
-        // CAPACITIES
-        const capWrap = document.createElement('div');
-        const capTitle = document.createElement('div'); capTitle.className='option-title'; capTitle.textContent = 'Capacidad';
-        capWrap.appendChild(capTitle);
-        const capRow = document.createElement('div'); capRow.className='capacities';
-        const hiddenCap = document.createElement('input'); hiddenCap.type='hidden'; hiddenCap.id='selCap';
-        const savedCapKey = 'lixby_sel_cap_' + p.id;
-        const savedCap = localStorage.getItem(savedCapKey);
-        const keys = Object.keys(p.storage).sort((a,b)=>Number(a)-Number(b));
-        keys.forEach((sz, i) => {
-          const price = p.storage[sz];
-          const card = document.createElement('div'); card.className='cap-card'; card.setAttribute('data-cap', sz); card.tabIndex=0;
-          if (savedCap ? savedCap === sz : i===0) card.classList.add('active');
-          const left = document.createElement('div'); left.className='cap-left'; left.textContent = (sz==='1024' ? '1 TB' : sz + ' GB');
-          const right = document.createElement('div'); right.className='cap-right'; right.innerHTML = `${nf(price)}<div class="muted">&nbsp;</div>`;
-          card.appendChild(left); card.appendChild(right);
-          card.addEventListener('click', function(){
-            capRow.querySelectorAll('.cap-card').forEach(c=>c.classList.remove('active'));
-            this.classList.add('active');
-            hiddenCap.value = this.dataset.cap || '';
-            try { localStorage.setItem(savedCapKey, this.dataset.cap); } catch(e){}
-            updateSummary();
-          });
-          card.addEventListener('keydown', (ev) => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); card.click(); } });
-          capRow.appendChild(card);
-        });
-        capWrap.appendChild(capRow);
-        capWrap.appendChild(hiddenCap);
-        options.appendChild(capWrap);
+      paySingle.addEventListener('click', ()=> { payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active')); paySingle.classList.add('active'); selTerm.value='1'; updateSummary(); });
+      payPlazo.addEventListener('click', ()=> { openMonthsModal(); });
 
-        // CARE (simple)
-        const careWrap = document.createElement('div');
-        const careTitle = document.createElement('div'); careTitle.className='option-title'; careTitle.textContent = 'LixbyCare+ (opcional)';
-        careWrap.appendChild(careTitle);
-        const careRow = document.createElement('div'); careRow.className='care'; careRow.style.display='flex'; careRow.style.gap='10px';
-        const careHidden = document.createElement('input'); careHidden.type='hidden'; careHidden.id='selCare';
-        ['none','standard','theft'].forEach((c, i) => {
-          const cc = document.createElement('div'); cc.className='care-card'; cc.tabIndex=0; cc.style.minWidth='150px';
-          cc.setAttribute('data-care', c); cc.innerHTML = `<div style="font-weight:700">${c==='none' ? 'Sin' : (c==='standard' ? 'LixbyCare+' : 'LixbyCare+ (robo)')}</div><div class="muted">${c==='none' ? 'Sin protección' : 'Protección extra'}</div>`;
-          if (i===0) cc.classList.add('active');
-          cc.addEventListener('click', ()=> { careRow.querySelectorAll('.care-card').forEach(x=>x.classList.remove('active')); cc.classList.add('active'); careHidden.value = c; updateSummary(); });
-          cc.addEventListener('keydown', (ev)=>{ if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); cc.click(); }});
-          careRow.appendChild(cc);
-        });
-        careWrap.appendChild(careRow); careWrap.appendChild(careHidden);
-        options.appendChild(careWrap);
+      // LixbyCare / AppleCare selection (checkbox style)
+      const careWrap = document.createElement('div'); const careTitle = document.createElement('div'); careTitle.className='option-title'; careTitle.textContent='AppleCare+. Protege tu nuevo Lixby.'; careWrap.appendChild(careTitle);
+      const careRow = document.createElement('div'); careRow.className='care-row';
+      const careSelect = document.createElement('select'); careSelect.id='selCare'; const optNone = document.createElement('option'); optNone.value='none'; optNone.textContent='Sin LixbyCare+'; careSelect.appendChild(optNone);
+      const optStd = document.createElement('option'); optStd.value='standard'; optStd.textContent='LixbyCare+ (estándar) — 3,00 € / mes (estim.)'; careSelect.appendChild(optStd);
+      const optTheft = document.createElement('option'); optTheft.value='theft'; optTheft.textContent='LixbyCare+ (robo y pérdida) — 5,00 € / mes (estim.)'; careSelect.appendChild(optTheft);
+      careRow.appendChild(careSelect);
+      const careCheckboxDiv = document.createElement('label'); careCheckboxDiv.className='care-input'; const careCheckbox = document.createElement('input'); careCheckbox.type='checkbox'; careCheckbox.id='careToggle'; careCheckboxDiv.appendChild(careCheckbox); careCheckboxDiv.appendChild(document.createTextNode(' Añadir LixbyCare+'));
+      careRow.appendChild(careCheckboxDiv);
+      careWrap.appendChild(careRow); options.appendChild(careWrap);
 
-        // summary + actions
-        const summary = document.createElement('div'); summary.className='summary';
-        summary.innerHTML = `<div><div class="muted">Total</div><div class="big" id="totalPrice">--</div></div><div style="text-align:right"><div id="perMonth" class="muted">--</div><div id="careInfo" class="muted">--</div></div>`;
-        options.appendChild(summary);
+      // summary
+      const summary = document.createElement('div'); summary.className='summary';
+      summary.innerHTML = `<div><div class="muted">Precio</div><div class="big" id="totalPrice">--</div></div><div style="text-align:right"><div id="perMonth" class="muted">--</div><div id="careInfo" class="muted">--</div></div>`;
+      options.appendChild(summary);
 
-        const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='10px'; actions.style.marginTop='12px';
-        addBtn.addEventListener('click', () => {
-          const selectedColor = hiddenColor.value || (p.colors[0]||'blue');
-          const selectedCap = hiddenCap.value || keys[0];
-          const priceNum = Number(p.storage[selectedCap] || 0);
-          const selCare = careHidden.value || 'none';
-          const displayStorage = selectedCap === '1024' ? '1 TB' : selectedCap + ' GB';
-          const productData = {
-            id: p.id,
-            name: `${p.name} — ${displayStorage} / ${selectedColor}`,
-            price: nf(priceNum),
-            priceNum: priceNum,
-            qty: 1,
-            image: p.image,
-            color: selectedColor,
-            storage: selectedCap,
-            care: selCare
-          };
-          window.addToCart(productData);
-          addBtn.textContent = 'Añadido';
-          setTimeout(()=> addBtn.textContent = 'Añadir al carrito', 900);
-        });
+      // actions
+      const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='10px'; actions.style.marginTop='12px';
+      const addBtn = document.createElement('button'); addBtn.className='btn btn-buy'; addBtn.textContent='Añadir al carrito';
+      const favBtn = document.createElement('button'); favBtn.className='btn'; favBtn.textContent='♡ Favorito';
+      actions.appendChild(addBtn); actions.appendChild(favBtn);
 
-        actions.appendChild(addBtn); actions.appendChild(favBtn);
+      // assemble columns
+      info.appendChild(title); info.appendChild(mini); info.appendChild(priceEl); info.appendChild(options); info.appendChild(actions);
+      container.appendChild(wrap); container.appendChild(info);
 
-        // assemble
-        info.appendChild(title); info.appendChild(mini); info.appendChild(priceEl); info.appendChild(options); info.appendChild(actions);
-        container.appendChild(wrap); container.appendChild(info);
+      // initialize values
+      const initialColor = localStorage.getItem(savedColorKey) || p.colors[0]; selColor.value = initialColor;
+      const initialCap = localStorage.getItem(savedCapKey) || keys[0]; selCap.value = initialCap;
+      selTerm.value = '1';
+      careSelect.value = 'none';
+      careCheckbox.checked = false;
 
-        // initial hidden values
-        const persistedColor = localStorage.getItem(savedColorKey);
-        if (persistedColor) hiddenColor.value = persistedColor;
-        const persistedCap = localStorage.getItem(savedCapKey);
-        if (persistedCap) hiddenCap.value = persistedCap;
+      // Update summary logic
+      function updateSummary(){
+        try {
+          const cap = selCap.value || keys[0];
+          const base = Number(p.storage[cap] || 0);
+          const careId = careCheckbox.checked ? (careSelect.value || 'none') : 'none';
+          const careMonthly = CARE[careId] ? CARE[careId].monthly : 0;
+          // if pago único selected (term === '1'), compute upfront care as monthly*12
+          const term = Number(selTerm.value || 1);
 
-        // update summary function
-        function updateSummary(){
-          try {
-            const selCap = hiddenCap.value || keys[0];
-            const base = Number(p.storage[selCap] || 0);
-            document.getElementById('totalPrice').textContent = nf(base);
-            document.getElementById('perMonth').textContent = 'Pago único: ' + nf(base);
-            const care = careHidden.value || 'none';
-            if (care === 'none') document.getElementById('careInfo').textContent = 'Sin LixbyCare+';
-            else if (care === 'standard') document.getElementById('careInfo').textContent = '3,00€ / mes (estim.)';
-            else document.getElementById('careInfo').textContent = '5,00€ / mes (estim.)';
-          } catch(e){ console.warn('updateSummary err', e); }
+          // compute displayed values
+          const careUpfront = Math.round(careMonthly * 12 * 100) / 100;
+          const totalSingle = Math.round((base + careUpfront) * 100) / 100;
+          const monthlyForTerm = Math.round(((base / Math.max(term,1)) + careMonthly) * 100) / 100;
+
+          // Big price logic:
+          // - If Pago único selected (term===1), big shows total single (base + careUpfront)
+          // - If Pagos mensuales selected (term>1), big shows "Desde {base} €" (total device price) but we also show prominent monthly value
+          const totalEl = document.getElementById('totalPrice');
+          const perMonthEl = document.getElementById('perMonth');
+          const careInfoEl = document.getElementById('careInfo');
+
+          if (term <= 1) {
+            totalEl.textContent = nf(totalSingle);
+            perMonthEl.textContent = `o ${nf(Math.round((base / 24)*100)/100)} /mes (ej.: 24 meses)`;
+          } else {
+            // show device total as "Desde X €" (without care upfront) and monthly prominently
+            totalEl.textContent = 'Desde ' + nf(base);
+            perMonthEl.textContent = `${nf(monthlyForTerm)} /mes durante ${term} meses (estim.)`;
+          }
+
+          if (careId === 'none' || !careCheckbox.checked) careInfoEl.textContent = 'Sin LixbyCare+';
+          else {
+            careInfoEl.textContent = `${CARE[careId].label} — ${nf(careMonthly)} /mes (estim.)`;
+          }
+        } catch(e){ console.warn('updateSummary err', e); }
+      }
+      updateSummary();
+
+      // events
+      // when capacity change via UI we already set selCap; ensure we call updateSummary after small delay
+      container.querySelectorAll('.cap-card').forEach(c=> c.addEventListener('click', ()=> setTimeout(updateSummary,50)));
+      container.querySelectorAll('.color-dot').forEach(d=> d.addEventListener('click', ()=> setTimeout(updateSummary,50)));
+      // care interactions
+      careCheckbox.addEventListener('change', ()=> {
+        // if unchecked force select none
+        if (!careCheckbox.checked) {
+          careSelect.value = 'none';
+        } else {
+          if (careSelect.value === 'none') careSelect.value = 'standard';
         }
         updateSummary();
+      });
+      careSelect.addEventListener('change', ()=> {
+        if (careSelect.value !== 'none') careCheckbox.checked = true;
+        updateSummary();
+      });
 
-      } catch(e){ console.error('renderProduct err', e); }
-    }
+      // months selection updates already call updateSummary in modal
+      // add to cart
+      addBtn.addEventListener('click', ()=>{
+        const cap = selCap.value || keys[0];
+        const base = Number(p.storage[cap] || 0);
+        const careId = careCheckbox.checked ? (careSelect.value || 'none') : 'none';
+        const careMonthly = CARE[careId] ? CARE[careId].monthly : 0;
+        const term = Number(selTerm.value || 1);
+        const productData = {
+          id: p.id,
+          name: `${p.name} — ${cap}GB — ${selColor.value || 'color'}`,
+          price: nf(base),
+          priceNum: base,
+          qty: 1,
+          image: p.image,
+          color: selColor.value || '',
+          storage: cap,
+          care: careId,
+          term: term
+        };
+        window.addToCart(productData);
+        addBtn.textContent = 'Añadido';
+        setTimeout(()=> addBtn.textContent = 'Añadir al carrito', 900);
+      });
 
-    // init
+      // favorites
+      favBtn.addEventListener('click', ()=> {
+        if (confirm('Para guardar favoritos debes iniciar sesión. ¿Ir a la página de cuenta?')) location.href='cuenta.html';
+      });
+
+    } // end renderProduct
+
+    // render on load
     renderProduct();
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -409,55 +436,10 @@
       const tbtn = document.getElementById('themeToggle');
       tbtn && tbtn.addEventListener('click', ()=> {
         document.documentElement.classList.toggle('light');
-        const isLight = document.documentElement.classList.contains('light');
-        try { localStorage.setItem('lixby_theme', isLight ? 'light' : 'dark'); } catch(e){}
+        try { localStorage.setItem('lixby_theme', document.documentElement.classList.contains('light') ? 'light' : 'dark'); } catch(e){}
       });
     } catch(e){}
-
   })();
   </script>
-
-  <!-- Firebase favorites snippet (defensivo) -->
-  <script type="module">
-    // Si usas favoritos vía Firebase, hazlo en un módulo separado. Aquí solo dejamos la plantilla.
-    // Nota: Para minimizar popups problemáticos, REDIRIGE a /cuenta.html para login.
-    import { getApps, initializeApp, getApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
-      authDomain: "lixby-e0344.firebaseapp.com",
-      projectId: "lixby-e0344"
-    };
-    const app = (getApps().length ? getApp() : initializeApp(firebaseConfig));
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    onAuthStateChanged(auth, user => { currentUser = user; });
-
-    // toggleFavorite: intenta guardar, pero si no hay user -> redirige a cuenta.html
-    window.addEventListener('toggleFavorite', async (ev) => {
-      const detail = ev.detail;
-      if (!detail || !detail.id) return;
-      if (!currentUser) {
-        if (confirm('Debes iniciar sesión para guardar favoritos. ¿Ir a la página de cuenta?')) location.href='cuenta.html';
-        return;
-      }
-      const ref = doc(db, 'users', currentUser.uid, 'favorites', detail.id);
-      try {
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          await deleteDoc(ref);
-          alert('Eliminado de favoritos');
-        } else {
-          await setDoc(ref, { id: detail.id, name: detail.name, image: detail.image || '', price: detail.price || '', createdAt: new Date().toISOString() });
-          alert('Añadido a favoritos');
-        }
-      } catch(err){ console.error('fav err', err); alert('Error guardando favorito. Revisa consola.'); }
-    });
-  </script>
-
 </body>
 </html>
