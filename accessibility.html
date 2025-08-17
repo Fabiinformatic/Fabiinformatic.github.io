@@ -356,7 +356,7 @@ document.addEventListener('keydown', (e) => {
       const px = parseFloat(current);
       const next = Math.max(14, Math.min(24, px + step));
       const percent = (next / 16) * 100; // base 16
-      const value = percent.toFixed(2) + '%';
+      const value = percent.toFixed(02) + '%';
       root.style.setProperty('--font-size', value);
       localStorage.setItem(LS_KEYS.font, value);
       announce(`Tamaño de texto ${step > 0 ? 'aumentado' : 'disminuido'} a ${Math.round(percent)}%`);
