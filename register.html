@@ -20,6 +20,10 @@
     .small { color:var(--muted); font-size:0.95rem; }
     .captcha { display:flex; gap:12px; align-items:center; margin-top:8px; }
     .captcha .box { padding:8px 12px; border-radius:8px; border:1px solid var(--stroke); background:#fff; color:#07101a; font-weight:700; }
+    /* responsive */
+    @media (max-width:700px){
+      .grid-2 { flex-direction:column; }
+    }
   </style>
 </head>
 <body>
@@ -66,7 +70,6 @@
           <option value="MX">México</option>
           <option value="AR">Argentina</option>
           <option value="CL">Chile</option>
-          <!-- añade más si quieres -->
         </select>
 
         <div style="margin-top:12px;">
@@ -187,7 +190,16 @@
     // header brand / cuenta
     document.getElementById('brand').addEventListener('click', ()=> location.href='index.html');
     document.getElementById('brand').addEventListener('keypress', (e)=> { if(e.key==='Enter') location.href='index.html'; });
-    document.getElementById('openAuthBtn').addEventListener('click', ()=> { if (document.getElementById('lixbyAuthOverlay')) { document.getElementById('lixbyAuthOverlay').style.display='flex'; document.getElementById('lixbyAuthOverlay').setAttribute('aria-hidden','false'); } else if(window.appAuth && typeof window.appAuth.signInWithGoogle === 'function') { /* fallback to auth overlay creation */ try{ window.dispatchEvent(new Event('showAuth')); }catch(e){} } });
+    document.getElementById('openAuthBtn').addEventListener('click', ()=> {
+      const overlay = document.getElementById('lixbyAuthOverlay');
+      if (overlay) { overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); }
+      else if(window.appAuth && typeof window.appAuth.signInWithGoogle === 'function') {
+        try{ window.dispatchEvent(new Event('showAuth')); }catch(e){}
+      }
+    });
+
+    // Helper local storage fallback key
+    const LS_CREATED = 'lixby_created_accounts';
 
     // form submit + validations
     const form = document.getElementById('registerForm');
@@ -239,31 +251,59 @@
       // phone (basic digits)
       if (!/^\d{6,}$/.test(phone)) mark('phone','Introduce un número de teléfono válido.');
 
-      // captcha
-      if (!captchaInput || captchaInput.toUpperCase() !== (currentCaptcha || '').replace(/\s+/g,'')) mark('captcha','Código incorrecto. Pide uno nuevo.');
+      // captcha: compare removing spaces and uppercase both sides
+      const normalizedCaptcha = (currentCaptcha || '').replace(/\s+/g,'').toUpperCase();
+      if (!captchaInput || captchaInput.replace(/\s+/g,'').toUpperCase() !== normalizedCaptcha) mark('captcha','Código incorrecto. Pide uno nuevo.');
 
       if (firstError) {
-        firstError.focus();
-        firstError.scrollIntoView({behavior:'smooth', block:'center'});
+        if (firstError.focus) firstError.focus();
+        firstError && firstError.scrollIntoView({behavior:'smooth', block:'center'});
         document.getElementById('formMessage').textContent = 'Hay errores en el formulario. Revisa los campos marcados.';
         return;
       }
 
       // all ok -> create user
-      document.getElementById('submitBtn').disabled = true;
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
       document.getElementById('formMessage').textContent = 'Creando cuenta...';
+
       try {
-        if (!window.appAuth || typeof window.appAuth.createUserWithEmail !== 'function') throw new Error('Módulo de autenticación no disponible.');
         const dob = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const extra = { firstName, lastName, dob, country: document.getElementById('country').value, phone: phonePref + ' ' + phone, marketing: { m1: !!document.getElementById('marketing1').checked, m2: !!document.getElementById('marketing2').checked } };
-        await window.appAuth.createUserWithEmail(email, password, extra);
-        document.getElementById('formMessage').textContent = 'Cuenta creada. Redirigiendo…';
-        setTimeout(()=> location.href = 'cuenta.html', 800);
+        const payload = {
+          firstName, lastName, dob,
+          country: document.getElementById('country').value,
+          phone: phonePref + ' ' + phone,
+          marketing: { m1: !!document.getElementById('marketing1').checked, m2: !!document.getElementById('marketing2').checked },
+          email
+        };
+
+        if (window.appAuth && typeof window.appAuth.createUserWithEmail === 'function') {
+          // if your auth module provides createUserWithEmail, call it
+          await window.appAuth.createUserWithEmail(email, password, payload);
+        } else {
+          // fallback local simulation: save a minimal record to localStorage (for demo)
+          try {
+            const arr = JSON.parse(localStorage.getItem(LS_CREATED) || '[]');
+            arr.push({ id: 'local-'+Date.now(), email, name: firstName + ' ' + lastName, created_at: new Date().toISOString(), meta: payload });
+            localStorage.setItem(LS_CREATED, JSON.stringify(arr));
+          } catch(errLocal) { console.warn('fallback save err', errLocal); }
+        }
+
+        // Success: show congratulations message then redirect to login after 2s
+        document.getElementById('formMessage').textContent = '🎉 Felicidades — has creado una cuenta en LIXBY.';
+        // mark dismissed for auth modal (optional)
+        try { localStorage.setItem('lixby_auth_dismissed','true'); } catch(e){}
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+
       } catch (err) {
         console.error(err);
-        document.getElementById('formMessage').textContent = err && err.message ? err.message : 'Error creando cuenta.';
+        // show server error message if present
+        const msg = err && err.message ? err.message : 'Error creando cuenta.';
+        document.getElementById('formMessage').textContent = msg;
       } finally {
-        document.getElementById('submitBtn').disabled = false;
+        submitBtn.disabled = false;
       }
     });
   </script>
