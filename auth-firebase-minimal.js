@@ -18,9 +18,9 @@ import {
   getMultiFactorResolver,
   multiFactor
 } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
-/* ===== CONFIG - reemplaza con la tuya si hace falta ===== */
+/* ===== CONFIG - reemplaza si hace falta ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
   authDomain: "lixby-e0344.firebaseapp.com",
@@ -43,31 +43,36 @@ const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
+/* Keys for localStorage */
+const LS_USER = 'lixby_user';
+const LS_AUTH_DISMISSED = 'lixby_auth_dismissed';
+const LS_COOKIES = 'lixby_cookies_accepted';
+
 /* Utils */
 const $id = id => document.getElementById(id);
 function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function isEmail(v){ return typeof v==='string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 function showConsolePretty(err){ console.warn(err && err.code ? `${err.code} ${err.message||''}` : err); }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function parseSafeName(u){ return (u && (u.displayName || (u.email? u.email.split('@')[0] : 'Usuario'))) || 'Usuario'; }
 
-/* Simple local snapshot */
+/* Local user snapshot */
 function saveLocalUser(user){
   try{
-    if (!user) { localStorage.removeItem('lixby_user'); return; }
+    if (!user) { localStorage.removeItem(LS_USER); return; }
     const u = { uid:user.uid, name:user.displayName || (user.email? user.email.split('@')[0] : 'Usuario'), email:user.email||null, photoURL:user.photoURL||null, isAnonymous: !!user.isAnonymous };
-    localStorage.setItem('lixby_user', JSON.stringify(u));
+    localStorage.setItem(LS_USER, JSON.stringify(u));
   }catch(e){ console.warn(e); }
 }
-function clearLocalUser(){ try{ localStorage.removeItem('lixby_user'); }catch(e){} }
+function loadLocalUser(){ try { return JSON.parse(localStorage.getItem(LS_USER)); } catch(e) { return null; } }
+function clearLocalUser(){ try{ localStorage.removeItem(LS_USER); }catch(e){} }
 
-/* Small error mapping for user messages */
 function mapError(code, fallback='Error') {
   const M = {
-    'auth/popup-blocked':'Popup bloqueado. El navegador ha impedido abrir ventanas emergentes.',
-    'auth/popup-closed-by-user':'Popup cerrado por el usuario.',
+    'auth/popup-blocked':'Popup bloqueado. El navegador ha bloqueado la ventana de autenticación.',
+    'auth/popup-closed-by-user':'Has cerrado la ventana emergente.',
     'auth/cancelled-popup-request':'Solicitud de popup cancelada.',
-    'auth/unauthorized-domain':'Dominio no autorizado para OAuth (añádelo en Firebase Console).',
-    'auth/operation-not-allowed':'Método de acceso no permitido (activar en Firebase Console).',
+    'auth/unauthorized-domain':'Dominio no autorizado para OAuth.',
+    'auth/operation-not-allowed':'Método de acceso no permitido.',
     'auth/invalid-phone-number':'Número de teléfono inválido.',
     'auth/missing-phone-number':'Falta número de teléfono.',
     'auth/too-many-requests':'Demasiadas solicitudes. Intenta más tarde.',
@@ -76,15 +81,48 @@ function mapError(code, fallback='Error') {
   return M[code] || fallback || code;
 }
 
-/* Inject minimal styles for the modal (white + black, rounded, Apple-like minimal) */
+/* ------------------------------
+   Cookie banner (si no aceptado)
+   ------------------------------ */
+(function ensureCookieBanner(){
+  try {
+    if (localStorage.getItem(LS_COOKIES) === 'true') return;
+    if (document.getElementById('lixbyCookieBanner')) return;
+    const style = document.createElement('style');
+    style.id = 'lixby-cookie-style';
+    style.textContent = `
+      #lixbyCookieBanner { position: fixed; left: 12px; right: 12px; bottom: 12px; max-width:1100px; margin:0 auto; z-index:2147483646; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:10px; box-shadow:0 12px 30px rgba(2,6,12,0.4); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); font-size:0.95rem; color:var(--text); }
+      #lixbyCookieBanner .actions { display:flex; gap:8px; }
+      #lixbyCookieBanner button { padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--text); }
+      #lixbyCookieBanner button.primary { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; border:none; }
+      @media(max-width:700px){ #lixbyCookieBanner{ flex-direction:column; align-items:flex-start; } }
+    `;
+    document.head.appendChild(style);
+    const banner = document.createElement('div');
+    banner.id = 'lixbyCookieBanner';
+    banner.innerHTML = `<div><strong>LIXBY</strong><div style="color:var(--muted);margin-top:4px">Usamos cookies para mejorar la experiencia. Puedes aceptar o configurar preferencias.</div></div>`;
+    const actions = document.createElement('div'); actions.className = 'actions';
+    const btnConfig = document.createElement('button'); btnConfig.textContent = 'Configurar';
+    const btnAccept = document.createElement('button'); btnAccept.textContent = 'Aceptar'; btnAccept.className = 'primary';
+    actions.appendChild(btnConfig); actions.appendChild(btnAccept);
+    banner.appendChild(actions);
+    banner.addEventListener('keydown', (e)=>{ if (e.key==='Escape') banner.remove(); });
+    document.body.appendChild(banner);
+    btnAccept.addEventListener('click', ()=> { try{ localStorage.setItem(LS_COOKIES,'true'); }catch(e){} banner.remove(); });
+    btnConfig.addEventListener('click', ()=> { alert('Configurar cookies — placeholder.'); try{ localStorage.setItem(LS_COOKIES,'true'); }catch(e){} banner.remove(); });
+  } catch(e){ console.warn('cookie banner err', e); }
+})();
+
+/* ------------------------------
+   Modal markup + styles (single)
+   ------------------------------ */
 function injectMinimalAuthStyles(){
   if (document.getElementById('lixby-auth-min-css')) return;
   const s = document.createElement('style');
   s.id = 'lixby-auth-min-css';
   s.textContent = `
-    /* minimal modal */
-    .lixby-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.38); z-index:9999; }
-    .lixby-modal{ background:#fff; color:#07101a; width:420px; max-width:94%; border-radius:14px; padding:18px; box-shadow:0 18px 48px rgba(2,6,12,0.38); font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto; }
+    .lixby-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.38); z-index:999999; }
+    .lixby-modal{ background:#fff; color:#07101a; width:420px; max-width:94%; border-radius:14px; padding:18px; box-shadow:0 18px 48px rgba(2,6,12,0.38); font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto; position:relative; }
     .lixby-title{ font-size:1.05rem; font-weight:700; margin:0 0 8px; }
     .lixby-sub{ color:#556; font-size:0.95rem; margin:0 0 14px; }
     .lixby-row{ display:flex; gap:10px; margin-top:8px; }
@@ -101,7 +139,6 @@ function injectMinimalAuthStyles(){
   document.head.appendChild(s);
 }
 
-/* Create the minimal modal (if the page doesn't have one) */
 function createAuthModalIfMissing(){
   if ($id('lixbyAuthOverlay')) return;
   injectMinimalAuthStyles();
@@ -109,6 +146,7 @@ function createAuthModalIfMissing(){
   overlay.id = 'lixbyAuthOverlay';
   overlay.className = 'lixby-overlay';
   overlay.setAttribute('aria-hidden','true');
+  overlay.style.display = 'none';
   overlay.innerHTML = `
     <div class="lixby-modal" role="dialog" aria-modal="true" aria-labelledby="lixTitle">
       <button class="lixby-close" id="lixClose" aria-label="Cerrar">✕</button>
@@ -142,25 +180,48 @@ function createAuthModalIfMissing(){
   `;
   document.body.appendChild(overlay);
 
-  $id('lixClose')?.addEventListener('click', hideAuthOverlay);
+  // wire close and quick navigation; set dismissed when explicitly closed or guest
+  $id('lixClose')?.addEventListener('click', ()=> { localStorage.setItem(LS_AUTH_DISMISSED, 'true'); hideAuthOverlay(); });
   $id('goLogin')?.addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'login.html'; });
   $id('goRegister')?.addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'register.html'; });
+  $id('btnAnonymous')?.addEventListener('click', async (e)=> { e.preventDefault(); localStorage.setItem(LS_AUTH_DISMISSED, 'true'); await doAnonymousSignIn(); });
 }
 
-/* show/hide */
-function showAuthOverlay(){ createAuthModalIfMissing(); const o = $id('lixbyAuthOverlay'); if(!o) return; o.setAttribute('aria-hidden','false'); o.style.display='flex'; try{ document.documentElement.style.overflow='hidden' }catch(e){} }
-function hideAuthOverlay(){ const o = $id('lixbyAuthOverlay'); if(!o) return; o.setAttribute('aria-hidden','true'); o.style.display='none'; try{ document.documentElement.style.overflow='' }catch(e){} }
+/* show/hide modal with safety checks */
+function showAuthOverlay(){
+  // never show if user signed in or dismissed previously
+  if (auth.currentUser) return;
+  if (localStorage.getItem(LS_AUTH_DISMISSED) === 'true') return;
+  createAuthModalIfMissing();
+  const o = $id('lixbyAuthOverlay');
+  if(!o) return;
+  o.setAttribute('aria-hidden','false');
+  o.style.display='flex';
+  // block scroll
+  try{ document.documentElement.style.overflow='hidden'; }catch(e){}
+  // focus first interactive
+  setTimeout(()=> { const btn = o.querySelector('button'); if (btn) btn.focus(); }, 80);
+}
+function hideAuthOverlay(){
+  const o = $id('lixbyAuthOverlay');
+  if(!o) return;
+  o.setAttribute('aria-hidden','true');
+  o.style.display='none';
+  try{ document.documentElement.style.overflow=''; }catch(e){}
+}
 
-/* Modal message */
+/* small modal helper */
 function setModalMsg(txt, autoHideMs=3000){
   const el = $id('lixMsg'); if(!el) return;
   el.textContent = txt || '';
   if (autoHideMs) { setTimeout(()=> { if(el) el.textContent=''; }, autoHideMs); }
 }
 
-/* OAuth sign-in with popup + redirect fallback */
+/* --------------------------
+   OAuth popup with fallback
+   -------------------------- */
 let oauthLock = false;
-async function doPopupSignInWithFallback(provider, providerName){
+async function doPopupSignInWithFallback(provider){
   if (oauthLock) return;
   oauthLock = true;
   try {
@@ -168,19 +229,24 @@ async function doPopupSignInWithFallback(provider, providerName){
       const res = await signInWithPopup(auth, provider);
       if (res && res.user) {
         saveLocalUser(res.user);
-        setModalMsg('Felicidades — has iniciado sesión',1200);
-        await sleep(800);
+        // mark dismissed so modal won't reappear
+        localStorage.setItem(LS_AUTH_DISMISSED, 'true');
+        setModalMsg('Has iniciado sesión correctamente',1200);
+        await sleep(600);
         hideAuthOverlay();
-        location.href = 'index.html';
+        // do not force a redirect; if landing page wants to redirect, it can
       }
     } catch(err) {
-      // If popup blocked or COOP issues, fallback to redirect
       showConsolePretty(err);
+      // fallback: try redirect for popup-blocked / unauthorized-domain etc.
       const code = err && err.code;
       if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' || code === 'auth/unauthorized-domain') {
-        setModalMsg(mapError(code,'Usando método alternativo...'),2000);
+        setModalMsg('Intentando método alternativo...',1500);
         await signInWithRedirect(auth, provider);
-        // redirect flow will continue on getRedirectResult in init()
+        // flow continues on getRedirectResult in init()
+      } else if (code === 'auth/multi-factor-auth-required') {
+        // bubble up MFA handler to init (handled there)
+        throw err;
       } else {
         setModalMsg(mapError(code, err && err.message),4000);
         throw err;
@@ -189,56 +255,50 @@ async function doPopupSignInWithFallback(provider, providerName){
   } finally { oauthLock = false; }
 }
 
-/* Anónimo */
+/* Anonymous */
 async function doAnonymousSignIn(){
   try {
-    $id('btnAnonymous').disabled = true;
+    $id('btnAnonymous') && ($id('btnAnonymous').disabled = true);
     const res = await signInAnonymously(auth);
     saveLocalUser(res.user);
+    localStorage.setItem(LS_AUTH_DISMISSED, 'true');
     setModalMsg('Entrando como invitado...',1000);
-    await sleep(800);
+    await sleep(700);
     hideAuthOverlay();
-    location.href = 'index.html';
   } catch(err) {
     showConsolePretty(err);
     setModalMsg('No se pudo entrar como invitado',3000);
   } finally {
-    try{ $id('btnAnonymous').disabled = false; } catch(e){}
+    try{ $id('btnAnonymous') && ($id('btnAnonymous').disabled = false); }catch(e){}
   }
 }
 
-/* --- reCAPTCHA & Phone MFA helpers --- */
+/* --------------------------
+   reCAPTCHA / Phone MFA helpers
+   -------------------------- */
 let recaptchaVerifierInstance = null;
 function ensureRecaptcha(){
   if (recaptchaVerifierInstance) return recaptchaVerifierInstance;
-  // invisible reCAPTCHA bound to the #recaptcha-container element
   try{
-    recaptchaVerifierInstance = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible'
-    });
-    // Render immediately so widget available
-    recaptchaVerifierInstance.render().catch(()=>{/* ignore render errors */});
+    recaptchaVerifierInstance = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'invisible' });
+    recaptchaVerifierInstance.render().catch(()=>{/* ignore render errs */});
     return recaptchaVerifierInstance;
   }catch(e){ console.warn('recaptcha init err', e); return null; }
 }
 
-/* Enrolar teléfono como segundo factor para currentUser */
 async function enrollPhoneMultiFactor(displayNameForFactor = 'Teléfono'){
   try {
     const user = auth.currentUser;
     if (!user) throw new Error('No hay usuario autenticado para inscribir segundo factor');
-    setModalMsg('Obteniendo sesión MFA...', 2000);
     const mfaUser = multiFactor(user);
-    const session = await mfaUser.getSession(); // MultiFactorSession
-    // pedir número de teléfono (prompt para beta rápida; reemplaza por UI bonita si quieres)
+    const session = await mfaUser.getSession();
     const phoneNumber = prompt('Introduce tu número con prefijo internacional (ej. +34123456789):');
     if (!phoneNumber) { setModalMsg('Inscripción cancelada'); return; }
     const rec = ensureRecaptcha();
     const phoneAuthProvider = new PhoneAuthProvider(auth);
-    // phoneInfoOptions: { phoneNumber, session }
     const verificationId = await phoneAuthProvider.verifyPhoneNumber({ phoneNumber, session }, rec);
-    const code = prompt('Introduce el código SMS que has recibido:');
-    if (!code) { setModalMsg('Código no introducido. Inscripción cancelada.'); return; }
+    const code = prompt('Introduce el código SMS recibido:');
+    if (!code) { setModalMsg('Código no introducido.'); return; }
     const cred = PhoneAuthProvider.credential(verificationId, code);
     const assertion = PhoneMultiFactorGenerator.assertion(cred);
     await mfaUser.enroll(assertion, displayNameForFactor);
@@ -250,20 +310,16 @@ async function enrollPhoneMultiFactor(displayNameForFactor = 'Teléfono'){
   }
 }
 
-/* Resolver sign-in cuando el primer factor requiere MFA (web) */
 async function handleMultiFactorRequired(error){
   try{
     if (!error || !error.code) { throw error || new Error('Unknown MFA error'); }
     if (error.code !== 'auth/multi-factor-auth-required') { throw error; }
     const resolver = getMultiFactorResolver(auth, error);
-    // Si hay hints, buscamos el primero de tipo phone
     const hints = resolver.hints || [];
     let phoneHintIndex = hints.findIndex(h=> h && h.factorId === PhoneMultiFactorGenerator.FACTOR_ID);
-    // Si no hay phone, pedir al usuario que elija; aquí elegimos el primero de la lista
     if (phoneHintIndex === -1 && hints.length>0) phoneHintIndex = 0;
     if (phoneHintIndex === -1) { setModalMsg('No hay factores disponibles para MFA'); return; }
     const hint = hints[phoneHintIndex];
-    // Inicia reCAPTCHA y envío SMS
     const rec = ensureRecaptcha();
     const phoneAuthProvider = new PhoneAuthProvider(auth);
     const verificationId = await phoneAuthProvider.verifyPhoneNumber({ multiFactorHint: hint, session: resolver.session }, rec);
@@ -271,14 +327,12 @@ async function handleMultiFactorRequired(error){
     if (!code) { setModalMsg('Código no introducido.'); return; }
     const cred = PhoneAuthProvider.credential(verificationId, code);
     const assertion = PhoneMultiFactorGenerator.assertion(cred);
-    // resuelve el signIn
     const userCredential = await resolver.resolveSignIn(assertion);
-    // sign-in completado
     saveLocalUser(userCredential.user);
+    localStorage.setItem(LS_AUTH_DISMISSED, 'true');
     setModalMsg('Acceso completado ✔', 1200);
-    await sleep(800);
+    await sleep(700);
     hideAuthOverlay();
-    location.href = 'index.html';
   } catch(err) {
     showConsolePretty(err);
     setModalMsg(err && err.message ? err.message : 'Error en MFA', 4000);
@@ -286,97 +340,113 @@ async function handleMultiFactorRequired(error){
   }
 }
 
-/* Wire up created modal buttons and auth flows */
+/* --------------------------
+   Wire modal buttons
+   -------------------------- */
 function wireModalButtons(){
   createAuthModalIfMissing();
-  // Google
   $id('btnGoogle')?.addEventListener('click', async (e)=> {
-    e.preventDefault();
-    try { await doPopupSignInWithFallback(googleProvider,'Google'); }
-    catch(err){ 
-      // special case: if MFA required from popup/redirect, handle in init via getRedirectResult or here if error thrown
-      if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err);
-      else setModalMsg(mapError(err && err.code, err && err.message)); 
-    }
+    e && e.preventDefault();
+    try { await doPopupSignInWithFallback(googleProvider); }
+    catch(err){ if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err); else setModalMsg(mapError(err && err.code, err && err.message)); }
   });
-  // GitHub
   $id('btnGitHub')?.addEventListener('click', async (e)=> {
-    e.preventDefault();
-    try { await doPopupSignInWithFallback(githubProvider,'GitHub'); }
-    catch(err){
-      if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err);
-      else setModalMsg(mapError(err && err.code, err && err.message));
-    }
+    e && e.preventDefault();
+    try { await doPopupSignInWithFallback(githubProvider); }
+    catch(err){ if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err); else setModalMsg(mapError(err && err.code, err && err.message)); }
   });
-  // Anonymous
-  $id('btnAnonymous')?.addEventListener('click', async (e)=>{
-    e.preventDefault();
-    await doAnonymousSignIn();
-  });
-  // recaptcha container is already in modal markup
 }
 
-/* Firestore upsert for user profile (safe merge) */
-async function upsertUserProfile(user, extra={}){
-  try{
+/* --------------------------
+   Firestore safe upsert for profile
+   -------------------------- */
+async function upsertUserProfile(user, extra={}) {
+  try {
     if (!user || !user.uid) return;
-    const ref = doc(db,'users',user.uid);
+    const ref = doc(db, 'users', user.uid);
     const snap = await getDoc(ref);
-    const base = { uid:user.uid, name:user.displayName||null, email:user.email||null, photoURL:user.photoURL||null, provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || null, createdAt: snap.exists() ? snap.data().createdAt : new Date().toISOString() };
-    await setDoc(ref, { ...base, ...extra }, { merge:true });
-  }catch(e){ console.warn('upsertUserProfile err', e); }
+    const base = { uid: user.uid, name: user.displayName || null, email: user.email || null, photoURL: user.photoURL || null, provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || null, createdAt: snap.exists() ? snap.data().createdAt : new Date().toISOString() };
+    await setDoc(ref, { ...base, ...extra }, { merge: true });
+  } catch(e){ console.warn('upsertUserProfile err', e); }
 }
 
-/* Header/account minimal */
-function ensureHeader(){
-  if ($id('lixbyHeader')) return $id('lixbyHeader');
-  const header = document.createElement('div');
-  header.id = 'lixbyHeader';
-  header.style.display='flex'; header.style.alignItems='center'; header.style.justifyContent='space-between';
-  header.style.padding='10px 18px'; header.style.gap='12px';
-  header.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;cursor:pointer" id="lix_logo">
-      <img src="https://i.imgur.com/dOCYmkx.jpeg" style="width:36px;height:36px;border-radius:8px;object-fit:cover">
-      <div style="font-weight:800">LIXBY</div>
-    </div>
-    <div style="margin-left:auto">
-      <button id="lixOpenAuth" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:#fff;color:#07101a;font-weight:700">Cuenta</button>
-    </div>
-  `;
-  document.body.prepend(header);
-  $id('lixOpenAuth')?.addEventListener('click', ()=> showAuthOverlay());
-  $id('lix_logo')?.addEventListener('click', ()=> location.href='index.html');
-  return header;
-}
-function updateHeaderSafe(user){
-  ensureHeader();
-  const prev = $id('lixbyAccountHolder'); if(prev) prev.remove();
-  if (!user) return;
-  const holder = document.createElement('div'); holder.id='lixbyAccountHolder';
-  holder.style.display='flex'; holder.style.alignItems='center'; holder.style.gap='10px';
-  const name = escapeHtml(user.displayName || (user.email ? user.email.split('@')[0] : 'Usuario'));
-  const avatar = user.photoURL ? user.photoURL : `https://via.placeholder.com/64?text=${encodeURIComponent(name.charAt(0)||'U')}`;
-  holder.innerHTML = `<img src="${avatar}" style="width:44px;height:44px;border-radius:10px;object-fit:cover"><div style="display:flex;flex-direction:column;align-items:flex-end"><div style="font-weight:700">${name}</div><div style="display:flex;gap:6px;margin-top:6px"><button id="viewAcc" style="padding:6px 8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff">Mi cuenta</button><button id="signOutBtn" style="padding:6px 8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff">Cerrar</button></div></div>`;
-  $id('lixbyHeader').appendChild(holder);
-  $id('viewAcc')?.addEventListener('click', ()=> location.href='cuenta.html');
-  $id('signOutBtn')?.addEventListener('click', async ()=> { try { await fbSignOut(auth); clearLocalUser(); location.href='index.html'; } catch(e){ console.warn(e); } });
+/* --------------------------
+   Header & account area
+   -------------------------- */
+function findAccountContainer(){
+  // 1) existing #accountContainer
+  const byId = $id('accountContainer');
+  if (byId) return byId;
+  // 2) nav .nav-right (if exists) -> create a slot div at end
+  const navRight = document.querySelector('.nav .nav-right, .nav-right');
+  if (navRight) {
+    let slot = navRight.querySelector('.lixby-account-slot');
+    if (!slot) {
+      slot = document.createElement('div');
+      slot.className = 'lixby-account-slot';
+      slot.style.display = 'inline-flex';
+      slot.style.alignItems = 'center';
+      slot.style.gap = '8px';
+      navRight.appendChild(slot);
+    }
+    return slot;
+  }
+  // 3) fallback: prepend a small header container at top
+  let fallback = document.getElementById('lixbyHeaderContainer');
+  if (!fallback) {
+    fallback = document.createElement('div');
+    fallback.id = 'lixbyHeaderContainer';
+    fallback.style.width = '100%';
+    fallback.style.display = 'flex';
+    fallback.style.justifyContent = 'flex-end';
+    fallback.style.padding = '6px 12px';
+    document.body.prepend(fallback);
+  }
+  return fallback;
 }
 
-/* INIT: handle redirect result (OAuth redirect) and auth state */
+function renderAccountUI(user){
+  const slot = findAccountContainer();
+  if (!slot) return;
+  slot.innerHTML = ''; // replace
+  if (!user) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn ghost';
+    btn.textContent = 'Cuenta';
+    btn.addEventListener('click', ()=> showAuthOverlay());
+    slot.appendChild(btn);
+    return;
+  }
+  const name = escapeHtml(parseSafeName(user));
+  const photo = user.photoURL || `https://via.placeholder.com/64?text=${encodeURIComponent(name.charAt(0)||'U')}`;
+  // Build account element that links to carrito.html (as requested)
+  const a = document.createElement('a');
+  a.href = 'carrito.html';
+  a.style.display = 'inline-flex';
+  a.style.alignItems = 'center';
+  a.style.gap = '8px';
+  a.style.textDecoration = 'none';
+  a.style.color = 'inherit';
+  a.innerHTML = `<img src="${photo}" alt="avatar" style="width:36px;height:36px;border-radius:8px;object-fit:cover"><div style="display:flex;flex-direction:column"><div style="font-weight:700">${name}</div><div style="font-size:0.85rem;color:var(--muted)">Mi cuenta</div></div>`;
+  slot.appendChild(a);
+}
+
+/* --------------------------
+   Init: redirect result, listeners
+   -------------------------- */
 async function init(){
-  // handle redirect result if present
+  // handle redirect result if any (only once)
   try {
     const rr = await getRedirectResult(auth);
     if (rr && rr.user) {
-      // Successful sign in via redirect
       saveLocalUser(rr.user);
-      setModalMsg('Inicio mediante redirect completado',1000);
+      localStorage.setItem(LS_AUTH_DISMISSED, 'true');
+      setModalMsg('Inicio por redirect completado',1000);
       await sleep(700);
       hideAuthOverlay();
-      location.href='index.html';
     }
   } catch(e) {
-    // If redirect failed due to MFA requirement, e may be multi-factor error
     if (e && e.code === 'auth/multi-factor-auth-required') {
       await handleMultiFactorRequired(e);
     } else {
@@ -384,42 +454,60 @@ async function init(){
     }
   }
 
-  // create modal & wire
+  // create modal & wire buttons
   createAuthModalIfMissing();
   wireModalButtons();
 
-  // Subscribe auth state changes
+  // Attach auth state observer (main source of truth)
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      try{ saveLocalUser(user); updateHeaderSafe(user); await upsertUserProfile(user); } catch(e){ console.warn(e); }
-    } else {
-      updateHeaderSafe(null);
-      // show overlay the first time (optional)
-      const seen = localStorage.getItem('lixby_seen_welcome');
-      if (!seen) { setTimeout(()=> showAuthOverlay(), 300); localStorage.setItem('lixby_seen_welcome','1'); }
+    try {
+      if (user) {
+        // persist & update UI once signed in
+        saveLocalUser(user);
+        localStorage.setItem(LS_AUTH_DISMISSED, 'true'); // ensure modal won't reopen
+        renderAccountUI(user);
+        await upsertUserProfile(user);
+        hideAuthOverlay();
+      } else {
+        // signed out: clear local snapshot and render anonymous account button
+        clearLocalUser();
+        renderAccountUI(null);
+        // do NOT auto-show the modal repeatedly: only show if not dismissed and user hasn't seen it
+        // showAuthOverlay() is intentionally NOT called here to avoid popups after register/login cycles
+      }
+    } catch(err) { console.warn('onAuthStateChanged handler err', err); }
+  });
+
+  // hydrate header from local snapshot quickly
+  try {
+    const cached = loadLocalUser();
+    if (cached && cached.name) renderAccountUI(cached);
+    else renderAccountUI(null);
+  } catch(e){ renderAccountUI(null); }
+
+  // minor accessibility: allow ESC to close modal
+  document.addEventListener('keydown', (e)=> {
+    if (e.key === 'Escape') {
+      const ov = $id('lixbyAuthOverlay');
+      if (ov && ov.style.display === 'flex') { localStorage.setItem(LS_AUTH_DISMISSED, 'true'); hideAuthOverlay(); }
     }
   });
 
-  // expose functions to window for manual testing & UI custom pages
+  // Expose API
   window.lixbyAuth = {
     show: showAuthOverlay,
     hide: hideAuthOverlay,
     enrollPhoneMFA: enrollPhoneMultiFactor,
-    ensureRecaptcha
+    ensureRecaptcha,
+    signInWithGoogle: () => doPopupSignInWithFallback(googleProvider),
+    signInWithGitHub: () => doPopupSignInWithFallback(githubProvider),
+    signInAnonymously: () => doAnonymousSignIn(),
+    signOut: async ()=> { try { await fbSignOut(auth); clearLocalUser(); localStorage.removeItem(LS_AUTH_DISMISSED); renderAccountUI(null); } catch(e) { console.warn(e); } },
+    _rawAuth: auth,
+    _rawDb: db
   };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-
-/* Expose simple API (programático) */
-window.appAuth = {
-  signInWithGoogle: () => doPopupSignInWithFallback(googleProvider,'Google'),
-  signInWithGitHub: () => doPopupSignInWithFallback(githubProvider,'GitHub'),
-  signInAnonymously: () => doAnonymousSignIn(),
-  enrollPhoneMFA: (displayName) => enrollPhoneMultiFactor(displayName),
-  signOut: async ()=> { try{ await fbSignOut(auth); clearLocalUser(); location.href='index.html'; } catch(e){ console.warn(e); } },
-  _rawAuth: auth,
-  _rawDb: db
-};
 
 export {};
