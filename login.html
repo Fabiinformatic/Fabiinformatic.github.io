@@ -1,74 +1,95 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Iniciar sesión — LIXBY</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .form-card { max-width:520px; margin:48px auto; text-align:left; }
+    .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+    .input-wide { width:100%; }
+    .sep { display:flex; align-items:center; gap:12px; margin:14px 0; color:var(--muted); }
+    .sep hr { flex:1; height:1px; border:0; background:var(--stroke); }
+    .error { color:#dc2626; font-size:0.95rem; margin-top:6px; }
+    .small { color:var(--muted); font-size:0.95rem; }
+  </style>
 </head>
 <body>
-  <main class="wrap">
-    <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-      <a class="brand" href="index.html"><img src="https://i.imgur.com/dOCYmkx.jpeg" alt="LIXBY" width="44" height="44"><strong>LIXBY</strong></a>
-    </header>
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand" id="brand">LIXBY</div>
+      <div class="nav-right">
+        <button id="openAuthBtn" class="btn ghost">Cuenta</button>
+      </div>
+    </div>
+  </header>
 
-    <section class="panel" style="max-width:520px;margin:0 auto">
-      <h1>Inicia sesión para acceder a Lixby</h1>
-      <p class="small">Gestiona pedidos, favoritos y tu perfil.</p>
+  <main>
+    <div class="form-card glass" role="main">
+      <h1 style="text-align:center">Inicia sesión en LIXBY</h1>
+      <p class="small" style="text-align:center">Inicia sesión para ver tu cuenta, pedidos y favoritos.</p>
 
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-        <button id="btnGoogle" class="auth-btn ghost">Iniciar con Google</button>
-        <button id="btnGithub" class="auth-btn ghost">Iniciar con GitHub</button>
+      <div class="auth-row">
+        <button id="googleBtn" class="auth-btn"><img class="icon" src="https://www.svgrepo.com/show/355037/google.svg" alt="" aria-hidden="true"> Iniciar con Google</button>
+        <button id="githubBtn" class="auth-btn"><img class="icon" src="https://www.svgrepo.com/show/341847/github.svg" alt="" aria-hidden="true"> Iniciar con GitHub</button>
       </div>
 
-      <div style="display:flex;align-items:center;gap:8px;margin:12px 0;">
-        <hr style="flex:1;border:none;height:1px;background:rgba(0,0,0,0.06)"><div class="muted">o</div><hr style="flex:1;border:none;height:1px;background:rgba(0,0,0,0.06)"></div>
+      <div class="sep"><hr/><div>o</div><hr/></div>
 
-      <form id="loginForm" style="display:flex;flex-direction:column;gap:10px">
-        <label for="loginId">Correo electrónico o teléfono</label>
-        <input id="loginId" autocomplete="username" />
+      <form id="loginForm" novalidate>
+        <label for="loginId"><strong>Correo electrónico o número de teléfono</strong></label>
+        <input id="loginId" class="input-wide" autocomplete="username" />
+        <div id="err-loginId" class="error" aria-live="polite"></div>
 
-        <label for="loginPass">Contraseña</label>
-        <input id="loginPass" type="password" autocomplete="current-password" />
+        <label for="loginPass" style="margin-top:10px"><strong>Contraseña</strong></label>
+        <input id="loginPass" type="password" class="input-wide" autocomplete="current-password" />
+        <div id="err-loginPass" class="error" aria-live="polite"></div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <a href="forgot-password.html" class="muted">¿Has olvidado la contraseña?</a>
-          <button class="btn primary" type="submit">Iniciar sesión</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <a href="forgot-password.html" class="small">¿Has olvidado la contraseña?</a>
+          <div style="display:flex;gap:8px">
+            <a href="register.html" class="btn ghost">Registrarse</a>
+            <button id="btnLogin" class="btn primary" type="submit">Iniciar sesión</button>
+          </div>
         </div>
 
-        <div class="small muted">¿No tienes cuenta? <a href="register.html">Crear cuenta de Lixby</a></div>
-        <div id="errLogin" class="errorsmall" aria-live="polite"></div>
+        <div style="margin-top:12px">
+          <button id="btnGuest" type="button" class="btn ghost">Entrar como invitado</button>
+        </div>
+
+        <div id="loginMsg" class="small" style="margin-top:12px" role="status" aria-live="polite"></div>
       </form>
-    </section>
+    </div>
   </main>
 
   <script type="module" src="auth-firebase-minimal.js"></script>
   <script>
-    (function(){
-      document.getElementById('btnGoogle').addEventListener('click', ()=> { if (window.appAuth) window.appAuth.signInWithGoogle(); else alert('No disponible'); });
-      document.getElementById('btnGithub').addEventListener('click', ()=> { if (window.appAuth) window.appAuth.signInWithGitHub(); else alert('No disponible'); });
+    // handlers
+    document.getElementById('brand').addEventListener('click', ()=> location.href='index.html');
+    document.getElementById('googleBtn').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGoogle().catch(e=>console.warn(e)); });
+    document.getElementById('githubBtn').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGitHub().catch(e=>console.warn(e)); });
+    document.getElementById('btnGuest').addEventListener('click', async ()=> { try{ if(window.appAuth) { await window.appAuth.signInAnonymously(); location.href='cuenta.html'; } } catch(e){ console.warn(e); } });
 
-      document.getElementById('loginForm').addEventListener('submit', async (e)=> {
-        e.preventDefault();
-        document.getElementById('errLogin').textContent = '';
-        const id = (document.getElementById('loginId').value||'').trim();
-        const pass = document.getElementById('loginPass').value || '';
-        if (!id) { document.getElementById('errLogin').textContent = 'Introduce correo o teléfono'; return; }
-        if (!pass) { document.getElementById('errLogin').textContent = 'Introduce la contraseña'; return; }
-        try {
-          if (window.appAuth && typeof window.appAuth.signInWithEmail === 'function') {
-            await window.appAuth.signInWithEmail(id, pass);
-            // appAuth handles redirect to cuenta.html
-          } else {
-            // fallback demo
-            alert('Demo: autenticación simulada. Redirigiendo a cuenta.');
-            setTimeout(()=> location.href='cuenta.html', 600);
-          }
-        } catch(err) {
-          console.warn(err);
-          document.getElementById('errLogin').textContent = err && err.message ? err.message : 'Error al iniciar sesión';
-        }
-      });
-    })();
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      document.getElementById('err-loginId').textContent=''; document.getElementById('err-loginPass').textContent='';
+      const id = (document.getElementById('loginId')||{}).value.trim();
+      const pass = (document.getElementById('loginPass')||{}).value;
+      if (!id) { document.getElementById('err-loginId').textContent='Introduce tu correo o teléfono.'; document.getElementById('loginId').focus(); return; }
+      if (!pass) { document.getElementById('err-loginPass').textContent='Introduce la contraseña.'; document.getElementById('loginPass').focus(); return; }
+      try {
+        if (!window.appAuth || typeof window.appAuth.signInWithEmail !== 'function') throw new Error('Módulo de autenticación no cargado');
+        // appAuth expects email+password; if id looks like phone we can't handle here – assume email
+        await window.appAuth.signInWithEmail(id, pass);
+        document.getElementById('loginMsg').textContent = 'Sesión iniciada. Redirigiendo…';
+        setTimeout(()=> location.href = 'cuenta.html', 600);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loginMsg').textContent = err && err.message ? err.message : 'Error iniciando sesión.';
+      }
+    });
   </script>
 </body>
 </html>
