@@ -1097,9 +1097,9 @@
     const pass = (document.getElementById('authPass')||{}).value || '';
     if (!email || !pass) { alert('Introduce email y contraseña'); return; }
 
-    if (window.appAuth && typeof window.appAuth.signUpWithEmail === 'function') {
+    if (window.appAuth && typeof window.appAuth.createUserWithEmail === 'function') {
       try {
-        await window.appAuth.signUpWithEmail(email, pass);
+        await window.appAuth.createUserWithEmail(email, pass);
         closeAuthOverlay();
         return;
       } catch (err) {
@@ -1113,6 +1113,53 @@
     const user = { uid: 'email_' + Date.now(), name: name, email: email || null, photoURL: 'https://via.placeholder.com/64x64?text=U' };
     setLocalUser(user); closeAuthOverlay();
   });
+
+  // -------------------------
+  // SYNC WITH appAuth / firebase module
+  // -------------------------
+  // This ensures that when Firebase signs in/out the HTML modal closes and header updates.
+  function hydrateHeaderFromAuthUser(u){
+    if (!u) { clearLocalUser(); return; }
+    const user = {
+      uid: u.uid,
+      name: u.name || u.displayName || (u.email ? u.email.split('@')[0] : 'Usuario'),
+      email: u.email || null,
+      photoURL: u.photoURL || null,
+      isAnonymous: !!u.isAnonymous
+    };
+    try { localStorage.setItem('lixby_user', JSON.stringify(user)); } catch(e){}
+    renderHeaderUser(user);
+  }
+
+  // Listen for custom event emitted by auth module
+  window.addEventListener('lixby:auth:changed', (ev) => {
+    try {
+      const detail = ev && ev.detail ? ev.detail : {};
+      if (detail.signedIn) {
+        // close overlay if visible and reflect header from local snapshot
+        closeAuthOverlay();
+        const local = (() => { try { return JSON.parse(localStorage.getItem('lixby_user')||'null'); } catch(e){ return null; } })();
+        if (local) renderHeaderUser(local);
+      } else {
+        renderHeaderUser(null);
+      }
+    } catch(e){ console.warn('lixby:auth:changed handler err', e); }
+  });
+
+  // Subscribe to appAuth.onAuthState if available (real-time)
+  if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
+    try {
+      window.appAuth.onAuthState((u) => {
+        if (u) {
+          hydrateHeaderFromAuthUser(u);
+          closeAuthOverlay();
+        } else {
+          renderHeaderUser(null);
+        }
+      });
+    } catch(e){ console.warn('appAuth.onAuthState subscribe failed', e); }
+  }
+
 })();
 </script>
 
