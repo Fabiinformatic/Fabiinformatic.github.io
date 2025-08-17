@@ -1,174 +1,271 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Crear tu cuenta — LIXBY</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crear cuenta — LIXBY</title>
+  <meta name="description" content="Crear tu cuenta de Lixby. Registro seguro y minimalista." />
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ajustes pequeños específicos de esta página */
-    main.wrap { max-width:860px; margin:48px auto; padding:18px; }
-    .errorsmall { color:#ff5c5c; margin-top:6px; }
+    /* Ajustes locales para esta página */
+    .form-card { max-width:680px; margin:36px auto; text-align:left; }
+    .form-card h1 { text-align:center; }
+    .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+    .input-wide { width:100%; box-sizing:border-box; }
+    .grid-2 { display:flex; gap:12px; }
+    .grid-2 .col { flex:1; }
+    .sep { display:flex; align-items:center; gap:12px; margin:14px 0; color:var(--muted); }
+    .sep hr { flex:1; height:1px; border:0; background:var(--stroke); }
+    .error { color:#dc2626; font-size:0.95rem; margin-top:6px; }
+    .small { color:var(--muted); font-size:0.95rem; }
+    .captcha { display:flex; gap:12px; align-items:center; margin-top:8px; }
+    .captcha .box { padding:8px 12px; border-radius:8px; border:1px solid var(--stroke); background:#fff; color:#07101a; font-weight:700; }
   </style>
 </head>
 <body>
-  <main class="wrap" role="main" aria-labelledby="hMain">
-    <header style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px">
-      <a class="brand" href="index.html" aria-label="Ir al inicio"><img src="https://i.imgur.com/dOCYmkx.jpeg" alt="LIXBY logo" width="44" height="44"><strong>LIXBY</strong></a>
-      <div>
-        <a href="login.html" class="btn ghost">Iniciar sesión</a>
+  <header class="nav" role="banner" aria-label="Cabecera">
+    <div class="nav-inner">
+      <div class="brand" id="brand" role="link" tabindex="0" aria-label="Ir a inicio">LIXBY</div>
+      <div id="navLinks" aria-hidden="true"></div>
+      <div class="nav-right">
+        <button id="openAuthBtn" class="btn ghost">Cuenta</button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <h1 id="hMain">Crear tu cuenta de Lixby</h1>
-    <p class="small">Solo necesitas una cuenta de Lixby para acceder a todos los servicios.</p>
+  <main>
+    <div class="form-card glass" role="main" aria-labelledby="title">
+      <h1 id="title">Crear tu cuenta de Lixby</h1>
+      <p class="small" style="text-align:center">Solo necesitas una cuenta de Lixby para acceder a todos los servicios de Lixby.<br>¿Ya tienes una cuenta de Lixby? <a href="login.html">Inicia sesión</a></p>
 
-    <section class="panel" aria-labelledby="formTitle" style="margin-top:12px">
+      <div class="auth-row" aria-hidden="false">
+        <button id="btnGoogle" class="auth-btn" type="button"><img class="icon" src="https://www.svgrepo.com/show/355037/google.svg" alt="" aria-hidden="true"><span>Iniciar con Google</span></button>
+        <button id="btnGithub" class="auth-btn" type="button"><img class="icon" src="https://www.svgrepo.com/show/341847/github.svg" alt="" aria-hidden="true"><span>Iniciar con GitHub</span></button>
+      </div>
+
+      <div class="sep"><hr/><div>o</div><hr/></div>
+
       <form id="registerForm" novalidate>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <div style="flex:1;min-width:160px" class="field">
-            <label for="firstName">Nombre</label>
-            <input id="firstName" autocomplete="given-name" />
-            <div id="err-firstName" class="errorsmall" aria-live="polite"></div>
+        <div class="grid-2">
+          <div class="col">
+            <label for="firstName"><strong>Nombre</strong></label>
+            <input id="firstName" name="firstName" class="input-wide" autocomplete="given-name" />
+            <div id="err-firstName" class="error" aria-live="polite"></div>
           </div>
-          <div style="flex:1;min-width:160px" class="field">
-            <label for="lastName">Apellidos</label>
-            <input id="lastName" autocomplete="family-name" />
-            <div id="err-lastName" class="errorsmall" aria-live="polite"></div>
+          <div class="col">
+            <label for="lastName"><strong>Apellidos</strong></label>
+            <input id="lastName" name="lastName" class="input-wide" autocomplete="family-name" />
+            <div id="err-lastName" class="error" aria-live="polite"></div>
           </div>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <div style="flex:0 0 160px" class="field">
-            <label for="country">País</label>
-            <select id="country">
-              <option value="ES" selected>España</option>
-              <option value="PT">Portugal</option>
-              <option value="FR">Francia</option>
-              <option value="US">Estados Unidos</option>
-            </select>
-          </div>
-          <div style="flex:1" class="field">
-            <label>Fecha de nacimiento</label>
-            <div style="display:flex;gap:8px">
-              <input id="dobDay" placeholder="Día" inputmode="numeric" style="max-width:88px" />
-              <input id="dobMonth" placeholder="Mes" inputmode="numeric" style="max-width:88px" />
-              <input id="dobYear" placeholder="Año" inputmode="numeric" style="max-width:120px" />
+        <label for="country" style="margin-top:10px"><strong>País / región</strong></label>
+        <select id="country" class="input-wide" aria-label="País o región">
+          <option value="ES" selected>España</option>
+          <option value="US">Estados Unidos</option>
+          <option value="MX">México</option>
+          <option value="AR">Argentina</option>
+          <option value="CL">Chile</option>
+          <!-- añade más si quieres -->
+        </select>
+
+        <div style="margin-top:12px;">
+          <strong>Fecha de nacimiento</strong>
+          <div class="small">Ayuda (cumpleaños)</div>
+          <div class="grid-2" style="margin-top:8px">
+            <div class="col">
+              <select id="day" class="input-wide" aria-label="Día"></select>
             </div>
-            <div id="err-dob" class="errorsmall" aria-live="polite"></div>
+            <div class="col">
+              <select id="month" class="input-wide" aria-label="Mes"></select>
+            </div>
+            <div class="col">
+              <select id="year" class="input-wide" aria-label="Año"></select>
+            </div>
+          </div>
+          <div id="err-dob" class="error" aria-live="polite"></div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label for="email"><strong>Correo electrónico</strong></label>
+          <input id="email" type="email" class="input-wide" placeholder="nombre@example.com" autocomplete="email" />
+          <div id="err-email" class="error" aria-live="polite"></div>
+          <div class="small" style="margin-top:6px">Esta será tu cuenta de Lixby.</div>
+        </div>
+
+        <div class="grid-2" style="margin-top:12px">
+          <div class="col">
+            <label for="password"><strong>Contraseña</strong></label>
+            <input id="password" type="password" class="input-wide" autocomplete="new-password" />
+            <div id="err-password" class="error" aria-live="polite"></div>
+          </div>
+          <div class="col">
+            <label for="confirm"><strong>Confirmar contraseña</strong></label>
+            <input id="confirm" type="password" class="input-wide" autocomplete="new-password" />
+            <div id="err-confirm" class="error" aria-live="polite"></div>
           </div>
         </div>
 
-        <div class="field" style="margin-top:12px">
-          <label for="email">Correo electrónico</label>
-          <input id="email" type="email" autocomplete="email" placeholder="nombre@example.com" />
-          <div id="err-email" class="errorsmall" aria-live="polite"></div>
-          <div class="small muted">Esta será tu cuenta de Lixby.</div>
+        <div style="margin-top:12px">
+          <label><strong>Teléfono</strong></label>
+          <div style="display:flex;gap:8px">
+            <select id="phonePrefix" style="width:110px;padding:10px;border-radius:8px;border:1px solid var(--stroke)">
+              <option value="+34">+34 (España)</option>
+              <option value="+1">+1 (EE. UU.)</option>
+              <option value="+52">+52 (México)</option>
+            </select>
+            <input id="phone" class="input-wide" placeholder="Número de teléfono" inputmode="tel" />
+          </div>
+          <div id="err-phone" class="error" aria-live="polite"></div>
+          <div class="small" style="margin-top:6px">Asegúrate de introducir un número de teléfono válido. Se usará para verificaciones.</div>
         </div>
 
-        <div style="display:flex;gap:8px">
-          <div style="flex:1" class="field">
-            <label for="password">Contraseña</label>
-            <input id="password" type="password" autocomplete="new-password" />
-            <div id="err-password" class="errorsmall" aria-live="polite"></div>
-          </div>
-          <div style="flex:1" class="field">
-            <label for="passwordConfirm">Confirmar contraseña</label>
-            <input id="passwordConfirm" type="password" autocomplete="new-password" />
-            <div id="err-passwordConfirm" class="errorsmall" aria-live="polite"></div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:8px;align-items:flex-end;margin-top:12px">
-          <div style="flex:0 0 160px">
-            <label for="phonePrefix">Prefijo</label>
-            <select id="phonePrefix"><option value="+34" selected>+34 (ES)</option><option value="+1">+1 (US)</option></select>
-          </div>
-          <div style="flex:1" class="field">
-            <label for="phone">Número de teléfono</label>
-            <input id="phone" inputmode="tel" placeholder="612345678" />
-            <div id="err-phone" class="errorsmall" aria-live="polite"></div>
+        <div style="margin-top:12px">
+          <strong>Verificar con:</strong>
+          <div style="display:flex;gap:10px;margin-top:6px">
+            <label><input type="radio" name="verify" value="sms" checked> SMS</label>
+            <label><input type="radio" name="verify" value="call"> Llamada telefónica</label>
           </div>
         </div>
 
-        <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
-          <div>
-            <button type="button" id="btnGoogle" class="btn ghost">Google</button>
-            <button type="button" id="btnGithub" class="btn ghost">GitHub</button>
+        <div style="margin-top:12px">
+          <label><input type="checkbox" id="marketing1"> Recibe correos y comunicaciones de Lixby (anuncios y novedades)</label>
+          <br/>
+          <label><input type="checkbox" id="marketing2"> Apps, música, TV y mucho más (ofertas y recomendaciones)</label>
+        </div>
+
+        <div class="captcha" aria-hidden="false">
+          <div class="box" id="captchaBox" aria-hidden="true">45 AB</div>
+          <div style="flex:1">
+            <label for="captchaInput"><strong>Introduce el código de la imagen</strong></label>
+            <input id="captchaInput" class="input-wide" placeholder="Código" />
+            <div style="margin-top:6px"><button id="refreshCaptcha" class="btn ghost" type="button">Código nuevo</button> <button id="visually" class="btn ghost" type="button">Visión limitada</button></div>
+            <div id="err-captcha" class="error" aria-live="polite"></div>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
           <a href="login.html" class="btn ghost">Iniciar sesión</a>
-          <button type="submit" id="btnContinue" class="btn primary">Continuar</button>
+          <button id="submitBtn" class="btn primary" type="submit">Continuar</button>
         </div>
 
-        <div id="formStatus" role="status" aria-live="polite" style="margin-top:10px;color:var(--muted)"></div>
+        <div id="formMessage" class="small" style="margin-top:12px" role="status" aria-live="polite"></div>
       </form>
-    </section>
+    </div>
   </main>
 
   <script type="module" src="auth-firebase-minimal.js"></script>
   <script>
+    // llenado de selects día/mes/año
     (function(){
-      const form = document.getElementById('registerForm');
-      const err = (id,msg) => { const el = document.getElementById('err-'+id); if(el) el.textContent = msg || ''; const f = document.getElementById(id); if(f) f.classList.toggle('input-error', !!msg); };
-      function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-      function isPositiveInteger(v){ return /^\d+$/.test(v); }
-      function validateDOB(day,month,year){
-        if(!day || !month || !year) return false;
-        const d=Number(day), m=Number(month)-1, y=Number(year);
-        const date = new Date(y,m,d);
-        if (isNaN(date.getTime())) return false;
-        if (date.getFullYear() !== y || date.getMonth() !== m || date.getDate() !== d) return false;
-        if (date > new Date()) return false;
-        const age = new Date().getFullYear() - y - ((new Date().getMonth() < m || (new Date().getMonth()===m && new Date().getDate() < d)) ? 1 : 0);
-        return age >= 13;
-      }
-      document.getElementById('btnGoogle').addEventListener('click', ()=> { if (window.appAuth) window.appAuth.signInWithGoogle(); else alert('No disponible.'); });
-      document.getElementById('btnGithub').addEventListener('click', ()=> { if (window.appAuth) window.appAuth.signInWithGitHub(); else alert('No disponible.'); });
-
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        ['firstName','lastName','dob','email','password','passwordConfirm','phone'].forEach(id => err(id,''));
-        let firstInvalid = null;
-        const firstName = (document.getElementById('firstName').value||'').trim();
-        const lastName = (document.getElementById('lastName').value||'').trim();
-        const dDay = (document.getElementById('dobDay').value||'').trim();
-        const dMonth = (document.getElementById('dobMonth').value||'').trim();
-        const dYear = (document.getElementById('dobYear').value||'').trim();
-        const email = (document.getElementById('email').value||'').trim();
-        const password = document.getElementById('password').value || '';
-        const passwordConfirm = document.getElementById('passwordConfirm').value || '';
-        const phone = (document.getElementById('phone').value||'').trim();
-
-        if (!firstName) { err('firstName','Introduce tu nombre.'); firstInvalid = firstInvalid || document.getElementById('firstName'); }
-        if (!lastName) { err('lastName','Introduce tus apellidos.'); firstInvalid = firstInvalid || document.getElementById('lastName'); }
-        if (!validateDOB(dDay,dMonth,dYear)) { err('dob','Introduce una fecha de nacimiento válida.'); firstInvalid = firstInvalid || document.getElementById('dobDay'); }
-        if (!isValidEmail(email)) { err('email','Introduce una dirección de correo válida.'); firstInvalid = firstInvalid || document.getElementById('email'); }
-        if (password.length < 8) { err('password','8 o más caracteres'); firstInvalid = firstInvalid || document.getElementById('password'); }
-        if (passwordConfirm !== password) { err('passwordConfirm','La confirmación no coincide'); firstInvalid = firstInvalid || document.getElementById('passwordConfirm'); }
-        if (phone.replace(/\D/g,'').length < 6) { err('phone','Introduce un número de teléfono válido.'); firstInvalid = firstInvalid || document.getElementById('phone'); }
-
-        if (firstInvalid) { firstInvalid.focus(); document.getElementById('formStatus').textContent = 'Hay errores en el formulario.'; return; }
-
-        document.getElementById('formStatus').textContent = 'Creando cuenta…';
-        try {
-          if (!window.appAuth || typeof window.appAuth.createUserWithEmail !== 'function') throw new Error('Autenticación no disponible');
-          const extra = { firstName, lastName, dob: `${dYear}-${String(dMonth).padStart(2,'0')}-${String(dDay).padStart(2,'0')}`, country: document.getElementById('country').value, phone: document.getElementById('phonePrefix').value + ' ' + phone };
-          await window.appAuth.createUserWithEmail(email, password, extra);
-          // store some snapshot locally
-          const snapshot = { uid: (window?.appAuth?._rawAuth?.currentUser?.uid || null), email, firstName, lastName };
-          try { localStorage.setItem('lixby_user', JSON.stringify(snapshot)); } catch(e){}
-          document.getElementById('formStatus').textContent = 'Cuenta creada correctamente. Redirigiendo…';
-          setTimeout(()=> location.href = 'cuenta.html', 800);
-        } catch (err) {
-          console.error(err);
-          const msg = err && err.message ? err.message : String(err);
-          document.getElementById('formStatus').textContent = 'Error: ' + msg;
-        }
-      });
+      const day = document.getElementById('day');
+      const month = document.getElementById('month');
+      const year = document.getElementById('year');
+      for(let d=1; d<=31; d++){ const o = document.createElement('option'); o.value=d; o.textContent=d; day.appendChild(o); }
+      const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      months.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i+1; o.textContent=m; month.appendChild(o); });
+      const now = new Date().getFullYear();
+      for(let y=now; y>=1900; y--){ const o = document.createElement('option'); o.value=y; o.textContent=y; year.appendChild(o); }
     })();
+
+    // simple captcha random
+    function generateCaptcha(){
+      const a = Math.floor(Math.random()*90)+10;
+      const b = Math.random().toString(36).slice(2,4).toUpperCase();
+      const code = `${a} ${b}`;
+      document.getElementById('captchaBox').textContent = code;
+      return code;
+    }
+    let currentCaptcha = generateCaptcha();
+    document.getElementById('refreshCaptcha').addEventListener('click', ()=> currentCaptcha = generateCaptcha());
+    document.getElementById('visually').addEventListener('click', ()=> alert('Si tienes problemas visuales contacta a accesibilidad@lixby.example'));
+
+    // social buttons
+    document.getElementById('btnGoogle').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGoogle().catch(e=>console.warn(e)); });
+    document.getElementById('btnGithub').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGitHub().catch(e=>console.warn(e)); });
+
+    // header brand / cuenta
+    document.getElementById('brand').addEventListener('click', ()=> location.href='index.html');
+    document.getElementById('brand').addEventListener('keypress', (e)=> { if(e.key==='Enter') location.href='index.html'; });
+    document.getElementById('openAuthBtn').addEventListener('click', ()=> { if (document.getElementById('lixbyAuthOverlay')) { document.getElementById('lixbyAuthOverlay').style.display='flex'; document.getElementById('lixbyAuthOverlay').setAttribute('aria-hidden','false'); } else if(window.appAuth && typeof window.appAuth.signInWithGoogle === 'function') { /* fallback to auth overlay creation */ try{ window.dispatchEvent(new Event('showAuth')); }catch(e){} } });
+
+    // form submit + validations
+    const form = document.getElementById('registerForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      // clear errors
+      ['firstName','lastName','dob','email','password','confirm','phone','captcha'].forEach(k=>{
+        const el = document.getElementById('err-'+k);
+        if (el) el.textContent = '';
+      });
+      document.getElementById('formMessage').textContent = '';
+
+      const firstName = (document.getElementById('firstName')||{}).value.trim();
+      const lastName = (document.getElementById('lastName')||{}).value.trim();
+      const d = (document.getElementById('day')||{}).value;
+      const m = (document.getElementById('month')||{}).value;
+      const y = (document.getElementById('year')||{}).value;
+      const email = (document.getElementById('email')||{}).value.trim();
+      const password = (document.getElementById('password')||{}).value;
+      const confirm = (document.getElementById('confirm')||{}).value;
+      const phonePref = (document.getElementById('phonePrefix')||{}).value;
+      const phone = (document.getElementById('phone')||{}).value.trim();
+      const captchaInput = (document.getElementById('captchaInput')||{}).value.trim();
+
+      let firstError = null;
+      function mark(id,msg){ const el = document.getElementById('err-'+id); if(el) el.textContent = msg; if(!firstError) firstError = document.getElementById(id); }
+
+      if (!firstName) mark('firstName','Introduce tu nombre.');
+      if (!lastName) mark('lastName','Introduce tus apellidos.');
+
+      // validate date (simple)
+      if (!d || !m || !y) mark('dob','Introduce una fecha de nacimiento válida.');
+      else {
+        const date = new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+        const minYear = new Date().getFullYear() - 13; // 13 años min
+        if (isNaN(date.getTime()) || Number(y) > new Date().getFullYear() || Number(y) < 1900 || Number(y) > minYear) {
+          mark('dob','Introduce una fecha de nacimiento válida (debes tener al menos 13 años).');
+        }
+      }
+
+      // email
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRe.test(email)) mark('email','Introduce una dirección de correo electrónico válida.');
+
+      // password
+      if (!password || password.length < 8) mark('password','8 o más caracteres');
+      if (confirm !== password) mark('confirm','Las contraseñas no coinciden.');
+
+      // phone (basic digits)
+      if (!/^\d{6,}$/.test(phone)) mark('phone','Introduce un número de teléfono válido.');
+
+      // captcha
+      if (!captchaInput || captchaInput.toUpperCase() !== (currentCaptcha || '').replace(/\s+/g,'')) mark('captcha','Código incorrecto. Pide uno nuevo.');
+
+      if (firstError) {
+        firstError.focus();
+        firstError.scrollIntoView({behavior:'smooth', block:'center'});
+        document.getElementById('formMessage').textContent = 'Hay errores en el formulario. Revisa los campos marcados.';
+        return;
+      }
+
+      // all ok -> create user
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('formMessage').textContent = 'Creando cuenta...';
+      try {
+        if (!window.appAuth || typeof window.appAuth.createUserWithEmail !== 'function') throw new Error('Módulo de autenticación no disponible.');
+        const dob = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const extra = { firstName, lastName, dob, country: document.getElementById('country').value, phone: phonePref + ' ' + phone, marketing: { m1: !!document.getElementById('marketing1').checked, m2: !!document.getElementById('marketing2').checked } };
+        await window.appAuth.createUserWithEmail(email, password, extra);
+        document.getElementById('formMessage').textContent = 'Cuenta creada. Redirigiendo…';
+        setTimeout(()=> location.href = 'cuenta.html', 800);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('formMessage').textContent = err && err.message ? err.message : 'Error creando cuenta.';
+      } finally {
+        document.getElementById('submitBtn').disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
