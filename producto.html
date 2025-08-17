@@ -4,18 +4,27 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LIXBY — Detalle de producto</title>
+
+  <!-- Aplicar tema temprano para evitar FOUC (si el usuario guardó preferencia) -->
+  <script>
+    (function(){
+      try {
+        const saved = localStorage.getItem('lixby_theme'); // 'light'|'dark'
+        if (saved === 'light') document.documentElement.classList.add('light');
+        else if (saved === 'dark') document.documentElement.classList.remove('light');
+        // si no hay preferencia, no tocar (estilos por defecto)
+      } catch(e){}
+    })();
+  </script>
+
   <link rel="stylesheet" href="style.css">
   <meta name="description" content="Ficha del producto Lixby — detalles, precio y especificaciones." />
   <style>
-    /* Minimal product UI overrides (redondeado + minimal) */
+    /* Overrides / UI local para product page (compacto, minimal) */
     .options { gap:18px; display:flex; flex-direction:column; }
     .option-title { font-weight:700; font-size:1.02rem; color:color-mix(in oklab, var(--text) 88%, var(--muted) 12%); margin-bottom:8px; }
     .colors { display:flex; gap:12px; align-items:center; }
-    .color-dot {
-      width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,0.06);
-      display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .14s ease,box-shadow .14s ease;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset; outline:none;
-    }
+    .color-dot { width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,0.06); display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .14s ease,box-shadow .14s ease; outline:none; }
     .color-dot[data-color="blue"]{ background:#2f6bff }
     .color-dot[data-color="green"]{ background:#9fe0d4 }
     .color-dot[data-color="pink"]{ background:#f1b6d9 }
@@ -25,13 +34,7 @@
     .color-dot:focus{ box-shadow: 0 0 0 6px rgba(10,132,255,0.12); }
 
     .capacities { display:flex; gap:12px; flex-wrap:wrap; align-items:stretch; }
-    .cap-card {
-      min-width:150px;padding:14px 16px;border-radius:14px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
-      border:1px solid rgba(255,255,255,0.04); cursor:pointer; display:flex; justify-content:space-between; align-items:center;
-      transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
-      box-shadow: 0 6px 18px rgba(2,6,12,0.04);
-    }
+    .cap-card { min-width:150px;padding:14px 16px;border-radius:14px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.04); cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease; box-shadow: 0 6px 18px rgba(2,6,12,0.04); }
     .cap-card.active{ border-color:var(--accent); transform:translateY(-6px); box-shadow:0 20px 40px rgba(10,132,255,0.06) }
     .cap-card:focus{ outline:none; box-shadow: 0 0 0 6px rgba(10,132,255,0.08); }
 
@@ -46,28 +49,24 @@
     .term-select-wrap { display:flex; gap:8px; align-items:center; margin-left:8px; }
     .term-select { padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; }
 
-    /* LixbyCare as square cards (like capacities) */
     .care-grid { display:flex; gap:12px; flex-wrap:wrap; align-items:stretch; }
-    .care-card {
-      min-width:160px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
-      cursor:pointer; display:flex; flex-direction:column; gap:8px;
-      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-    }
+    .care-card { min-width:160px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); cursor:pointer; display:flex; flex-direction:column; gap:8px; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
     .care-card.active { border-color:var(--accent); transform:translateY(-6px); box-shadow:0 18px 36px rgba(10,132,255,0.06); }
     .care-card small { color:var(--muted); font-size:0.92rem; }
 
-    /* small responsive adjustments */
+    /* panel de pago del seguro */
+    .care-pay-panel { margin-top:12px; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); display:flex; gap:12px; align-items:flex-start; }
+    .care-pay-option { flex:1; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); cursor:pointer; background:transparent; }
+    .care-pay-option.active { border-color:var(--accent); box-shadow:0 12px 30px rgba(10,132,255,0.06); transform:translateY(-4px); }
+
+    /* responsive */
     @media (max-width:700px) {
       .color-dot { width:34px;height:34px; }
       .cap-card { min-width:48%; padding:12px;border-radius:12px; }
       .big { font-size:1.08rem; }
       .term-select-wrap { margin-left:0; margin-top:8px; flex-direction:column; align-items:flex-start; }
+      .care-pay-panel { flex-direction:column; }
     }
-
-    /* Mini-cart show/hide safety */
-    .mini-cart[aria-hidden="true"] { display:none !important; pointer-events:none; }
-    .mini-cart[aria-hidden="false"] { display:flex !important; pointer-events:auto; }
   </style>
 </head>
 <body>
@@ -112,11 +111,11 @@
   <script>
   (function(){
     'use strict';
-    // Util helpers
-    const nf = v => (Math.round((Number(v)||0)*100)/100).toFixed(2).replace('.',',') + ' €';
-    const proxied = url => { try { return 'https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//,'')) + '&w=900&q=80'; } catch(e){ return url; } };
+    // formateo sencillo
+    function nfEuro(v){ return (Math.round((Number(v)||0)*100)/100).toFixed(2).replace('.',',') + ' €'; }
+    function proxied(url){ try { return 'https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//,'')) + '&w=900&q=80'; } catch(e){ return url; } }
 
-    // Product dataset
+    // Productos: ahora incluyen air y pro con diferencias
     const products = {
       "lixby-one": {
         id:'lixby-one', name:'Lixby One',
@@ -124,20 +123,35 @@
         image:'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg',
         colors:['blue','green','pink','white','black'],
         storage:{ '128':349, '256':429, '512':549, '1024':699 }
+      },
+      "lixby-one-air": {
+        id:'lixby-one-air', name:'Lixby One Air',
+        mini:'Ligero y asequible',
+        image:'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg',
+        colors:['blue','green','pink','white','black'],
+        // Air no tiene 1TB
+        storage:{ '128':249, '256':299, '512':379 }
+      },
+      "lixby-one-pro": {
+        id:'lixby-one-pro', name:'Lixby One Pro',
+        mini:'Audio & rendimiento',
+        image:'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg',
+        // Pro no tiene 128 GB y colores limitados
+        colors:['blue','white','black'],
+        storage:{ '256':899, '512':1099, '1024':1299 }
       }
     };
 
-    // Care options: monthly base
+    // Opciones de LixbyCare (ejemplo) -> monthly = tarifa mensual estimada
     const CARE = {
-      none: { id:'none', label:'Sin LixbyCare+', monthly:0 },
-      standard: { id:'standard', label:'LixbyCare+ (estándar)', monthly:3.00 },
-      theft: { id:'theft', label:'LixbyCare+ (robo y pérdida)', monthly:5.00 }
+      none:    { id:'none', label:'Sin LixbyCare+', monthly:0 },
+      monthly: { id:'monthly', label:'Póliza anual con pago mensual', monthly:8.99 }, // se mostrará 8.99€/mes
+      upfront: { id:'upfront', label:'Dos años de cobertura (pago único)', monthly: 169 } // aquí monthly actuaría como precio único
     };
 
-    // Terms allowed (now including 30,36)
     const TERMS = [6,12,18,24,30,36];
 
-    // Cart storage helpers (unchanged)
+    // Cart helpers (igual)
     const CART_KEY = 'lixby_cart_v1';
     function loadCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY))||[]; } catch(e){ return []; } }
     function saveCart(c){ try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){} }
@@ -162,7 +176,7 @@
           if (cartCount) cartCount.textContent = '0';
           return;
         }
-        let total = 0, qty = 0;
+        let total=0, qty=0;
         cart.forEach((it, idx) => {
           const row = document.createElement('div'); row.style.display='flex'; row.style.gap='10px'; row.style.padding='8px'; row.style.alignItems='center';
           const img = document.createElement('img'); img.src = it.image || 'https://via.placeholder.com/80'; img.alt = it.name || ''; img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
@@ -174,9 +188,9 @@
           total += (it.priceNum || 0) * (it.qty||1);
           qty += (it.qty||1);
         });
-        miniCartTotal.textContent = nf(total);
+        miniCartTotal.textContent = nfEuro(total);
         if (cartCount) cartCount.textContent = qty;
-      } catch(e){ console.warn('mini update err', e); }
+      } catch(e){ console.warn(e); }
     }
     updateMiniCartUI();
 
@@ -208,53 +222,100 @@
         else cart.push(Object.assign({}, product));
         saveCart(cart);
         updateMiniCartUI();
-        try { miniCart.setAttribute('aria-hidden','false'); cartBtn.setAttribute('aria-expanded','true'); setTimeout(()=>{ miniCart.setAttribute('aria-hidden','true'); cartBtn.setAttribute('aria-expanded','false'); }, 2200); } catch(e){}
-      } catch(e){ console.error('addToCart err', e); }
+        try { miniCart.setAttribute('aria-hidden','false'); cartBtn.setAttribute('aria-expanded','true'); setTimeout(()=>{ miniCart.setAttribute('aria-hidden','true'); cartBtn.setAttribute('aria-expanded','false'); }, 2000); } catch(e){}
+      } catch(e){ console.error(e); }
     };
 
-    // Render product + UI logic
-    function getProductIdFromUrl(){ try { const p = new URLSearchParams(location.search).get('id'); if (p) return p; } catch(e){} return 'lixby-one'; }
+    // Detección flexible de ID en URL (query, hash, path)
+    function getProductIdFromUrl(){
+      try {
+        const qs = new URLSearchParams(location.search).get('id'); if (qs) return decodeURIComponent(qs);
+      } catch(e){}
+      try {
+        const h = (location.hash || '').replace(/^#\/?/, '');
+        if (h) {
+          // formatos: #id=lixby-one-air  o #/producto/lixby-one-air
+          const m = h.match(/id=([^&]+)/);
+          if (m && m[1]) return decodeURIComponent(m[1]);
+          const parts = h.split('/').filter(Boolean);
+          if (parts.length) return decodeURIComponent(parts[parts.length-1]);
+        }
+      } catch(e){}
+      try {
+        const segs = location.pathname.split('/').filter(Boolean);
+        if (segs.length) {
+          const last = segs[segs.length-1];
+          if (last && !last.match(/\.html$/i)) return decodeURIComponent(last);
+        }
+      } catch(e){}
+      return null;
+    }
+
+    function findProductKeyFlexible(raw){
+      if (!raw) return null;
+      raw = String(raw).trim().toLowerCase();
+      // exact match
+      if (products[raw]) return raw;
+      // normalize common variants: spaces, underscores -> hyphens
+      const normalized = raw.replace(/\s+/g,'-').replace(/_/g,'-');
+      for (const k in products) {
+        if (k.toLowerCase() === normalized) return k;
+      }
+      // partial match: contains or contained
+      for (const k in products) {
+        if (k.toLowerCase().indexOf(normalized) !== -1 || normalized.indexOf(k.toLowerCase()) !== -1) return k;
+      }
+      return null;
+    }
+
+    // Render product
     function renderProduct(){
-      const id = getProductIdFromUrl();
-      const p = products[id] || Object.values(products)[0];
+      const raw = getProductIdFromUrl();
+      const key = findProductKeyFlexible(raw) || 'lixby-one';
+      const p = products[key];
       const container = document.getElementById('productDetail');
       if (!container) return;
       container.innerHTML = '';
 
-      // image
+      // left: image
       const wrap = document.createElement('div'); wrap.className = 'image-wrap';
       const img = document.createElement('img'); img.className='product-image'; img.alt = p.name; img.src = proxied(p.image); img.loading='eager';
       img.addEventListener('error', ()=>{ img.src = p.image; });
       wrap.appendChild(img);
 
-      // info column
+      // right: info
       const info = document.createElement('div'); info.className='product-info';
       const title = document.createElement('h1'); title.textContent = p.name;
       const mini = document.createElement('p'); mini.textContent = p.mini || '';
-      const priceEl = document.createElement('div'); priceEl.className='price'; priceEl.textContent = nf(Object.values(p.storage)[0]);
+      const priceEl = document.createElement('div'); priceEl.className='price'; priceEl.textContent = nfEuro(Object.values(p.storage)[0]);
 
       const options = document.createElement('div'); options.className='options';
 
-      // colors
-      const colWrap = document.createElement('div'); const colTitle = document.createElement('div'); colTitle.className='option-title'; colTitle.textContent='Acabado. Elige tu favorito.'; colWrap.appendChild(colTitle);
+      // Colors
+      const colWrap = document.createElement('div');
+      const colTitle = document.createElement('div'); colTitle.className='option-title'; colTitle.textContent='Acabado. Elige tu favorito.';
+      colWrap.appendChild(colTitle);
       const colorsRow = document.createElement('div'); colorsRow.className='colors';
       const selColor = document.createElement('input'); selColor.type='hidden'; selColor.id='selColor';
       const savedColorKey = 'lixby_sel_color_' + p.id;
       const savedColor = localStorage.getItem(savedColorKey);
       (p.colors||[]).forEach((c, i) => {
         const b = document.createElement('button'); b.className='color-dot'; b.setAttribute('data-color', c); b.setAttribute('aria-label', c); b.tabIndex=0;
-        if (savedColor ? savedColor === c : i===0) b.classList.add('active');
+        if (savedColor ? savedColor===c : i===0) b.classList.add('active');
         b.addEventListener('click', function(){
-          colorsRow.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+          colorsRow.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
           this.classList.add('active'); selColor.value = this.dataset.color; localStorage.setItem(savedColorKey, this.dataset.color); updateSummary();
         });
         b.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); b.click(); }});
         colorsRow.appendChild(b);
       });
-      colWrap.appendChild(colorsRow); colWrap.appendChild(selColor); options.appendChild(colWrap);
+      colWrap.appendChild(colorsRow); colWrap.appendChild(selColor);
+      options.appendChild(colWrap);
 
-      // capacities
-      const capWrap = document.createElement('div'); const capTitle = document.createElement('div'); capTitle.className='option-title'; capTitle.textContent='Capacidad. ¿Cuánto espacio necesitas?'; capWrap.appendChild(capTitle);
+      // Capacidades
+      const capWrap = document.createElement('div');
+      const capTitle = document.createElement('div'); capTitle.className='option-title'; capTitle.textContent='Capacidad. ¿Cuánto espacio necesitas?';
+      capWrap.appendChild(capTitle);
       const capRow = document.createElement('div'); capRow.className='capacities';
       const selCap = document.createElement('input'); selCap.type='hidden'; selCap.id='selCap';
       const keys = Object.keys(p.storage).sort((a,b)=>Number(a)-Number(b));
@@ -262,59 +323,86 @@
       const savedCap = localStorage.getItem(savedCapKey);
       keys.forEach((sz, idx) => {
         const card = document.createElement('div'); card.className='cap-card'; card.setAttribute('data-cap', sz); card.tabIndex=0;
-        if (savedCap ? savedCap === sz : idx===0) card.classList.add('active');
-        const left = document.createElement('div'); left.textContent = (sz==='1024' ? '1 TB' : sz + ' GB'); left.style.fontWeight='700';
-        const right = document.createElement('div'); right.innerHTML = `${nf(p.storage[sz])}<div class="muted" style="margin-top:6px">o ${nf(Math.round((p.storage[sz]/24)*100)/100)} /mes (24 meses)</div>`;
+        if (savedCap ? savedCap===sz : idx===0) card.classList.add('active');
+        const left = document.createElement('div'); left.style.fontWeight='700'; left.textContent = (sz==='1024' ? '1 TB' : sz + ' GB');
+        const right = document.createElement('div'); right.innerHTML = `${nfEuro(p.storage[sz])}<div class="muted" style="margin-top:6px">o ${nfEuro(Math.round((p.storage[sz]/24)*100)/100)} /mes (24 meses)</div>`;
         card.appendChild(left); card.appendChild(right);
         card.addEventListener('click', ()=>{ capRow.querySelectorAll('.cap-card').forEach(c=>c.classList.remove('active')); card.classList.add('active'); selCap.value = sz; localStorage.setItem(savedCapKey, sz); updateSummary(); });
         card.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); card.click(); }});
         capRow.appendChild(card);
       });
-      capWrap.appendChild(capRow); capWrap.appendChild(selCap); options.appendChild(capWrap);
+      capWrap.appendChild(capRow); capWrap.appendChild(selCap);
+      options.appendChild(capWrap);
 
-      // payment options (Pago único / Pagos mensuales)
-      const payWrap = document.createElement('div'); const payTitle = document.createElement('div'); payTitle.className='option-title'; payTitle.textContent='Opciones de pago. Elige lo que más te convenga.'; payWrap.appendChild(payTitle);
+      // Opciones de pago
+      const payWrap = document.createElement('div');
+      const payTitle = document.createElement('div'); payTitle.className='option-title'; payTitle.textContent='Opciones de pago. Elige lo que más te convenga.';
+      payWrap.appendChild(payTitle);
       const payRow = document.createElement('div'); payRow.className='pay-options';
       const paySingle = document.createElement('div'); paySingle.className='pay-card active'; paySingle.setAttribute('data-pay','single'); paySingle.textContent='Pago único';
-      const payPlazo = document.createElement('div'); payPlazo.className='pay-card'; payPlazo.setAttribute('data-pay','plazo'); payPlazo.textContent='Pagos mensuales';
+      const payPlazo  = document.createElement('div'); payPlazo.className='pay-card'; payPlazo.setAttribute('data-pay','plazo'); payPlazo.textContent='Pagos mensuales';
       payRow.appendChild(paySingle); payRow.appendChild(payPlazo);
 
-      // term select dropdown (visible only when plazo active)
+      // selector terms
       const termWrap = document.createElement('div'); termWrap.className='term-select-wrap';
-      const termSelect = document.createElement('select'); termSelect.className='term-select'; termSelect.id = 'selTerm';
-      // options: 6,12,18,24,30,36
-      [6,12,18,24,30,36].forEach(m => {
-        const o = document.createElement('option'); o.value = String(m); o.textContent = `${m} meses`;
-        termSelect.appendChild(o);
-      });
-      // price badge next to select (base/mes)
-      const termBadge = document.createElement('div'); termBadge.id = 'termBadge'; termBadge.className = 'muted';
+      const termSelect = document.createElement('select'); termSelect.className='term-select'; termSelect.id='selTerm';
+      TERMS.forEach(m => { const o = document.createElement('option'); o.value = String(m); o.textContent = `${m} meses`; termSelect.appendChild(o); });
+      const termBadge = document.createElement('div'); termBadge.id='termBadge'; termBadge.className='muted';
       termWrap.appendChild(termSelect); termWrap.appendChild(termBadge);
-
-      // initially hide termWrap (Pago único default)
       termWrap.style.display = 'none';
+      payWrap.appendChild(payRow); payWrap.appendChild(termWrap);
+      options.appendChild(payWrap);
 
-      payWrap.appendChild(payRow); payWrap.appendChild(termWrap); options.appendChild(payWrap);
-
-      // LixbyCare as square cards
-      const careWrap = document.createElement('div'); const careTitle = document.createElement('div'); careTitle.className='option-title'; careTitle.textContent='AppleCare+. Protege tu nuevo Lixby.'; careWrap.appendChild(careTitle);
-      const careGrid = document.createElement('div'); careGrid.className = 'care-grid';
+      // LixbyCare (titulo cambiado)
+      const careWrap = document.createElement('div');
+      const careTitle = document.createElement('div'); careTitle.className='option-title'; careTitle.textContent='LixbyCare+. Protege tu nuevo Lixby.';
+      careWrap.appendChild(careTitle);
+      const careGrid = document.createElement('div'); careGrid.className='care-grid';
       const careSavedKey = 'lixby_sel_care_' + p.id;
       const savedCare = localStorage.getItem(careSavedKey) || 'none';
-      // build cards from CARE map
       Object.values(CARE).forEach(c => {
         const card = document.createElement('button'); card.type='button'; card.className='care-card'; card.setAttribute('data-care', c.id);
         if (savedCare === c.id) card.classList.add('active');
-        card.innerHTML = `<div style="font-weight:700">${c.label === 'Sin LixbyCare+' ? 'Sin LixbyCare+' : c.label}</div><small>${c.monthly > 0 ? (nf(c.monthly) + ' / mes (estim.)') : 'Sin coste'}</small>`;
+        // show monthly or upfront price
+        let priceLine = '';
+        if (c.id === 'monthly') priceLine = nfEuro(c.monthly) + ' /mes';
+        else if (c.id === 'upfront') priceLine = nfEuro(c.monthly) + ' (pago único)';
+        else priceLine = 'Sin coste';
+        card.innerHTML = `<div style="font-weight:700">${c.id==='none' ? 'Sin LixbyCare+' : c.label}</div><small>${priceLine}</small>`;
         card.addEventListener('click', ()=> {
           careGrid.querySelectorAll('.care-card').forEach(x=>x.classList.remove('active'));
           card.classList.add('active');
           localStorage.setItem(careSavedKey, c.id);
+          // mostrar panel de método de pago del seguro (solo si no none)
+          toggleCarePaymentPanel(c.id);
           updateSummary();
         });
         careGrid.appendChild(card);
       });
       careWrap.appendChild(careGrid);
+
+      // Panel de pago del seguro (oculto por defecto)
+      const carePayPanel = document.createElement('div'); carePayPanel.className='care-pay-panel'; carePayPanel.style.display='none';
+      carePayPanel.innerHTML = `
+        <div style="flex:1">
+          <div style="font-weight:700;margin-bottom:8px">¿Qué póliza de seguro LixbyCare+ quieres?</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="care-pay-option" data-payopt="monthly">
+              <div style="font-weight:700">Póliza anual con pago mensual hasta su cancelación</div>
+              <div class="muted" style="margin-top:6px" id="payMonthlyPrice"></div>
+            </div>
+            <div class="care-pay-option" data-payopt="upfront">
+              <div style="font-weight:700">Dos años de cobertura con pago al contado</div>
+              <div class="muted" style="margin-top:6px" id="payUpfrontPrice"></div>
+            </div>
+          </div>
+        </div>
+        <div style="flex:0 0 320px;color:var(--muted);font-size:0.95rem">
+          <div style="font-weight:700;margin-bottom:8px">Información</div>
+          <div>La póliza anual con pago mensual se renueva automáticamente salvo cancelación. El pago al contado es un precio por la cobertura completa (2 años).</div>
+        </div>
+      `;
+      careWrap.appendChild(carePayPanel);
       options.appendChild(careWrap);
 
       // summary
@@ -322,64 +410,99 @@
       summary.innerHTML = `<div><div class="muted">Precio</div><div class="big" id="totalPrice">--</div></div><div style="text-align:right"><div id="perMonth" class="muted">--</div><div id="careInfo" class="muted">--</div></div>`;
       options.appendChild(summary);
 
-      // actions (add to cart / fav)
+      // acciones
       const actions = document.createElement('div'); actions.style.display='flex'; actions.style.gap='10px'; actions.style.marginTop='12px';
       const addBtn = document.createElement('button'); addBtn.className='btn btn-buy'; addBtn.textContent='Añadir al carrito';
       const favBtn = document.createElement('button'); favBtn.className='btn'; favBtn.textContent='♡ Favorito';
       actions.appendChild(addBtn); actions.appendChild(favBtn);
 
-      // assemble info
+      // ensamblar
       info.appendChild(title); info.appendChild(mini); info.appendChild(priceEl); info.appendChild(options); info.appendChild(actions);
       container.appendChild(wrap); container.appendChild(info);
 
-      // initialize hidden values
-      selColor.value = savedColor || (p.colors[0]||'');
-      selCap.value = savedCap || keys[0];
-      termSelect.value = '12'; // default when switching to plazo
-      // init care active state
-      const activeCareId = savedCare || 'none';
-      careGrid.querySelectorAll('.care-card').forEach(card => {
-        if (card.dataset.care === activeCareId) card.classList.add('active'); else card.classList.remove('active');
-      });
+      // inicializar valores escondidos
+      const defaultColor = savedColor || (p.colors[0]||'');
+      selColor.value = defaultColor;
+      const defaultCap = savedCap || keys[0];
+      selCap.value = defaultCap;
+      termSelect.value = '12';
+      // mostrar u ocultar panel cuidado segun seleccionado guardado
+      toggleCarePaymentPanel(localStorage.getItem(careSavedKey) || 'none');
 
-      // Payment toggles
-      paySingle.addEventListener('click', ()=> {
-        payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
-        paySingle.classList.add('active');
-        termWrap.style.display = 'none';
-        updateSummary();
-      });
-      payPlazo.addEventListener('click', ()=> {
-        payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active'));
-        payPlazo.classList.add('active');
-        termWrap.style.display = 'flex';
-        updateSummary();
-      });
-
+      // Interacciones: pago
+      paySingle.addEventListener('click', ()=> { payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active')); paySingle.classList.add('active'); termWrap.style.display='none'; updateSummary(); });
+      payPlazo.addEventListener('click', ()=> { payRow.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('active')); payPlazo.classList.add('active'); termWrap.style.display='flex'; updateSummary(); });
       termSelect.addEventListener('change', updateSummary);
-      // capacity and color interactions already wired via localStorage listeners when cards clicked
 
-      // care card click handled earlier — add keyboard support
-      careGrid.querySelectorAll('.care-card').forEach(c=> c.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); c.click(); }}));
+      // togglear panel de pago del seguro
+      function toggleCarePaymentPanel(careId){
+        if (!carePayPanel) return;
+        if (!careId || careId === 'none') { carePayPanel.style.display = 'none'; return; }
+        carePayPanel.style.display = 'flex';
+        // rellenar precios
+        const monthlyEl = carePayPanel.querySelector('#payMonthlyPrice');
+        const upfrontEl  = carePayPanel.querySelector('#payUpfrontPrice');
+        const c = CARE[careId];
+        if (!c) { monthlyEl.textContent = ''; upfrontEl.textContent = ''; return; }
+        if (careId === 'monthly') {
+          monthlyEl.textContent = nfEuro(c.monthly) + ' /mes';
+          // compute upfront approx (12 meses)
+          upfrontEl.textContent = nfEuro(Math.round(c.monthly*12*100)/100) + ' (estim.)';
+        } else if (careId === 'upfront') {
+          // here c.monthly holds upfront price in our data
+          monthlyEl.textContent = nfEuro(Math.round((c.monthly/12)*100)/100) + ' /mes (estim.)';
+          upfrontEl.textContent = nfEuro(c.monthly) + ' (precio único)';
+        } else {
+          monthlyEl.textContent = '—'; upfrontEl.textContent = '—';
+        }
 
-      // update summary function
+        // hacer opciones seleccionables
+        carePayPanel.querySelectorAll('.care-pay-option').forEach(opt => {
+          opt.classList.remove('active');
+          opt.addEventListener('click', ()=> {
+            carePayPanel.querySelectorAll('.care-pay-option').forEach(o=>o.classList.remove('active'));
+            opt.classList.add('active');
+            // guardar elección para usar en updateSummary (opcional si quieres persistir)
+            localStorage.setItem(careSavedKey + '_payopt', opt.dataset.payopt);
+            updateSummary();
+          });
+        });
+
+        // marcar por defecto la opción 'monthly' si existe
+        const savedOpt = localStorage.getItem(careSavedKey + '_payopt') || (careId === 'monthly' ? 'monthly' : 'upfront');
+        const def = carePayPanel.querySelector(`.care-pay-option[data-payopt="${savedOpt}"]`);
+        if (def) def.classList.add('active');
+      }
+
+      // actualizar resumen
       function updateSummary(){
         try {
           const cap = selCap.value || keys[0];
           const base = Number(p.storage[cap] || 0);
-          // detect term selection
           const isPlazo = payPlazo.classList.contains('active');
           const term = isPlazo ? Number(termSelect.value || 12) : 1;
-          // care selected
-          const careId = (careGrid.querySelector('.care-card.active') || {}).dataset?.care || 'none';
-          const careMonthly = CARE[careId] ? CARE[careId].monthly : 0;
+          const careSel = (careGrid.querySelector('.care-card.active') || {}).dataset?.care || 'none';
+          const careObj = CARE[careSel] || CARE.none;
 
-          // compute values
-          const deviceTotal = base;
-          const deviceMonthly = Math.round((deviceTotal / Math.max(term,1)) * 100) / 100;
-          const careUpfront = Math.round(careMonthly * 12 * 100) / 100; // upfront cost for single payment approximated as 12*monthly
-          const totalSingle = Math.round((deviceTotal + careUpfront) * 100) / 100;
-          const perMonthTotal = Math.round((deviceMonthly + careMonthly) * 100) / 100;
+          // seleccionar metodo de pago del seguro (si panel visible)
+          const payOpt = (document.querySelector('.care-pay-option.active') || {}).dataset?.payopt || (careSel==='upfront' ? 'upfront' : 'monthly');
+
+          // cálculos:
+          // device monthly
+          const deviceMonthly = Math.round((base / Math.max(term,1)) * 100) / 100;
+          // care monthly / upfront
+          let careMonthly = 0, careUpfront = 0;
+          if (careSel === 'monthly') {
+            careMonthly = careObj.monthly;
+            careUpfront = Math.round(careMonthly * 12 * 100) / 100;
+          } else if (careSel === 'upfront') {
+            careUpfront = careObj.monthly; // in our structure monthly field stores upfront price
+            careMonthly = Math.round((careUpfront / 24) * 100) / 100; // approx
+          } else {
+            careMonthly = 0; careUpfront = 0;
+          }
+
+          const perMonthTotal = Math.round((deviceMonthly + (careSel==='none' ? 0 : (payOpt==='monthly' ? careMonthly : Math.round((careUpfront/term)*100)/100))) * 100) / 100;
 
           const totalEl = document.getElementById('totalPrice');
           const perMonthEl = document.getElementById('perMonth');
@@ -387,69 +510,86 @@
           const termBadgeEl = document.getElementById('termBadge');
 
           if (!isPlazo) {
-            // show full total (device + upfront care)
-            totalEl.textContent = nf(totalSingle);
-            perMonthEl.textContent = `Pago único. Ejemplo: ${nf(Math.round((deviceTotal/24)*100)/100)} /mes (si financias a 24 meses)`;
-            termBadgeEl.textContent = ''; // hide badge when not plazo
+            // pago único: mostrar device + posible care upfront si pago upfront o monthly (we assume show base + upfront)
+            const totalSingle = Math.round((base + (payOpt==='upfront' ? careUpfront : careUpfront)) * 100) / 100;
+            totalEl.textContent = nfEuro(totalSingle);
+            perMonthEl.textContent = `Pago único. (Ej.: ${nfEuro(Math.round((base/24)*100)/100)} /mes si financias a 24 meses)`;
+            termBadgeEl && (termBadgeEl.textContent = '');
           } else {
-            totalEl.textContent = 'Desde ' + nf(deviceTotal);
-            perMonthEl.textContent = `${nf(perMonthTotal)} /mes durante ${term} meses (estim.)`;
-            termBadgeEl.textContent = `Dispositivo: ${nf(deviceMonthly)} /mes`; // badge shows device-only monthly price
+            totalEl.textContent = 'Desde ' + nfEuro(base);
+            perMonthEl.textContent = `${nfEuro(perMonthTotal)} /mes durante ${term} meses (estim.)`;
+            termBadgeEl && (termBadgeEl.textContent = `Dispositivo: ${nfEuro(deviceMonthly)} /mes`);
           }
 
-          if (!careId || careId === 'none') {
+          if (careSel === 'none') {
             careInfoEl.textContent = 'Sin LixbyCare+';
           } else {
-            careInfoEl.textContent = `${CARE[careId].label} — ${nf(careMonthly)} /mes (estim.)`;
+            if (payOpt === 'monthly') {
+              careInfoEl.textContent = `${CARE[careSel].label} — ${nfEuro(careMonthly)} /mes (estim.)`;
+            } else {
+              careInfoEl.textContent = `${CARE[careSel].label} — ${nfEuro(careUpfront)} pago único`;
+            }
           }
 
+          // actualizar badge precio por mes del dispositivo al cambiar term
+          const badge = document.getElementById('termBadge');
+          if (badge) {
+            if (isPlazo) {
+              badge.textContent = `Dispositivo: ${nfEuro(deviceMonthly)} /mes`;
+            } else badge.textContent = '';
+          }
         } catch(e){ console.warn('updateSummary err', e); }
       }
 
-      // initial update
-      updateSummary();
-
-      // add to cart behavior
-      addBtn.addEventListener('click', ()=>{
+      // enlazar click add to cart
+      addBtn.addEventListener('click', ()=> {
         const cap = selCap.value || keys[0];
         const base = Number(p.storage[cap] || 0);
-        const careId = (careGrid.querySelector('.care-card.active') || {}).dataset?.care || 'none';
+        const careSel = (careGrid.querySelector('.care-card.active') || {}).dataset?.care || 'none';
         const term = payPlazo.classList.contains('active') ? Number(termSelect.value || 12) : 1;
-        const productData = {
+        const priceLabel = nfEuro(base);
+        const prod = {
           id: p.id,
           name: `${p.name} — ${cap} GB — ${selColor.value || 'color'}`,
-          price: nf(base),
+          price: priceLabel,
           priceNum: base,
           qty: 1,
           image: p.image,
           color: selColor.value || '',
           storage: cap,
-          care: careId,
+          care: careSel,
           term: term
         };
-        window.addToCart(productData);
+        window.addToCart(prod);
         addBtn.textContent = 'Añadido';
         setTimeout(()=> addBtn.textContent = 'Añadir al carrito', 900);
       });
 
-      // favorites
       favBtn.addEventListener('click', ()=> {
-        if (confirm('Para guardar favoritos debes iniciar sesión. ¿Ir a la página de cuenta?')) location.href='cuenta.html';
+        if (confirm('Debes iniciar sesión para guardar favoritos. ¿Ir a la página de cuenta?')) location.href='cuenta.html';
       });
 
-      // ensure keyboard accessibility on cap/color
-      capRow.querySelectorAll('.cap-card').forEach(c=> c.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); c.click(); }}));
-      colorsRow.querySelectorAll('.color-dot').forEach(d=> d.addEventListener('keydown', ev => { if (ev.key==='Enter' || ev.key===' ') { ev.preventDefault(); d.click(); }}));
-    } // end renderProduct
+      // llamadas iniciales
+      updateSummary();
+    } // renderProduct end
 
     renderProduct();
+
+    // year
     try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
-    // theme toggle (simple)
+
+    // theme toggle (guarda preferencia)
     try {
       const tbtn = document.getElementById('themeToggle');
       tbtn && tbtn.addEventListener('click', ()=> {
-        document.documentElement.classList.toggle('light');
-        try { localStorage.setItem('lixby_theme', document.documentElement.classList.contains('light') ? 'light' : 'dark'); } catch(e){}
+        const isLight = document.documentElement.classList.contains('light');
+        if (isLight) {
+          document.documentElement.classList.remove('light');
+          localStorage.setItem('lixby_theme','dark');
+        } else {
+          document.documentElement.classList.add('light');
+          localStorage.setItem('lixby_theme','light');
+        }
       });
     } catch(e){}
   })();
