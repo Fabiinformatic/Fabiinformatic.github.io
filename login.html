@@ -6,56 +6,78 @@
   <title>Iniciar sesión — LIXBY</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .form-card { max-width:520px; margin:48px auto; text-align:left; }
-    .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
-    .input-wide { width:100%; }
-    .sep { display:flex; align-items:center; gap:12px; margin:14px 0; color:var(--muted); }
-    .sep hr { flex:1; height:1px; border:0; background:var(--stroke); }
-    .error { color:#dc2626; font-size:0.95rem; margin-top:6px; }
+    /* Minimal + accesible */
+    :root { --accent:#2f6bff; --bg:#fff; --text:#07101a; --muted:#6b7a86; --stroke:rgba(2,6,12,0.06); }
+    body { color:var(--text); background:var(--bg); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding:24px; }
+    .form-card { max-width:520px; margin:72px auto; text-align:left; border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(2,6,12,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96)); }
+    h1 { margin:0 0 6px; font-size:1.25rem; }
     .small { color:var(--muted); font-size:0.95rem; }
+    .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+    .auth-btn { display:inline-flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--stroke); background:transparent; cursor:pointer; font-weight:700; color:var(--text); }
+    .auth-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .auth-btn img.icon { width:18px;height:18px; display:block; }
+    .sep { display:flex; align-items:center; gap:12px; margin:16px 0; color:var(--muted); }
+    .sep hr { flex:1; height:1px; border:0; background:var(--stroke); }
+    label { display:block; margin-top:8px; font-weight:700; }
+    input[type="text"], input[type="password"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--stroke); box-sizing:border-box; font-size:1rem; margin-top:6px; }
+    .error { color:#dc2626; font-size:0.95rem; margin-top:6px; min-height:1.1em; }
+    .row-right { display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:12px; }
+    .btn { padding:9px 12px; border-radius:8px; border:1px solid var(--stroke); background:transparent; cursor:pointer; font-weight:700; }
+    .btn.primary { background:linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; border:none; }
+    .btn.ghost { background:transparent; }
+    .muted-link { color:var(--muted); text-decoration:underline; text-underline-offset:3px; }
+    .center { text-align:center; }
+    .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; white-space:nowrap; }
+    @media (max-width:560px){ .form-card { margin:36px 12px; padding:16px; } }
   </style>
 </head>
 <body>
-  <header class="nav">
-    <div class="nav-inner">
-      <div class="brand" id="brand">LIXBY</div>
+  <header class="nav" aria-label="Cabecera">
+    <div class="nav-inner" style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
+      <div class="brand" id="brand" role="link" tabindex="0" aria-label="Ir al inicio">LIXBY</div>
       <div class="nav-right">
-        <button id="openAuthBtn" class="btn ghost">Cuenta</button>
+        <button id="openAuthBtn" class="btn ghost" aria-haspopup="dialog">Cuenta</button>
       </div>
     </div>
   </header>
 
   <main>
-    <div class="form-card glass" role="main">
-      <h1 style="text-align:center">Inicia sesión en LIXBY</h1>
-      <p class="small" style="text-align:center">Inicia sesión para ver tu cuenta, pedidos y favoritos.</p>
+    <div class="form-card" role="main" aria-labelledby="loginTitle">
+      <h1 id="loginTitle" class="center">Inicia sesión en LIXBY</h1>
+      <p class="small center">Accede a tu cuenta para ver pedidos, favoritos y configuración.</p>
 
-      <div class="auth-row">
-        <button id="googleBtn" class="auth-btn"><img class="icon" src="https://www.svgrepo.com/show/355037/google.svg" alt="" aria-hidden="true"> Iniciar con Google</button>
-        <button id="githubBtn" class="auth-btn"><img class="icon" src="https://www.svgrepo.com/show/341847/github.svg" alt="" aria-hidden="true"> Iniciar con GitHub</button>
+      <div class="auth-row" role="region" aria-label="Iniciar con proveedores">
+        <button id="googleBtn" class="auth-btn" type="button" aria-label="Iniciar con Google">
+          <img class="icon" src="https://www.svgrepo.com/show/355037/google.svg" alt="">
+          <span>Iniciar con Google</span>
+        </button>
+        <button id="githubBtn" class="auth-btn" type="button" aria-label="Iniciar con GitHub">
+          <img class="icon" src="https://www.svgrepo.com/show/341847/github.svg" alt="">
+          <span>Iniciar con GitHub</span>
+        </button>
       </div>
 
-      <div class="sep"><hr/><div>o</div><hr/></div>
+      <div class="sep" aria-hidden="true"><hr/><div>o</div><hr/></div>
 
       <form id="loginForm" novalidate>
-        <label for="loginId"><strong>Correo electrónico o número de teléfono</strong></label>
-        <input id="loginId" class="input-wide" autocomplete="username" />
+        <label for="loginId">Correo electrónico</label>
+        <input id="loginId" name="loginId" type="text" inputmode="email" autocomplete="username email" aria-describedby="hint-loginId" placeholder="nombre@ejemplo.com">
         <div id="err-loginId" class="error" aria-live="polite"></div>
 
-        <label for="loginPass" style="margin-top:10px"><strong>Contraseña</strong></label>
-        <input id="loginPass" type="password" class="input-wide" autocomplete="current-password" />
+        <label for="loginPass">Contraseña</label>
+        <input id="loginPass" name="loginPass" type="password" autocomplete="current-password">
         <div id="err-loginPass" class="error" aria-live="polite"></div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-          <a href="forgot-password.html" class="small">¿Has olvidado la contraseña?</a>
-          <div style="display:flex;gap:8px">
-            <a href="register.html" class="btn ghost">Registrarse</a>
-            <button id="btnLogin" class="btn primary" type="submit">Iniciar sesión</button>
+        <div class="row-right">
+          <a href="forgot-password.html" class="small muted-link">¿Has olvidado la contraseña?</a>
+          <div style="display:flex;gap:8px;align-items:center">
+            <a href="register.html" class="btn ghost" aria-label="Registrarse">Registrarse</a>
+            <button id="btnLogin" class="btn primary" type="submit" aria-live="polite">Iniciar sesión</button>
           </div>
         </div>
 
-        <div style="margin-top:12px">
-          <button id="btnGuest" type="button" class="btn ghost">Entrar como invitado</button>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button id="btnGuest" type="button" class="btn ghost" aria-label="Entrar como invitado">Entrar como invitado</button>
         </div>
 
         <div id="loginMsg" class="small" style="margin-top:12px" role="status" aria-live="polite"></div>
@@ -65,30 +87,124 @@
 
   <script type="module" src="auth-firebase-minimal.js"></script>
   <script>
-    // handlers
-    document.getElementById('brand').addEventListener('click', ()=> location.href='index.html');
-    document.getElementById('googleBtn').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGoogle().catch(e=>console.warn(e)); });
-    document.getElementById('githubBtn').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGitHub().catch(e=>console.warn(e)); });
-    document.getElementById('btnGuest').addEventListener('click', async ()=> { try{ if(window.appAuth) { await window.appAuth.signInAnonymously(); location.href='cuenta.html'; } } catch(e){ console.warn(e); } });
+    // --- Helpers ---
+    const $ = id => document.getElementById(id);
+    function setStatus(msg, isError = false) {
+      const el = $('loginMsg');
+      el.textContent = msg || '';
+      el.style.color = isError ? '#b91c1c' : 'var(--muted)';
+    }
+    function disableBtns(state){
+      ['googleBtn','githubBtn','btnLogin','btnGuest','openAuthBtn'].forEach(id=>{
+        const b = $(id); if (!b) return; b.disabled = !!state;
+      });
+    }
 
-    const form = document.getElementById('loginForm');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      document.getElementById('err-loginId').textContent=''; document.getElementById('err-loginPass').textContent='';
-      const id = (document.getElementById('loginId')||{}).value.trim();
-      const pass = (document.getElementById('loginPass')||{}).value;
-      if (!id) { document.getElementById('err-loginId').textContent='Introduce tu correo o teléfono.'; document.getElementById('loginId').focus(); return; }
-      if (!pass) { document.getElementById('err-loginPass').textContent='Introduce la contraseña.'; document.getElementById('loginPass').focus(); return; }
+    // --- Navigation / UI wiring ---
+    $('brand').addEventListener('click', ()=> location.href='index.html');
+    $('brand').addEventListener('keypress', e=> { if (e.key==='Enter') location.href='index.html'; });
+
+    // open auth overlay if available
+    $('openAuthBtn').addEventListener('click', ()=> {
+      if (window.lixbyAuth && typeof window.lixbyAuth.show === 'function') return window.lixbyAuth.show();
+      // fallback: open modal created by auth module
+      const ov = document.getElementById('lixbyAuthOverlay');
+      if (ov) { ov.style.display='flex'; ov.setAttribute('aria-hidden','false'); }
+    });
+
+    // social buttons: try appAuth first, fallback to window.lixbyAuth
+    $('googleBtn').addEventListener('click', async ()=> {
       try {
+        disableBtns(true); setStatus('Abriendo Google…');
+        if (window.appAuth && typeof window.appAuth.signInWithGoogle === 'function') await window.appAuth.signInWithGoogle();
+        else if (window.lixbyAuth && typeof window.lixbyAuth.signInWithGoogle === 'function') await window.lixbyAuth.signInWithGoogle();
+        setStatus('Acceso mediante Google completado.'); setTimeout(()=> location.href='cuenta.html', 700);
+      } catch(e) {
+        console.error(e); setStatus((e && e.message) || 'Error con Google', true);
+      } finally { disableBtns(false); }
+    });
+
+    $('githubBtn').addEventListener('click', async ()=> {
+      try {
+        disableBtns(true); setStatus('Abriendo GitHub…');
+        if (window.appAuth && typeof window.appAuth.signInWithGitHub === 'function') await window.appAuth.signInWithGitHub();
+        else if (window.lixbyAuth && typeof window.lixbyAuth.signInWithGitHub === 'function') await window.lixbyAuth.signInWithGitHub();
+        setStatus('Acceso mediante GitHub completado.'); setTimeout(()=> location.href='cuenta.html', 700);
+      } catch(e) {
+        console.error(e); setStatus((e && e.message) || 'Error con GitHub', true);
+      } finally { disableBtns(false); }
+    });
+
+    // Guest
+    $('btnGuest').addEventListener('click', async ()=> {
+      try {
+        disableBtns(true); setStatus('Entrando como invitado…');
+        if (window.appAuth && typeof window.appAuth.signInAnonymously === 'function') {
+          await window.appAuth.signInAnonymously();
+          setStatus('Entrando como invitado…');
+          setTimeout(()=> location.href='cuenta.html', 600);
+        } else if (window.lixbyAuth && typeof window.lixbyAuth.signInAnonymously === 'function') {
+          await window.lixbyAuth.signInAnonymously();
+          setTimeout(()=> location.href='cuenta.html', 600);
+        } else {
+          throw new Error('Función de invitado no disponible');
+        }
+      } catch(e) {
+        console.error(e); setStatus((e && e.message) || 'No se pudo entrar como invitado', true);
+      } finally { disableBtns(false); }
+    });
+
+    // --- Login form ---
+    const form = $('loginForm');
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      $('err-loginId').textContent = ''; $('err-loginPass').textContent = ''; setStatus('');
+      const id = ($('loginId')||{}).value.trim();
+      const pass = ($('loginPass')||{}).value;
+      if (!id) { $('err-loginId').textContent = 'Introduce tu correo.'; $('loginId').focus(); return; }
+      if (!pass) { $('err-loginPass').textContent = 'Introduce la contraseña.'; $('loginPass').focus(); return; }
+
+      try {
+        disableBtns(true); setStatus('Iniciando sesión…');
+        // prefer email sign-in; the auth module exposes signInWithEmail
         if (!window.appAuth || typeof window.appAuth.signInWithEmail !== 'function') throw new Error('Módulo de autenticación no cargado');
-        // appAuth expects email+password; if id looks like phone we can't handle here – assume email
+        // If user typed a phone number by mistake, we could detect it here (simple)
+        const looksLikeEmail = id.includes('@');
+        if (!looksLikeEmail) {
+          // still attempt with provided id — most flows expect email
+          // but warn user if it's clearly a phone (digits + optional +)
+          const digitsOnly = id.replace(/\s+/g,'').replace(/^\+/, '');
+          if (/^\d{6,}$/.test(digitsOnly)) {
+            // show friendly hint but still attempt
+            setStatus('Parece un teléfono — probando con correo…');
+          }
+        }
         await window.appAuth.signInWithEmail(id, pass);
-        document.getElementById('loginMsg').textContent = 'Sesión iniciada. Redirigiendo…';
+        setStatus('Sesión iniciada. Redirigiendo…');
         setTimeout(()=> location.href = 'cuenta.html', 600);
       } catch (err) {
         console.error(err);
-        document.getElementById('loginMsg').textContent = err && err.message ? err.message : 'Error iniciando sesión.';
+        // Prefer human-friendly message if provided
+        const msg = (err && err.message) ? err.message : 'Error iniciando sesión.';
+        setStatus(msg, true);
+      } finally {
+        disableBtns(false);
       }
+    });
+
+    // small UX: press Enter on inputs submits
+    ['loginId','loginPass'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('keydown', (e)=> { if (e.key==='Enter') form.dispatchEvent(new Event('submit',{cancelable:true})); });
+    });
+
+    // If auth module later populates header, it will override; keep graceful if not present
+    window.addEventListener('load', ()=> {
+      // keep small timeout to allow auth module to hydrate header
+      setTimeout(()=> {
+        // nothing else needed here; just ensure UI responsive
+      }, 300);
     });
   </script>
 </body>
