@@ -15,7 +15,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
-/* ====== CONFIG - usa tu config (la que compartiste antes) ====== */
+/* ====== CONFIG (usa tu config) ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyDMcDeBKSGqf9ZEexQAIM-9u6GLaQEnLcs",
   authDomain: "lixby-e0344.firebaseapp.com",
@@ -47,38 +47,43 @@ function escapeHtml(str){ if (str === undefined || str === null) return ''; retu
 function saveLocalUser(userObj){
   try{
     if (!userObj) { localStorage.removeItem('lixby_user'); return; }
-    const u = { uid: userObj.uid, name: userObj.displayName || (userObj.email ? userObj.email.split('@')[0] : null), email: userObj.email || null, photoURL: userObj.photoURL || null, isAnonymous: !!userObj.isAnonymous, firstName: null, lastName: null, dob: null };
+    const u = { uid: userObj.uid, name: userObj.displayName || (userObj.email ? userObj.email.split('@')[0] : null), email: userObj.email || null, photoURL: userObj.photoURL || null, isAnonymous: !!userObj.isAnonymous };
     localStorage.setItem('lixby_user', JSON.stringify(u));
   }catch(e){ console.warn('saveLocalUser', e); }
 }
 function clearLocalUser(){ try{ localStorage.removeItem('lixby_user'); }catch(e){} }
 
-/* inject minimal CSS for modal (keeps look consistent) */
+/* ============ Minimal CSS for modal ============ */
 const MINIMAL_CSS = `
-.lixby-glass{ background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); backdrop-filter: blur(10px) saturate(120%); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color:inherit; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto;}
-.lixby-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
-.lixby-panel{ width:420px; max-width:100%; padding:18px; }
-.lixby-btn{ display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; cursor:pointer; border:1px solid rgba(255,255,255,0.04); background:transparent; font-weight:700; }
-.lixby-btn .icon{ width:18px; height:18px; flex:0 0 18px; display:inline-block; vertical-align:middle; }
-.lixby-row{ display:flex; gap:8px; margin-top:10px; }
-.lixby-input{ width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit; }
-.lixby-small{ font-size:0.92rem; color:rgba(255,255,255,0.8); margin-top:8px; }
+/* injected by auth-firebase-minimal.js */
+.lixby-glass{ background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96)); color:#07101a; backdrop-filter: blur(6px) saturate(120%); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;}
+.lixby-overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; background: rgba(0,0,0,0.45); }
+.lixby-panel{ width:520px; max-width:96vw; padding:20px; box-shadow: 0 24px 60px rgba(2,6,12,0.48); border-radius:12px; background:#fff; color:#07101a; }
+.lixby-title{ font-size:1.25rem; font-weight:800; margin:0 0 8px; }
+.lixby-sub{ color: #6b7280; margin-bottom:12px; }
+.row-top{ display:flex; gap:10px; justify-content:center; margin-bottom:14px; }
+.lixby-btn{ display:inline-flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; border:1px solid rgba(0,0,0,0.06); background:#fff; font-weight:700; }
+.lixby-btn .icon{ width:18px; height:18px; display:inline-block; }
+.lixby-primary{ display:block; width:100%; margin:8px 0; padding:12px; font-size:1rem; border-radius:10px; background:linear-gradient(180deg,#2f8cff,#1a6fe0); color:white; border:0; font-weight:800; }
+.lixby-secondary{ display:block; width:100%; margin:8px 0; padding:12px; font-size:1rem; border-radius:10px; background:transparent; border:1px solid rgba(0,0,0,0.08); color:#07101a; font-weight:700; }
+.lixby-ghost{ background:transparent; border:none; color:#6b7280; text-align:center; margin-top:8px; display:block; }
+.lixby-divider{ display:flex; align-items:center; gap:12px; color:#9ca3af; margin:8px 0; }
+.lixby-divider hr{ flex:1; height:1px; border:0; background:#e6e9ef; opacity:0.6; }
+.lixby-msg{ margin-top:8px; color:#ef4444; font-weight:600; min-height:18px; }
+.lixby-close{ position:absolute; right:18px; top:14px; background:transparent; border:0; font-size:18px; cursor:pointer; color:#374151; }
 `;
 
-/* inject css */
+/* inject css once */
 function injectCSS(){
   if (document.getElementById('lixby-minimal-css')) return;
   const s = document.createElement('style'); s.id = 'lixby-minimal-css'; s.textContent = MINIMAL_CSS; document.head.appendChild(s);
 }
 
-/* ========================
-   UI overlay (modal)
-   ======================== */
+/* ============ Create overlay with exact layout requested ============ */
 function createAuthOverlay(){
   if ($id('lixbyAuthOverlay')) return;
   injectCSS();
 
-  // SVG icons (inline)
   const googleSVG = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M21.6 12.227c0-.74-.066-1.449-.191-2.136H12v4.048h5.4c-.233 1.254-1.01 2.316-2.155 3.03v2.52h3.48c2.036-1.876 3.23-4.64 3.23-7.462z"/><path fill="#34A853" d="M12 22c2.43 0 4.467-.8 5.956-2.17l-3.48-2.52c-.968.647-2.208 1.03-3.476 1.03-2.673 0-4.935-1.802-5.744-4.22H2.664v2.64C4.137 19.95 7.78 22 12 22z"/><path fill="#4A90E2" d="M6.256 13.12A6.997 6.997 0 0 1 6 12c0-.414.042-.817.122-1.2V8.16H2.664A9.997 9.997 0 0 0 2 12c0 1.66.397 3.226 1.096 4.64l3.16-3.52z"/><path fill="#FBBC05" d="M12 6.0c1.318 0 2.5.452 3.43 1.34l2.57-2.57C16.47 2.98 14.43 2 12 2 7.78 2 4.137 4.05 2.664 8.16L6 9.36C6.865 7.16 9.327 6 12 6z"/></svg>`;
   const githubSVG = `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 2C6.48 2 2 6.58 2 12.18c0 4.5 2.87 8.32 6.84 9.66.5.1.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.64-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05A9.24 9.24 0 0 1 12 6.8c.85.004 1.71.115 2.5.34 1.9-1.32 2.74-1.05 2.74-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.64 1.03 2.76 0 3.94-2.34 4.81-4.57 5.07.36.3.68.9.68 1.82 0 1.31-.01 2.36-.01 2.68 0 .26.18.59.69.49A10.2 10.2 0 0 0 22 12.18C22 6.58 17.52 2 12 2z"/></svg>`;
 
@@ -86,49 +91,65 @@ function createAuthOverlay(){
   overlay.id = 'lixbyAuthOverlay';
   overlay.className = 'lixby-overlay';
   overlay.setAttribute('aria-hidden','true');
-  overlay.style.display = 'none';
 
   overlay.innerHTML = `
     <div class="lixby-panel l ixby-glass" role="dialog" aria-modal="true" aria-labelledby="lixbyAuthTitle">
-      <h3 id="lixbyAuthTitle">Acceso a Lixby</h3>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
-        <button id="lixbyGoogle" class="lixby-btn" type="button">${googleSVG}<span class="label">Iniciar con Google</span></button>
-        <button id="lixbyGithub" class="lixby-btn" type="button">${githubSVG}<span class="label">Iniciar con GitHub</span></button>
+      <button class="lixby-close" id="lixbyCloseBtn" aria-label="Cerrar">✕</button>
+      <h3 id="lixbyAuthTitle" class="lixby-title">Bienvenido a LIXBY</h3>
+      <div class="lixby-sub">Inicia sesión para acceder a tu cuenta, pedidos y favoritos.</div>
 
-        <div style="display:flex;align-items:center;gap:8px;margin:8px 0;">
-          <button id="lixbyGoLogin" class="lixby-btn" type="button">Iniciar sesión</button>
-          <div style="flex:1;text-align:center;color:rgba(255,255,255,0.7)">— o —</div>
-          <button id="lixbyGoRegister" class="lixby-btn" type="button">Registrarse</button>
-        </div>
-
-        <div style="display:flex;justify-content:space-between;gap:8px;">
-          <button id="lixbyAnon" class="lixby-btn" type="button">Entrar como invitado</button>
-          <button id="lixbyClose" class="lixby-btn" type="button">Cerrar</button>
-        </div>
-
-        <div id="lixbyAuthMsg" class="lixby-small" role="status" aria-live="polite"></div>
+      <div class="row-top" aria-hidden="false">
+        <button id="lixbyGoogle" class="lixby-btn" type="button">${googleSVG}<span>Iniciar con Google</span></button>
+        <button id="lixbyGithub" class="lixby-btn" type="button">${githubSVG}<span>Iniciar con GitHub</span></button>
       </div>
+
+      <button id="lixbyGoLogin" class="lixby-primary" type="button">Iniciar sesión</button>
+
+      <div class="lixby-divider" aria-hidden="true"><hr /><div>o</div><hr /></div>
+
+      <button id="lixbyGoRegister" class="lixby-secondary" type="button">Registrarse</button>
+
+      <button id="lixbyAnon" class="lixby-ghost" type="button">Continuar como invitado</button>
+
+      <div id="lixbyAuthMsg" class="lixby-msg" role="status" aria-live="polite"></div>
     </div>
   `;
-  // fix small typo after template
+
+  // fix small accidental class spacing
   overlay.querySelector('.lixby-panel').className = overlay.querySelector('.lixby-panel').className.replace(' l ',' ');
 
   document.body.appendChild(overlay);
 
-  $id('lixbyClose').addEventListener('click', ()=> hideAuthOverlay());
-  $id('lixbyGoogle').addEventListener('click', ()=> doPopupSignIn(googleProvider,'Google').catch(()=>{}));
-  $id('lixbyGithub').addEventListener('click', ()=> doPopupSignIn(githubProvider,'GitHub').catch(()=>{}));
+  // handlers
+  $id('lixbyCloseBtn').addEventListener('click', hideAuthOverlay);
+  $id('lixbyGoogle').addEventListener('click', async () => {
+    showMsg('Abriendo proveedor Google…');
+    try { await doPopupSignIn(googleProvider,'Google'); } catch(e){ showMsg(makeFriendlyOAuthError(e,'Google')); }
+  });
+  $id('lixbyGithub').addEventListener('click', async () => {
+    showMsg('Abriendo proveedor GitHub…');
+    try { await doPopupSignIn(githubProvider,'GitHub'); } catch(e){ showMsg(makeFriendlyOAuthError(e,'GitHub')); }
+  });
   $id('lixbyGoLogin').addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'login.html'; });
   $id('lixbyGoRegister').addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'register.html'; });
-  $id('lixbyAnon').addEventListener('click', async ()=>{ try{ const res = await signInAnonymously(auth); handleSignIn(res.user, true); }catch(err){ showMsg(err.message || String(err)); } });
+  $id('lixbyAnon').addEventListener('click', async ()=>{ showMsg('Entrando como invitado…'); try{ const res = await signInAnonymously(auth); handleSignIn(res.user,true); }catch(err){ showMsg(err && err.message ? err.message : String(err)); } });
 }
-function showMsg(txt){ const el = $id('lixbyAuthMsg'); if (el) el.textContent = txt; }
-function showAuthOverlay(){ const o = $id('lixbyAuthOverlay'); if (!o) createAuthOverlay(); const overlay = $id('lixbyAuthOverlay'); overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); try{ document.documentElement.style.overflow='hidden'; }catch(e){} }
+
+/* user friendly oauth errors */
+function makeFriendlyOAuthError(err, providerName){
+  if (!err) return 'Error de autenticación.';
+  const code = err.code || '';
+  if (code === 'auth/unauthorized-domain') return `${providerName}: Dominio no autorizado. Añádelo en Firebase Console → Authentication → Sign-in method → Authorized domains.`;
+  if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user') return `${providerName}: Ventana emergente bloqueada o cerrada. Permite ventanas emergentes y vuelve a intentarlo.`;
+  if (code === 'auth/account-exists-with-different-credential') return `${providerName}: Ya existe una cuenta con ese correo utilizando otro proveedor.`;
+  return err.message || String(err);
+}
+
+function showMsg(txt){ const el = $id('lixbyAuthMsg'); if (el) el.textContent = txt; else console.warn('msg:',txt); }
+function showAuthOverlay(){ const o = $id('lixbyAuthOverlay'); if (!o) createAuthOverlay(); const overlay = $id('lixbyAuthOverlay'); overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); try{ document.documentElement.style.overflow='hidden'; }catch(e){} if ($id('lixbyAuthMsg')) $id('lixbyAuthMsg').textContent=''; }
 function hideAuthOverlay(){ const overlay = $id('lixbyAuthOverlay'); if (!overlay) return; overlay.style.display='none'; overlay.setAttribute('aria-hidden','true'); try{ document.documentElement.style.overflow=''; }catch(e){} }
 
-/* ========================
-   Firestore upsert (safe)
-   ======================== */
+/* ============ Firestore upsert ============ */
 async function upsertUserProfile(user, extra={}){
   if (!user || !user.uid) return;
   try{
@@ -139,29 +160,22 @@ async function upsertUserProfile(user, extra={}){
   }catch(e){ console.warn('upsertUserProfile', e); }
 }
 
-/* ========================
-   Handle sign-in unified
-   ======================== */
+/* ============ Handle sign-in unified ============ */
 async function handleSignIn(user, anonymous=false){
   if (!user) return;
   saveLocalUser(user);
   try{ await upsertUserProfile(user, anonymous?{anonymous:true}:{}) }catch(e){}
   updateHeaderSafe(user);
   hideAuthOverlay();
-  // redirect to cuenta if on root
   const path = location.pathname;
   if (path === '/' || path.endsWith('/index.html') || path.endsWith('/')) location.href = 'cuenta.html';
 }
 
-/* ========================
-   OAUTH helpers
-   ======================== */
-function oauthErrorHandler(err, providerName){ console.error(`${providerName} sign-in error`, err); const code = err && err.code; if (code === 'auth/unauthorized-domain') alert('Dominio no autorizado para OAuth. Añádelo en Firebase Console.'); else if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user') alert('Popup bloqueado o cerrado. Permite ventanas emergentes.'); else alert(err && err.message ? err.message : String(err)); }
+/* ============ OAUTH helpers ============ */
+function oauthErrorHandler(err, providerName){ console.error(`${providerName} sign-in error`, err); showMsg(makeFriendlyOAuthError(err,providerName)); }
 async function doPopupSignIn(provider, providerName){ try{ const res = await signInWithPopup(auth, provider); handleSignIn(res.user); window.dispatchEvent(new CustomEvent('lixby:auth:signin',{ detail: { uid: res.user.uid, provider: providerName } })); return res.user; }catch(err){ oauthErrorHandler(err, providerName); throw err; } }
 
-/* ========================
-   Public API
-   ======================== */
+/* ============ Public API ============ */
 window.appAuth = {
   signInWithGoogle: () => doPopupSignIn(googleProvider,'Google'),
   signInWithGitHub: () => doPopupSignIn(githubProvider,'GitHub'),
@@ -171,15 +185,13 @@ window.appAuth = {
   signOut: async ()=>{ try{ await fbSignOut(auth); }catch(e){ console.warn(e); } try{ localStorage.removeItem('lixby_seen_welcome'); localStorage.removeItem('lixby_user'); }catch(e){} try{ location.href='index.html'; }catch(e){} },
   onAuthState: (cb)=>{ if(typeof cb!=='function') return ()=>{}; const unsub = onAuthStateChanged(auth,(u)=>{ cb(u ? { uid:u.uid, name:u.displayName || (u.email? u.email.split('@')[0] : null), email:u.email, photoURL:u.photoURL, isAnonymous: u.isAnonymous } : null); }); return unsub; },
   updateProfileExtra: async (extra={})=>{ const u = auth.currentUser; if(!u) throw new Error('No authenticated user'); try{ const ref = doc(db,'users',u.uid); await setDoc(ref,{ profile: extra, updatedAt: new Date().toISOString() },{ merge:true }); // persist local snapshot
-      try{ const raw = localStorage.getItem('lixby_user'); const local = raw? JSON.parse(raw): {}; local.firstName = extra.firstName || local.firstName; local.lastName = extra.lastName || local.lastName; local.dob = extra.dob || local.dob; localStorage.setItem('lixby_user', JSON.stringify(local)); }catch(e){} return true; }catch(e){ console.error('updateProfileExtra err', e); throw e; } },
+      try{ const raw = localStorage.getItem('lixby_user'); const local = raw? JSON.parse(raw): {}; local.firstName = extra.firstName || local.firstName; local.lastName = extra.lastName || local.lastName; local.dob = extra.dob || local.dob; local.phone = extra.phone || local.phone; local.shipping = extra.shipping || local.shipping; localStorage.setItem('lixby_user', JSON.stringify(local)); }catch(e){} return true; }catch(e){ console.error('updateProfileExtra err', e); throw e; } },
   resetPassword: async (email)=>{ if(!email) throw new Error('email required'); try { await sendPasswordResetEmail(auth, email); return true; } catch(e) { throw e; } },
   _rawAuth: auth,
   _rawDb: db
 };
 
-/* ========================
-   Header + account UI (minimal)
-   ======================== */
+/* ============ Header + account UI (ensure presence) ============ */
 function ensureHeader(){
   if ($id('lixbyHeader')) return $id('lixbyHeader');
   injectCSS();
@@ -222,9 +234,8 @@ function updateHeaderSafe(user){
   $id('lixbySignOut').addEventListener('click', async ()=>{ try{ await fbSignOut(auth); clearLocalUser(); location.href='index.html'; }catch(e){ console.warn(e); } });
 }
 
-/* ========================
-   Account panel (cuenta.html)
-   ======================== */
+/* ============ Account panel (cuenta.html) ============ */
+// (keeps previous implementation — renders additional info when on cuenta.html)
 async function renderAccountPageIfNeeded(user){
   const isCuenta = location.pathname.endsWith('cuenta.html') || !!$id('accountPanel');
   if (!isCuenta) return;
@@ -247,7 +258,7 @@ async function renderAccountPageIfNeeded(user){
   panel.innerHTML = `
     <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
       <div style="flex:0 0 120px;">
-        <div style="width:120px;height:120px;border-radius:14px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px">${(fn||'U').charAt(0).toUpperCase()}</div>
+        <div style="width:120px;height:120px;border-radius:14px;background:rgba(0,0,0,0.04);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:28px">${(fn||'U').charAt(0).toUpperCase()}</div>
       </div>
       <div style="flex:1;min-width:260px;">
         <h2>Información personal</h2>
@@ -261,7 +272,7 @@ async function renderAccountPageIfNeeded(user){
         </div>
         <div style="margin-top:10px;">
           <label style="display:block;font-weight:700">Correo</label>
-          <div class="lixby-small">${email || '<span style="color:rgba(255,255,255,0.6)">No definido</span>'}</div>
+          <div class="lixby-small">${email || '<span style="color:rgba(0,0,0,0.6)">No definido</span>'}</div>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
           <button id="btnSaveProfile" class="lixby-btn" type="button">Guardar</button><button id="btnCancelProfile" class="lixby-btn" type="button">Cancelar</button>
@@ -270,7 +281,7 @@ async function renderAccountPageIfNeeded(user){
       </div>
     </div>
 
-    <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)" />
+    <hr style="margin:18px 0;border:none;border-top:1px solid rgba(0,0,0,0.06)" />
 
     <div style="display:grid;grid-template-columns:1fr 360px;gap:18px;">
       <div>
@@ -303,9 +314,8 @@ async function renderAccountPageIfNeeded(user){
     }catch(e){ console.error('save profile', e); if (msg) msg.textContent='Error al guardar. Revisa consola.'; }
   });
 
-  // load shipping info, orders, favorites
+  // load shipping/orders/favs (same as previous; kept defensive)
   try{
-    // shipping info in users/{uid}.shipping
     if (user && user.uid){
       const uref = doc(db,'users',user.uid);
       const snap = await getDoc(uref);
@@ -334,7 +344,7 @@ async function renderAccountPageIfNeeded(user){
             const o = os.data();
             const el = document.createElement('div');
             el.style.padding='10px';
-            el.style.border='1px solid rgba(255,255,255,0.03)';
+            el.style.border='1px solid rgba(0,0,0,0.04)';
             el.style.borderRadius='8px';
             el.style.marginBottom='8px';
             el.innerHTML = `<div style="font-weight:700">${escapeHtml(o.title || ('Pedido ' + os.id))}</div>
@@ -377,18 +387,14 @@ async function renderAccountPageIfNeeded(user){
           });
           favsEl.innerHTML = '';
           favsEl.appendChild(fragF);
-          // attach handlers
+          // attach handlers (view/remove)
           favsEl.querySelectorAll('button').forEach(b => {
             const action = b.getAttribute('data-action');
             const id = b.getAttribute('data-id');
             if (action === 'view') b.addEventListener('click', ()=> { const pid = b.getAttribute('data-id'); location.href = 'producto.html?id='+encodeURIComponent(pid); });
             if (action === 'remove') b.addEventListener('click', async ()=> {
               if (!confirm('Eliminar favorito?')) return;
-              try{ await setDoc(doc(db,'users',user.uid,'favorites', id), {}, { merge:false }); // overwrite empty -> delete below
-                // Firestore doesn't allow delete via setDoc; fallback: attempt delete via doc() + set? Better: use deleteDoc
-                // But deleteDoc may be not imported earlier; easiest: tell user to refresh. We'll attempt delete if available.
-                try { const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js'); await deleteDoc(doc(db,'users',user.uid,'favorites',id)); }catch(e){ console.warn('delete fallback', e); }
-                renderAccountPageIfNeeded(user);
+              try{ const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js'); await deleteDoc(doc(db,'users',user.uid,'favorites',id)); renderAccountPageIfNeeded(user);
               }catch(e){ console.warn(e); alert('No se pudo eliminar favorito'); }
             });
           });
@@ -397,7 +403,6 @@ async function renderAccountPageIfNeeded(user){
     }
   }catch(e){ console.warn('renderAccountPageIfNeeded err', e); }
 
-  // helper to add shipping
   async function promptAddShipping(uid){
     const address = prompt('Dirección (Calle, número):');
     if (!address) return;
@@ -408,17 +413,15 @@ async function renderAccountPageIfNeeded(user){
   }
 }
 
-/* ========================
-   Init / subscribe auth state
-   ======================== */
+/* ============ Init / subscribe auth state ============ */
 function init(){
   createAuthOverlay();
   ensureHeader();
   onAuthStateChanged(auth, async (user) => {
     if (user){ try{ saveLocalUser(user); updateHeaderSafe(user); await renderAccountPageIfNeeded(user); window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ uid:user.uid, signedIn:true } })); }catch(e){ console.warn(e); } }
-    else{ clearLocalUser(); updateHeaderSafe(null); const shouldShow = !localStorage.getItem('lixby_seen_welcome'); if (shouldShow) setTimeout(()=> showAuthOverlay(), 300); window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ signedIn:false } })); }
+    else{ clearLocalUser(); updateHeaderSafe(null); const shouldShow = !localStorage.getItem('lixby_seen_welcome'); if (shouldShow) setTimeout(()=> showAuthOverlay(), 400); window.dispatchEvent(new CustomEvent('lixby:auth:changed',{ detail:{ signedIn:false } })); }
   });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
-export {}; // módulo vacío
+export {}; // módulo
