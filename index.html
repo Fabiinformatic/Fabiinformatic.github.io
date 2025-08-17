@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="style.css" />
   <!-- Overrides locales para header y comportamiento consistente -->
   <style>
+    /* (estilos conservados, cortados para brevedad en esta vista — en tu archivo real mantenlos completos) */
     /* Header compacto, línea recta, minimal */
     .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 120; padding: 10px 24px; background: rgba(255,255,255,0.02); backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px) saturate(120%); border-bottom: 1px solid rgba(255,255,255,0.03); border-radius: 0; box-shadow: none; }
     .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 0 6px; }
@@ -82,9 +83,9 @@
     /* Footer improvements */
     .footer { text-align:left; padding:40px 20px; margin-top:40px; }
     .footer-grid { max-width:1200px; margin:0 auto; display:grid; grid-template-columns: 1.4fr 1fr 1fr 1.2fr; gap:22px; align-items:start; }
-    .footer-col h4 { margin:0 0 8px; font-size:1rem; color:var(--text); }
+    .footer-col h4 { margin:0 0 8px 0; font-size:1rem; color:var(--text); }
     .footer-brand { font-weight:800; letter-spacing:0.08em; font-size:1.05rem; margin-bottom:8px; }
-    .footer p { margin:0 0 8px; color:var(--muted); }
+    .footer p { margin:0 0 8px 0; color:var(--muted); }
     .footer-links { display:flex; flex-direction:column; gap:6px; }
     .footer-links a { color:var(--muted); font-size:0.95rem; }
     .social-links { display:flex; gap:8px; margin-top:8px; }
@@ -99,6 +100,11 @@
       .footer-grid { grid-template-columns: 1fr; gap:14px; }
       .footer-bottom { flex-direction:column; align-items:flex-start; gap:8px; }
     }
+
+    /* small additions to style brand with image */
+    .brand { display:flex; align-items:center; gap:8px; cursor:pointer; text-decoration:none; color:inherit; }
+    .brand img { width:44px; height:44px; border-radius:8px; object-fit:cover; display:block; }
+    .brand .title { font-weight:800; letter-spacing:0.08em; }
   </style>
 
   <!-- Añadir: glass util (liquid glass styling consistente) -->
@@ -127,7 +133,16 @@
   <div class="nav-inner">
     <!-- LEFT: logo -->
     <div class="nav-left">
-      <div class="brand" role="button" aria-label="Ir al inicio" onclick="location.href='index.html'">LIXBY</div>
+      <!-- Usamos DIV con onclick y manejador de teclado (igual que tu ejemplo), y role/tabindex para accesibilidad -->
+      <div class="brand"
+           role="link"
+           tabindex="0"
+           aria-label="Ir al inicio"
+           onclick="location.href='index.html'"
+           onkeydown="if(event.key==='Enter' || event.key===' ') { event.preventDefault(); location.href='index.html'; }">
+        <img src="https://i.imgur.com/dOCYmkx.jpeg" alt="LIXBY logo" width="44" height="44">
+        <div class="title">LIXBY</div>
+      </div>
     </div>
     <!-- CENTER: nav links -->
     <nav id="navLinks" role="navigation" aria-label="Principal">
@@ -374,11 +389,10 @@
       <div class="legal-links" style="margin-left:12px;">
         <a href="privacidad.html">Política de privacidad</a>
         <a href="terminos.html">Términos y condiciones</a>
+        <!-- MODIFICADO: abre en la misma pestaña -->
         <a id="accessibilityLink"
            href="accessibility.html"
-           target="_blank"
-           rel="noopener noreferrer"
-           aria-label="Abrir página de accesibilidad (se abrirá en una ventana nueva)">
+           aria-label="Ir a la página de accesibilidad">
           Accesibilidad
         </a>
       </div>
@@ -1102,36 +1116,20 @@
 })();
 </script>
 
-<!-- Mejora accesibilidad del enlace de accesibilidad en el footer (no destructivo) -->
+<!-- Mejora no destructiva del enlace de accesibilidad: NO fuerza nueva pestaña -->
 <script>
-/* Mejora no destructiva para el enlace de accesibilidad en el footer.
-   - Asegura atributos accesibles
-   - Abre la página en una nueva pestaña (window.open) como refuerzo
-*/
 (function(){
   const a = document.getElementById('accessibilityLink');
   if (!a) return;
 
-  // Asegurar atributos (no sobrescribimos si ya existen)
-  if (!a.hasAttribute('target')) a.setAttribute('target', '_blank');
-  if (!a.hasAttribute('rel')) a.setAttribute('rel', 'noopener noreferrer');
-  if (!a.hasAttribute('aria-label')) a.setAttribute('aria-label', 'Abrir página de accesibilidad (se abrirá en una ventana nueva)');
+  // Asegurar aria-label sin alterar la intención de navegación
+  if (!a.hasAttribute('aria-label')) {
+    a.setAttribute('aria-label', 'Ir a la página de accesibilidad');
+  }
 
-  // Refuerzo: abrir con window.open si el navegador impide target=_blank en algún contexto
-  a.addEventListener('click', function(e){
-    // Si el usuario usa Ctrl/Cmd/Shift/Alt (quiere abrir en otra forma), respetar su intención
-    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-
-    // Normal: abrir en nueva ventana/pestaña mediante JS y prevenir el comportamiento por defecto para evitar duplicados
-    e.preventDefault();
-    const href = a.getAttribute('href') || 'accessibility.html';
-    try {
-      window.open(href, '_blank', 'noopener');
-    } catch(err) {
-      // Si window.open falla (bloqueador), fallback a navegación normal sin romper el DOM
-      window.location.href = href;
-    }
-  }, { passive: false });
+  // Aseguramos que se abra en la MISMA pestaña: eliminamos target/rel si existieran
+  if (a.hasAttribute('target')) a.removeAttribute('target');
+  if (a.hasAttribute('rel')) a.removeAttribute('rel');
 })();
 </script>
 
