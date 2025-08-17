@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="es" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Página de accesibilidad con buenas prácticas: navegación por teclado, contraste, tamaño de texto, ARIA, formularios, tablas, medios y más." />
+  <title>Accesibilidad — LIXBY</title>
+  
+  <!-- Fuente del sistema: sin carga remota para rendimiento/accesibilidad -->
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #111827; /* zinc-900 */
+      --muted: #4b5563; /* gray-600 */
+      --primary: #2563eb; /* blue-600 */
+      --ring: #8b5cf6; /* violet-500 */
+      --surface: #f3f4f6; /* gray-100 */
+      --code: #0f172a; /* slate-900 */
+
+      --leading: 1.6;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --container: clamp(320px, 92vw, 920px);
+      --font-size: 100%; /* controlado por el botón +/- texto */
+    }
+
+    /* Alto contraste (toggle) */
+    .high-contrast {
+      --bg: #000000;
+      --fg: #ffffff;
+      --muted: #e5e7eb;
+      --primary: #00ffbf;
+      --ring: #ffff00;
+      --surface: #111111;
+      --code: #ffffff;
+    }
+
+    html { font-size: var(--font-size); }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: var(--leading);
+      color: var(--fg);
+      background: linear-gradient(180deg, var(--surface), var(--bg) 240px);
+    }
+
+    .container { width: var(--container); margin-inline: auto; padding: 24px; }
+
+    header, main, footer, nav, aside, section { display: block; }
+
+    header {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(8px);
+      background: color-mix(in oklab, var(--bg) 75%, transparent);
+      border-bottom: 1px solid #e5e7eb22;
+    }
+
+    .bar {
+      display: flex; gap: 12px; align-items: center; justify-content: space-between;
+      padding: 12px 24px; max-width: var(--container); margin: 0 auto;
+    }
+
+    .brand { font-weight: 800; letter-spacing: .4px; }
+
+    .controls { display: flex; gap: 8px; align-items: center; }
+
+    .btn {
+      appearance: none; border: 1px solid #e5e7eb; background: #fff; color: var(--fg);
+      padding: 8px 12px; border-radius: var(--radius);
+      font-weight: 600; cursor: pointer; box-shadow: var(--shadow);
+    }
+    .btn[aria-pressed="true"] { outline: 3px solid var(--ring); }
+    .btn:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+
+    a.skip {
+      position: absolute; left: 12px; top: -80px; background: var(--primary); color: #000;
+      padding: 8px 12px; border-radius: 10px; text-decoration: none; font-weight: 700;
+    }
+    a.skip:focus { top: 12px; }
+
+    nav ul { display: flex; gap: 12px; list-style: none; padding: 0; margin: 0; }
+    nav a { text-decoration: none; color: var(--fg); padding: 8px 10px; border-radius: 10px; }
+    nav a:focus-visible, nav a[aria-current="page"] { outline: 3px solid var(--ring); }
+
+    .hero {
+      padding: 48px 0; border-bottom: 1px solid #e5e7eb44;
+    }
+
+    h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1.2; margin: 0 0 12px; }
+    h2 { font-size: clamp(1.4rem, 2.4vw, 1.8rem); margin-top: 2rem; }
+    h3 { font-size: 1.125rem; margin-top: 1.5rem; }
+
+    p { color: var(--muted); }
+
+    .card {
+      background: var(--bg); border: 1px solid #e5e7eb; border-radius: var(--radius);
+      padding: 16px; box-shadow: var(--shadow);
+    }
+
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    .kbd { font: 600 .95rem ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+
+    /* Formularios */
+    form { display: grid; gap: 12px; }
+    label { font-weight: 700; }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #d1d5db; background: #fff;
+    }
+    input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--ring); }
+    .hint { font-size: .9rem; color: var(--muted); }
+    .error { color: #b91c1c; }
+
+    /* Tablas accesibles */
+    table { width: 100%; border-collapse: collapse; }
+    caption { text-align: left; font-weight: 700; margin-bottom: 8px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; }
+    th { background: #f9fafb; text-align: left; }
+
+    /* Código */
+    pre, code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace; }
+    pre { background: #0b1020; color: #e5e7eb; padding: 14px; border-radius: 12px; overflow: auto; }
+
+    /* Enlaces visibles al enfoque */
+    :focus-visible { scroll-margin-top: 120px; }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Enlaces para saltar: mejoran navegación por teclado/lectores de pantalla -->
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <a class="skip" href="#navegacion">Saltar a la navegación</a>
+
+  <header role="banner" class="header">
+    <div class="bar" aria-label="Barra superior">
+      <div class="brand" aria-label="Marca">LIXBY</div>
+      <nav id="navegacion" aria-label="Navegación principal">
+        <ul>
+          <li><a href="#proposito" aria-current="page">Accesibilidad</a></li>
+          <li><a href="#guias">Guías</a></li>
+          <li><a href="#ejemplos">Ejemplos</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </nav>
+      <div class="controls" role="group" aria-label="Preferencias de visualización">
+        <button id="contrastBtn" class="btn" type="button" aria-pressed="false" aria-label="Alternar modo de alto contraste">Alto contraste</button>
+        <button id="bigger" class="btn" type="button" aria-label="Aumentar tamaño de texto">A+</button>
+        <button id="smaller" class="btn" type="button" aria-label="Disminuir tamaño de texto">A−</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+    <section class="hero container" id="proposito">
+      <h1>Accesibilidad en LIXBY</h1>
+      <p>Esta página demuestra patrones accesibles: navegación por teclado, contraste y tamaño de texto, estructura semántica, ARIA sólo cuando es necesario, formularios, tablas, medios y más.</p>
+      <aside class="card" aria-label="Ayuda para teclado">
+        <strong>Atajos de teclado:</strong>
+        <p>
+          Usa <span class="kbd">Tab</span> para moverte, <span class="kbd">Shift</span> + <span class="kbd">Tab</span> para retroceder, y <span class="kbd">Enter</span> o <span class="kbd">Espacio</span> para activar botones.
+        </p>
+      </aside>
+    </section>
+
+    <section class="container" id="guias" aria-labelledby="h-guias">
+      <h2 id="h-guias">Principios rápidos</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Estructura semántica primero</h3>
+          <p>Usa <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code> y <code>&lt;footer&gt;</code>. Evita roles redundantes si ya existen por semántica.</p>
+        </article>
+        <article class="card">
+          <h3>Contraste suficiente</h3>
+          <p>Apunta a una relación de contraste mínima 4.5:1 para texto normal (WCAG AA). Proporciona un <em>toggle</em> de alto contraste como el de esta página.</p>
+        </article>
+        <article class="card">
+          <h3>Soporta preferencias del usuario</h3>
+          <p>Respeta <code>prefers-reduced-motion</code>, permite ajustar tamaño de fuente y recuerda preferencias.</p>
+        </article>
+        <article class="card">
+          <h3>Estados de enfoque visibles</h3>
+          <p>Usa <code>:focus-visible</code> con un contorno claro. Nunca los ocultes.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="container" id="ejemplos" aria-labelledby="h-ejemplos">
+      <h2 id="h-ejemplos">Ejemplos prácticos</h2>
+
+      <article class="card" aria-labelledby="h-form">
+        <h3 id="h-form">Formulario accesible</h3>
+        <form novalidate aria-describedby="formHint">
+          <p id="formHint" class="hint">Todos los campos marcados con * son obligatorios.</p>
+
+          <div>
+            <label for="nombre">Nombre *</label>
+            <input id="nombre" name="nombre" required autocomplete="name" />
+            <p id="err-nombre" class="hint" role="status" aria-live="polite"></p>
+          </div>
+
+          <div>
+            <label for="email">Correo electrónico *</label>
+            <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" />
+            <p id="err-email" class="hint" role="status" aria-live="polite"></p>
+          </div>
+
+          <div>
+            <label for="tema">Tema</label>
+            <select id="tema" name="tema">
+              <option>Soporte</option>
+              <option>Accesibilidad</option>
+              <option>Otro</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="mensaje">Mensaje</label>
+            <textarea id="mensaje" name="mensaje" rows="5"></textarea>
+          </div>
+
+          <button class="btn" type="submit">Enviar</button>
+
+          <!-- Región viva para avisos del formulario -->
+          <div id="form-live" aria-live="polite" class="hint" style="margin-top:8px"></div>
+        </form>
+      </article>
+
+      <article class="card" aria-labelledby="h-tabla">
+        <h3 id="h-tabla">Tabla con cabeceras y <code>scope</code></h3>
+        <table>
+          <caption>Resumen de comprobaciones de accesibilidad</caption>
+          <thead>
+            <tr>
+              <th scope="col">Área</th>
+              <th scope="col">Criterio</th>
+              <th scope="col">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Color</th>
+              <td>Contraste AA (4.5:1)</td>
+              <td>Aprobado</td>
+            </tr>
+            <tr>
+              <th scope="row">Teclado</th>
+              <td>Todos los controles son alcanzables</td>
+              <td>Aprobado</td>
+            </tr>
+            <tr>
+              <th scope="row">Lectores</th>
+              <td>Estructura semántica correcta</td>
+              <td>En progreso</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+
+      <article class="card" aria-labelledby="h-medios">
+        <h3 id="h-medios">Medios con alternativas</h3>
+        <figure>
+          <img src="https://picsum.photos/800/400" alt="Fotografía de ejemplo con alto contraste" width="800" height="400" />
+          <figcaption>Las imágenes requieren textos alternativos que describan su propósito.</figcaption>
+        </figure>
+        <video controls width="100%" preload="metadata">
+          <source src="" type="video/mp4" />
+          <track kind="captions" src="captions.vtt" srclang="es" label="Español" />
+          Tu navegador no soporta el elemento <code>video</code>.
+        </video>
+        <p class="hint">Incluye subtítulos (<code>&lt;track kind="captions"&gt;</code>) y transcripciones cuando sea posible.</p>
+      </article>
+
+      <article class="card" aria-labelledby="h-acordeon">
+        <h3 id="h-acordeon">Contenido expandible con <code>&lt;details&gt;</code></h3>
+        <details>
+          <summary>Lista rápida de comprobación (WCAG AA)</summary>
+          <ul>
+            <li>Contraste suficiente para texto e iconos.</li>
+            <li>Navegación por teclado completa y visible.</li>
+            <li>Estados y errores anunciados con regiones vivas.</li>
+            <li>Enlaces y botones con nombres accesibles claros.</li>
+            <li>Campos con <code>label</code> y <code>autocomplete</code> adecuados.</li>
+            <li>Evitar contenido que parpadee.</li>
+          </ul>
+        </details>
+      </article>
+
+      <article class="card" aria-labelledby="h-codigo">
+        <h3 id="h-codigo">Ejemplo de botón accesible</h3>
+        <pre aria-label="Código de ejemplo"><code>// Evita usar sólo un div clicable. Usa &lt;button&gt; y gestiona aria-pressed cuando corresponda.
+const boton = document.querySelector('#demoButton')
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    boton?.focus();
+  }
+})</code></pre>
+        <button id="demoButton" class="btn" type="button" aria-pressed="false" aria-label="Botón de demostración">Botón de demostración</button>
+        <p id="demoStatus" class="hint" role="status" aria-live="polite"></p>
+      </article>
+    </section>
+
+    <section class="container" id="contacto" aria-labelledby="h-contacto">
+      <h2 id="h-contacto">Contacto</h2>
+      <p>Si detectas cualquier barrera de accesibilidad en LIXBY, escríbenos. Nos comprometemos a mejorar continuamente.</p>
+      <address>
+        <a href="mailto:accesibilidad@lixby.example" class="btn">accesibilidad@lixby.example</a>
+      </address>
+    </section>
+
+  </main>
+
+  <footer class="container" role="contentinfo">
+    <p>© <span id="anio"></span> LIXBY — Compromiso con la inclusión digital.</p>
+  </footer>
+
+  <script>
+    // Preferencias persistentes
+    const root = document.documentElement;
+    const contrastBtn = document.getElementById('contrastBtn');
+    const bigger = document.getElementById('bigger');
+    const smaller = document.getElementById('smaller');
+
+    const LS_KEYS = {
+      contrast: 'pref-contrast',
+      font: 'pref-font-size'
+    };
+
+    function applyPrefs() {
+      const high = localStorage.getItem(LS_KEYS.contrast) === '1';
+      document.body.classList.toggle('high-contrast', high);
+      contrastBtn.setAttribute('aria-pressed', String(high));
+
+      const fs = localStorage.getItem(LS_KEYS.font);
+      if (fs) root.style.setProperty('--font-size', fs);
+    }
+
+    applyPrefs();
+
+    contrastBtn?.addEventListener('click', () => {
+      const now = !(document.body.classList.contains('high-contrast'));
+      document.body.classList.toggle('high-contrast', now);
+      contrastBtn.setAttribute('aria-pressed', String(now));
+      localStorage.setItem(LS_KEYS.contrast, now ? '1' : '0');
+      announce(`Modo alto contraste ${now ? 'activado' : 'desactivado'}`);
+    });
+
+    function clampFont(step) {
+      const current = getComputedStyle(root).fontSize; // px
+      const px = parseFloat(current);
+      const next = Math.max(14, Math.min(24, px + step));
+      const percent = (next / 16) * 100; // base 16
+      const value = percent.toFixed(2) + '%';
+      root.style.setProperty('--font-size', value);
+      localStorage.setItem(LS_KEYS.font, value);
+      announce(`Tamaño de texto ${step > 0 ? 'aumentado' : 'disminuido'} a ${Math.round(percent)}%`);
+    }
+
+    bigger?.addEventListener('click', () => clampFont(2));
+    smaller?.addEventListener('click', () => clampFont(-2));
+
+    // Enfoque al contenido cuando se usan enlaces de salto
+    document.querySelectorAll('a.skip').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href');
+        const el = document.querySelector(id);
+        if (el) { el.setAttribute('tabindex', '-1'); el.focus(); }
+      })
+    });
+
+    // Demo de botón accesible
+    const demoBtn = document.getElementById('demoButton');
+    const demoStatus = document.getElementById('demoStatus');
+    demoBtn?.addEventListener('click', () => {
+      const pressed = demoBtn.getAttribute('aria-pressed') === 'true';
+      demoBtn.setAttribute('aria-pressed', String(!pressed));
+      announce(`Botón de demostración ${!pressed ? 'activado' : 'desactivado'}`);
+    });
+
+    // Validación amable del formulario
+    const form = document.querySelector('form');
+    const live = document.getElementById('form-live');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let ok = true;
+      const nombre = document.getElementById('nombre');
+      const email = document.getElementById('email');
+      const errNombre = document.getElementById('err-nombre');
+      const errEmail = document.getElementById('err-email');
+
+      errNombre.textContent = '';
+      errEmail.textContent = '';
+
+      if (!nombre.value.trim()) {
+        ok = false; errNombre.textContent = 'Por favor, introduce tu nombre.';
+        nombre.setAttribute('aria-invalid', 'true');
+        nombre.setAttribute('aria-describedby', 'err-nombre');
+        nombre.focus();
+      } else {
+        nombre.removeAttribute('aria-invalid');
+      }
+
+      if (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        ok = false; errEmail.textContent = 'Introduce un correo válido.';
+        email.setAttribute('aria-invalid', 'true');
+        email.setAttribute('aria-describedby', 'err-email');
+        if (!document.activeElement || document.activeElement.id !== 'nombre') email.focus();
+      } else {
+        email.removeAttribute('aria-invalid');
+      }
+
+      if (ok) {
+        live.textContent = 'Formulario enviado correctamente. ¡Gracias!';
+        form.reset();
+      } else {
+        live.textContent = 'Hay errores en el formulario. Revisa los campos resaltados.';
+      }
+    });
+
+    // Utilidad para anunciar mensajes a lectores de pantalla
+    function announce(msg) {
+      const region = document.getElementById('sr-announcer') || createAnnouncer();
+      region.textContent = '';
+      setTimeout(() => { region.textContent = msg; }, 10);
+    }
+    function createAnnouncer() {
+      const node = document.createElement('div');
+      node.id = 'sr-announcer';
+      node.setAttribute('aria-live', 'polite');
+      node.setAttribute('role', 'status');
+      node.className = 'hint';
+      node.style.position = 'fixed';
+      node.style.left = '-9999px';
+      node.style.top = 'auto';
+      document.body.appendChild(node);
+      return node;
+    }
+
+    // Año dinámico en el pie
+    document.getElementById('anio').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
