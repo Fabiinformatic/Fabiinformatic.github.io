@@ -197,6 +197,7 @@
      El modal ahora lo crea y gestiona `auth-firebase-minimal.js` (se carga como módulo al final).
 -->
 
+
 <main id="maincontent">
   <!-- HERO -->
   <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
@@ -621,44 +622,99 @@
     en: { "nav.inicio":"Home","nav.productos":"Products","nav.contacto":"Contact","nav.conocenos":"About","cart.title":"Cart","cart.clear":"Clear","cart.total":"Total:","cart.checkout":"Checkout","btn.add":"Add to cart","btn.added":"Added","btn.explorar":"Explore","btn.enviar":"Send","theme.toggle":"Toggle theme","cart.empty":"Your cart is empty." },
     fr: { "nav.inicio":"Accueil","nav.productos":"Produits","nav.contacto":"Contact","nav.conocenos":"À propos","cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer","btn.add":"Ajouter au panier","btn.added":"Ajouté","btn.explorar":"Explorer","btn.enviar":"Envoyer","theme.toggle":"Changer el thème","cart.empty":"Votre panier est vide." }
   };
+  // start language from localStorage or default 'es'
   let currentLang = localStorage.getItem('lixby_lang') || 'es';
+
   function getTranslation(key){
     try {
       const map = translations[currentLang] || translations['es'];
       return (map && map[key]) ? map[key] : null;
     } catch(e){ return null; }
   }
+
+  // safer applyTranslations: do not clobber child images/icons; update only textual part when possible
   function applyTranslations(lang){
     const map = translations[lang] || translations['es'];
     document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      if (key && map && map[key]) el.textContent = map[key];
+      try {
+        const key = el.getAttribute('data-i18n');
+        if (!key) return;
+        const text = (map && map[key]) ? map[key] : el.textContent;
+        // If element has non-img child nodes (like a span for label), replace that child's text only
+        const childElements = Array.from(el.children || []);
+        // Prefer updating the first non-img child element's textContent if there is one
+        const nonImgChild = childElements.find(c => c.tagName.toLowerCase() !== 'img');
+        if (nonImgChild) {
+          nonImgChild.textContent = text;
+        } else {
+          // fallback: replace textContent (safe for plain elements)
+          el.textContent = text;
+        }
+      } catch(err) {
+        // guard: don't let one element break the whole translation operation
+        console.warn('applyTranslations item failed', err);
+      }
     });
+
+    // Buttons with icons: try to update only a text span if present, otherwise update textContent
     document.querySelectorAll('.btn-add').forEach(btn => {
-      try { btn.textContent = (map && map['btn.add']) || btn.textContent; } catch(e){}
+      try {
+        const labelSpan = btn.querySelector('span');
+        if (labelSpan) labelSpan.textContent = (map && map['btn.add']) || labelSpan.textContent;
+        else btn.textContent = (map && map['btn.add']) || btn.textContent;
+      } catch(e){}
     });
+
+    // update lang label
     const names = { es:'Español', en:'English', fr:'Français' };
     if (langLabel) langLabel.textContent = names[lang] || names['es'];
-    // refresh cart empty message
-    updateMiniCartUI();
-    updateCartPanel();
+
+    // refresh cart empty message and totals
+    try { updateMiniCartUI(); updateCartPanel(); } catch(e){}
   }
+
   function setLang(l){
     if (!translations[l]) l = 'es';
     currentLang = l;
     try { localStorage.setItem('lixby_lang', l); } catch(e){}
-    applyTranslations(l);
+    try { applyTranslations(l); } catch(e){}
   }
-  setLang(localStorage.getItem('lixby_lang') || currentLang);
+
+  // init language (guardado y aplicado)
+  try { setLang(localStorage.getItem('lixby_lang') || currentLang); } catch(e){ setLang('es'); }
 
   if (langBtn && langMenu){
     langBtn.addEventListener('click', ()=> {
-      const isOpen = langMenu.getAttribute('aria-hidden') === 'false';
-      langMenu.setAttribute('aria-hidden', String(!isOpen));
-      langMenu.style.display = !isOpen ? 'flex' : 'none';
-      langBtn.setAttribute('aria-expanded', String(!isOpen));
+      try {
+        const isOpen = langMenu.getAttribute('aria-hidden') === 'false';
+        langMenu.setAttribute('aria-hidden', String(!isOpen));
+        langMenu.style.display = !isOpen ? 'flex' : 'none';
+        langBtn.setAttribute('aria-expanded', String(!isOpen));
+      } catch(e){}
     });
-    Array.from(langMenu.querySelectorAll('.lang-item')).forEach(btn => btn.addEventListener('click', ()=>{ const lang = btn.getAttribute('data-lang'); setLang(lang); langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }));    document.addEventListener('click', (e)=> { try { if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { langMenu.setAttribute('aria-hidden','true'); langMenu.style.display='none'; langBtn.setAttribute('aria-expanded','false'); }} catch(e){} });
+
+    // click handlers for language items (delegation safe)
+    Array.from(langMenu.querySelectorAll('.lang-item')).forEach(btn => btn.addEventListener('click', ()=>{ 
+      try {
+        const lang = btn.getAttribute('data-lang');
+        if (!lang) return;
+        setLang(lang);
+        langMenu.setAttribute('aria-hidden','true');
+        langMenu.style.display='none';
+        langBtn.setAttribute('aria-expanded','false');
+      } catch(e){ console.warn(e); }
+    }));
+
+    // close menu when clicking outside (defensivo)
+    document.addEventListener('click', (e)=> { 
+      try { 
+        if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) { 
+          langMenu.setAttribute('aria-hidden','true'); 
+          langMenu.style.display='none'; 
+          langBtn.setAttribute('aria-expanded','false'); 
+        } 
+      } catch(e){} 
+    });
   }
 
   // THEME
@@ -804,6 +860,45 @@
   // export for other modules if needed
   window.lixby = window.lixby || {};
   window.lixby.cart = { load: loadCart, save: saveCart, getAll: () => cart };
+
+  // ---------------------------
+  // FIX: account button behavior
+  // ---------------------------
+  try {
+    const accountBtn = document.getElementById('accountBtn');
+    if (accountBtn) {
+      accountBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        try {
+          // If there's a local snapshot of user or Firebase auth shows currentUser, go to account page
+          const stored = (function(){ try { return JSON.parse(localStorage.getItem('lixby_user')||'null'); } catch(e){ return null; } })();
+          const firebaseUser = (window.appAuth && window.appAuth._rawAuth && window.appAuth._rawAuth.currentUser) ? window.appAuth._rawAuth.currentUser : null;
+          if (stored && stored.uid) {
+            // quick redirect if we have stored user info
+            window.location.href = 'cuenta.html';
+            return;
+          }
+          if (firebaseUser) {
+            window.location.href = 'cuenta.html';
+            return;
+          }
+          // If auth modal available, show it (preferred)
+          if (window.lixbyAuth && typeof window.lixbyAuth.show === 'function') {
+            window.lixbyAuth.show();
+            return;
+          }
+          // Fallback: if auth module exposes overlay element, show it
+          const ov = document.getElementById('lixbyAuthOverlay');
+          if (ov) { ov.style.display='flex'; ov.setAttribute('aria-hidden','false'); return; }
+          // Last resort: go to login page
+          window.location.href = 'login.html';
+        } catch(err) {
+          console.warn('accountBtn handler err', err);
+          window.location.href = 'login.html';
+        }
+      });
+    }
+  } catch(e){ console.warn('accountBtn attach err', e); }
 
 })();
 </script>
