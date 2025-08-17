@@ -36,6 +36,7 @@
     <div class="nav-inner" style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
       <div class="brand" id="brand" role="link" tabindex="0" aria-label="Ir al inicio">LIXBY</div>
       <div class="nav-right">
+        <!-- Modificado según tu petición: al pinchar en "Cuenta" vamos a cuenta.html -->
         <button id="openAuthBtn" class="btn ghost" aria-haspopup="dialog">Cuenta</button>
       </div>
     </div>
@@ -69,7 +70,9 @@
         <div id="err-loginPass" class="error" aria-live="polite"></div>
 
         <div class="row-right">
-          <a href="forgot-password.html" class="small muted-link">¿Has olvidado la contraseña?</a>
+          <!-- Ajustado: apuntamos al reset que el módulo espera (/reset-password.html).
+               Si tu fichero se llama `forgot-password.html` cámbialo aquí. -->
+          <a href="reset-password.html" class="small muted-link">¿Has olvidado la contraseña?</a>
           <div style="display:flex;gap:8px;align-items:center">
             <a href="register.html" class="btn ghost" aria-label="Registrarse">Registrarse</a>
             <button id="btnLogin" class="btn primary" type="submit" aria-live="polite">Iniciar sesión</button>
@@ -104,13 +107,8 @@
     $('brand').addEventListener('click', ()=> location.href='index.html');
     $('brand').addEventListener('keypress', e=> { if (e.key==='Enter') location.href='index.html'; });
 
-    // open auth overlay if available
-    $('openAuthBtn').addEventListener('click', ()=> {
-      if (window.lixbyAuth && typeof window.lixbyAuth.show === 'function') return window.lixbyAuth.show();
-      // fallback: open modal created by auth module
-      const ov = document.getElementById('lixbyAuthOverlay');
-      if (ov) { ov.style.display='flex'; ov.setAttribute('aria-hidden','false'); }
-    });
+    // Según tu petición: al pinchar "Cuenta" vamos a la página cuenta.html
+    $('openAuthBtn').addEventListener('click', ()=> location.href = 'cuenta.html');
 
     // social buttons: try appAuth first, fallback to window.lixbyAuth
     $('googleBtn').addEventListener('click', async ()=> {
@@ -166,25 +164,12 @@
 
       try {
         disableBtns(true); setStatus('Iniciando sesión…');
-        // prefer email sign-in; the auth module exposes signInWithEmail
         if (!window.appAuth || typeof window.appAuth.signInWithEmail !== 'function') throw new Error('Módulo de autenticación no cargado');
-        // If user typed a phone number by mistake, we could detect it here (simple)
-        const looksLikeEmail = id.includes('@');
-        if (!looksLikeEmail) {
-          // still attempt with provided id — most flows expect email
-          // but warn user if it's clearly a phone (digits + optional +)
-          const digitsOnly = id.replace(/\s+/g,'').replace(/^\+/, '');
-          if (/^\d{6,}$/.test(digitsOnly)) {
-            // show friendly hint but still attempt
-            setStatus('Parece un teléfono — probando con correo…');
-          }
-        }
         await window.appAuth.signInWithEmail(id, pass);
         setStatus('Sesión iniciada. Redirigiendo…');
         setTimeout(()=> location.href = 'cuenta.html', 600);
       } catch (err) {
         console.error(err);
-        // Prefer human-friendly message if provided
         const msg = (err && err.message) ? err.message : 'Error iniciando sesión.';
         setStatus(msg, true);
       } finally {
@@ -199,13 +184,8 @@
       el.addEventListener('keydown', (e)=> { if (e.key==='Enter') form.dispatchEvent(new Event('submit',{cancelable:true})); });
     });
 
-    // If auth module later populates header, it will override; keep graceful if not present
-    window.addEventListener('load', ()=> {
-      // keep small timeout to allow auth module to hydrate header
-      setTimeout(()=> {
-        // nothing else needed here; just ensure UI responsive
-      }, 300);
-    });
+    // allow auth module to hydrate header/account if present
+    window.addEventListener('load', ()=> { setTimeout(()=> {}, 300); });
   </script>
 </body>
 </html>
