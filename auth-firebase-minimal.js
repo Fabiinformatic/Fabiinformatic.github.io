@@ -16,7 +16,11 @@ import {
   PhoneAuthProvider,
   PhoneMultiFactorGenerator,
   getMultiFactorResolver,
-  multiFactor
+  multiFactor,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  sendEmailVerification
 } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
@@ -76,7 +80,12 @@ function mapError(code, fallback='Error') {
     'auth/invalid-phone-number':'Número de teléfono inválido.',
     'auth/missing-phone-number':'Falta número de teléfono.',
     'auth/too-many-requests':'Demasiadas solicitudes. Intenta más tarde.',
-    'auth/user-disabled':'Cuenta deshabilitada.'
+    'auth/user-disabled':'Cuenta deshabilitada.',
+    'auth/email-already-in-use':'El correo ya está en uso.',
+    'auth/invalid-email':'Correo inválido.',
+    'auth/weak-password':'La contraseña es demasiado débil.',
+    'auth/wrong-password':'Contraseña incorrecta.',
+    'auth/user-not-found':'No existe una cuenta con ese correo.'
   };
   return M[code] || fallback || code;
 }
@@ -234,18 +243,14 @@ async function doPopupSignInWithFallback(provider){
         setModalMsg('Has iniciado sesión correctamente',1200);
         await sleep(600);
         hideAuthOverlay();
-        // do not force a redirect; if landing page wants to redirect, it can
       }
     } catch(err) {
       showConsolePretty(err);
-      // fallback: try redirect for popup-blocked / unauthorized-domain etc.
       const code = err && err.code;
       if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' || code === 'auth/unauthorized-domain') {
         setModalMsg('Intentando método alternativo...',1500);
         await signInWithRedirect(auth, provider);
-        // flow continues on getRedirectResult in init()
       } else if (code === 'auth/multi-factor-auth-required') {
-        // bubble up MFA handler to init (handled there)
         throw err;
       } else {
         setModalMsg(mapError(code, err && err.message),4000);
@@ -374,10 +379,8 @@ async function upsertUserProfile(user, extra={}) {
    Header & account area
    -------------------------- */
 function findAccountContainer(){
-  // 1) existing #accountContainer
   const byId = $id('accountContainer');
   if (byId) return byId;
-  // 2) nav .nav-right (if exists) -> create a slot div at end
   const navRight = document.querySelector('.nav .nav-right, .nav-right');
   if (navRight) {
     let slot = navRight.querySelector('.lixby-account-slot');
@@ -391,7 +394,6 @@ function findAccountContainer(){
     }
     return slot;
   }
-  // 3) fallback: prepend a small header container at top
   let fallback = document.getElementById('lixbyHeaderContainer');
   if (!fallback) {
     fallback = document.createElement('div');
@@ -408,7 +410,7 @@ function findAccountContainer(){
 function renderAccountUI(user){
   const slot = findAccountContainer();
   if (!slot) return;
-  slot.innerHTML = ''; // replace
+  slot.innerHTML = '';
   if (!user) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -420,7 +422,6 @@ function renderAccountUI(user){
   }
   const name = escapeHtml(parseSafeName(user));
   const photo = user.photoURL || `https://via.placeholder.com/64?text=${encodeURIComponent(name.charAt(0)||'U')}`;
-  // Build account element that links to carrito.html (as requested)
   const a = document.createElement('a');
   a.href = 'carrito.html';
   a.style.display = 'inline-flex';
@@ -433,10 +434,68 @@ function renderAccountUI(user){
 }
 
 /* --------------------------
+   NEW: Create / Sign-in by email (exposed)
+   -------------------------- */
+
+/**
+ * Crea un usuario con email+password.
+ * - extra: objeto libre (firstName,lastName,dob,country,phone,marketing...)
+ * - envía email de verificación si sendVerification=true
+ * - cierra sesión tras crear (para que el flujo de register redirija a login).
+ */
+async function createUserWithEmailLocal(email, password, extra = {}, opts = { sendVerification: true }) {
+  try {
+    if (!email || !password) throw new Error('Email y contraseña requeridos.');
+    // create account
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const user = cred.user;
+    // update displayName if available
+    try {
+      const displayName = extra.firstName ? `${extra.firstName} ${extra.lastName||''}`.trim() : (user.displayName || null);
+      if (displayName) await updateProfile(user, { displayName });
+    } catch(updateErr){ console.warn('updateProfile err', updateErr); }
+    // persist profile in firestore
+    await upsertUserProfile(user, extra);
+    // optionally send verification email
+    if (opts && opts.sendVerification) {
+      try {
+        await sendEmailVerification(user);
+      } catch (verErr) {
+        console.warn('sendEmailVerification failed', verErr);
+      }
+    }
+    // cache locally (brief) then sign out so the register page can redirect to login flow
+    saveLocalUser(user);
+    try { await fbSignOut(auth); } catch(e){ /* non-fatal */ }
+    // mark modal dismissed
+    localStorage.setItem(LS_AUTH_DISMISSED, 'true');
+    return { ok: true, uid: user.uid, email: user.email };
+  } catch (err) {
+    console.error('createUserWithEmailLocal err', err);
+    throw new Error(mapError(err && err.code, err && err.message || 'Error creando cuenta.'));
+  }
+}
+
+/**
+ * Inicia sesión con email+password
+ */
+async function signInWithEmailLocal(email, password) {
+  try {
+    if (!email || !password) throw new Error('Email y contraseña requeridos.');
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    saveLocalUser(res.user);
+    localStorage.setItem(LS_AUTH_DISMISSED, 'true');
+    return res.user;
+  } catch (err) {
+    console.error('signInWithEmailLocal err', err);
+    throw new Error(mapError(err && err.code, err && err.message || 'Error iniciando sesión.'));
+  }
+}
+
+/* --------------------------
    Init: redirect result, listeners
    -------------------------- */
 async function init(){
-  // handle redirect result if any (only once)
   try {
     const rr = await getRedirectResult(auth);
     if (rr && rr.user) {
@@ -454,38 +513,30 @@ async function init(){
     }
   }
 
-  // create modal & wire buttons
   createAuthModalIfMissing();
   wireModalButtons();
 
-  // Attach auth state observer (main source of truth)
   onAuthStateChanged(auth, async (user) => {
     try {
       if (user) {
-        // persist & update UI once signed in
         saveLocalUser(user);
-        localStorage.setItem(LS_AUTH_DISMISSED, 'true'); // ensure modal won't reopen
+        localStorage.setItem(LS_AUTH_DISMISSED, 'true');
         renderAccountUI(user);
         await upsertUserProfile(user);
         hideAuthOverlay();
       } else {
-        // signed out: clear local snapshot and render anonymous account button
         clearLocalUser();
         renderAccountUI(null);
-        // do NOT auto-show the modal repeatedly: only show if not dismissed and user hasn't seen it
-        // showAuthOverlay() is intentionally NOT called here to avoid popups after register/login cycles
       }
     } catch(err) { console.warn('onAuthStateChanged handler err', err); }
   });
 
-  // hydrate header from local snapshot quickly
   try {
     const cached = loadLocalUser();
     if (cached && cached.name) renderAccountUI(cached);
     else renderAccountUI(null);
   } catch(e){ renderAccountUI(null); }
 
-  // minor accessibility: allow ESC to close modal
   document.addEventListener('keydown', (e)=> {
     if (e.key === 'Escape') {
       const ov = $id('lixbyAuthOverlay');
@@ -493,7 +544,7 @@ async function init(){
     }
   });
 
-  // Expose API
+  // expose l ixbyAuth & appAuth
   window.lixbyAuth = {
     show: showAuthOverlay,
     hide: hideAuthOverlay,
@@ -503,6 +554,20 @@ async function init(){
     signInWithGitHub: () => doPopupSignInWithFallback(githubProvider),
     signInAnonymously: () => doAnonymousSignIn(),
     signOut: async ()=> { try { await fbSignOut(auth); clearLocalUser(); localStorage.removeItem(LS_AUTH_DISMISSED); renderAccountUI(null); } catch(e) { console.warn(e); } },
+    _rawAuth: auth,
+    _rawDb: db
+  };
+
+  // programmatic appAuth (backwards compatible, expected by your pages)
+  window.appAuth = {
+    signInWithGoogle: () => doPopupSignInWithFallback(googleProvider),
+    signInWithGitHub: () => doPopupSignInWithFallback(githubProvider),
+    signInAnonymously: () => doAnonymousSignIn(),
+    signOut: async ()=> { try { await fbSignOut(auth); clearLocalUser(); localStorage.removeItem(LS_AUTH_DISMISSED); renderAccountUI(null); } catch(e) { console.warn(e); } },
+    enrollPhoneMFA: (displayName) => enrollPhoneMultiFactor(displayName),
+    // new:
+    createUserWithEmail: (email, password, extra, opts) => createUserWithEmailLocal(email, password, extra, opts),
+    signInWithEmail: (email, password) => signInWithEmailLocal(email, password),
     _rawAuth: auth,
     _rawDb: db
   };
