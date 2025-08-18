@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Confirmar pedido — LIXBY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:Inter,system-ui,Arial;background:#0b0c10;color:#e9eef2;margin:0;padding:20px}
+    .wrap{max-width:920px;margin:0 auto}
+    h1{font-size:1.6rem}
+    .grid{display:flex;gap:20px;align-items:flex-start}
+    .left{flex:1;background:#0f1316;padding:18px;border-radius:12px}
+    .right{width:360px;background:#0f1316;padding:18px;border-radius:12px}
+    .product-row{display:flex;gap:12px;align-items:center}
+    .thumb img{width:96px;height:96px;object-fit:cover;border-radius:8px}
+    label{display:block;margin-top:10px}
+    input[type="text"], input[type="email"], textarea, select {
+      width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit;
+    }
+    .btn{display:inline-block;padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+    .btn-primary{background:#0a84ff;color:#00121a;margin-top:12px}
+    .row-between{display:flex;justify-content:space-between;align-items:center}
+    .muted{color:#aab3ba;font-size:0.95rem}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-weight:700;cursor:pointer" onclick="location.href='index.html'">LIXBY</div>
+      <div class="muted">Confirmar pedido</div>
+    </header>
+
+    <h1>Confirmar pedido</h1>
+
+    <form id="orderForm" class="grid" novalidate>
+      <div class="left" aria-labelledby="leftTitle">
+        <div id="giftRow">
+          <label><input type="checkbox" id="isGift"> ¿Este pedido es un regalo? Incluir mensaje de regalo</label>
+          <div id="giftMessageWrap" style="display:none">
+            <label for="giftMessage">Mensaje del regalo (opcional)</label>
+            <textarea id="giftMessage" rows="3" placeholder="Escribe tu mensaje..."></textarea>
+          </div>
+        </div>
+
+        <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:14px 0">
+
+        <div id="productList" aria-live="polite"></div>
+
+        <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:14px 0">
+
+        <div>
+          <strong>Dirección de envío</strong>
+          <label for="fullname">Nombre completo</label>
+          <input id="fullname" required type="text" placeholder="Tu nombre">
+          <label for="email">Correo electrónico</label>
+          <input id="email" required type="email" placeholder="tu@correo.com">
+          <label for="addr">Dirección</label>
+          <input id="addr" required type="text" placeholder="Calle, número, piso...">
+          <label for="city">Ciudad</label>
+          <input id="city" required type="text" placeholder="Ciudad">
+          <label for="zip">Código postal</label>
+          <input id="zip" required type="text" placeholder="28001">
+          <label for="country">País</label>
+          <select id="country" required>
+            <option value="ES">España</option>
+            <option value="PT">Portugal</option>
+            <option value="FR">Francia</option>
+            <!-- añade más países si quieres -->
+          </select>
+        </div>
+      </div>
+
+      <aside class="right" aria-labelledby="resumenTitle">
+        <div style="font-weight:700;margin-bottom:8px">Resumen</div>
+        <div id="summaryItems" style="margin-bottom:12px"></div>
+        <div class="row-between"><div class="muted">Subtotal</div><div id="subTotal">0,00 €</div></div>
+        <div class="row-between"><div class="muted">Envío</div><div id="shippingCost">GRATIS</div></div>
+        <div style="height:12px"></div>
+        <div class="row-between" style="font-weight:700;font-size:1.05rem"><div>Total</div><div id="grandTotal">0,00 €</div></div>
+
+        <div style="margin-top:12px">
+          <button id="payBtn" type="button" class="btn btn-primary" aria-live="polite">Realizar pago</button>
+        </div>
+
+        <div id="status" class="muted" style="margin-top:10px"></div>
+      </aside>
+    </form>
+  </div>
+
+  <script>
+    (function(){
+      const KEY = 'lixby_cart_v1';
+      function parseValue(v){
+        if (typeof v === 'number') return v;
+        if (!v) return 0;
+        try {
+          if (typeof v === 'string' && v.includes(',')) {
+            const cleaned = v.replace(/\s/g,'').replace('€','').replace(/\./g,'').replace(',', '.').trim();
+            return parseFloat(cleaned) || 0;
+          }
+          return parseFloat(String(v).replace(/[^\d.-]/g,'')) || 0;
+        } catch(e) { return 0; }
+      }
+      const nf = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
+      const cart = (()=>{ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ return []; } })();
+
+      const productList = document.getElementById('productList');
+      const summaryItems = document.getElementById('summaryItems');
+      const subTotalEl = document.getElementById('subTotal');
+      const grandTotalEl = document.getElementById('grandTotal');
+
+      function fmt(n){ return nf.format(n); }
+
+      if (!cart || cart.length === 0) {
+        productList.innerHTML = '<div class="muted">Tu bolsa está vacía. <a href="index.html">Volver a la tienda</a></div>';
+        document.getElementById('payBtn').disabled = true;
+      } else {
+        let subtotal = 0;
+        cart.forEach(it => {
+          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseValue(it.price);
+          const qty = Number(it.qty || 1);
+          const line = price * qty;
+          subtotal += line;
+          const img = it.image ? it.image : 'https://via.placeholder.com/400';
+          const el = document.createElement('div');
+          el.className = 'product-row';
+          el.innerHTML = `
+            <div style="display:flex;gap:12px;align-items:center">
+              <div class="thumb"><img src="${img}" alt="${(it.name||'Producto')}" width="96" height="96"></div>
+              <div>
+                <div style="font-weight:700">${(it.name||'Producto')}</div>
+                <div class="muted" style="margin-top:4px">${(it.description||'')}</div>
+                <div class="muted" style="margin-top:6px">Cantidad: ${qty}</div>
+              </div>
+            </div>
+            <div style="margin-left:auto;font-weight:700">${fmt(line)}</div>
+          `;
+          productList.appendChild(el);
+
+          const srow = document.createElement('div');
+          srow.style.display = 'flex';
+          srow.style.justifyContent = 'space-between';
+          srow.style.marginBottom = '8px';
+          srow.innerHTML = `<div>${(it.name||'Producto')} x${qty}</div><div>${fmt(line)}</div>`;
+          summaryItems.appendChild(srow);
+        });
+
+        subTotalEl.textContent = fmt(subtotal);
+        grandTotalEl.textContent = fmt(subtotal); // sin envío ni impuestos por simplicidad
+      }
+
+      // gift toggle
+      document.getElementById('isGift').addEventListener('change', (e)=>{
+        document.getElementById('giftMessageWrap').style.display = e.target.checked ? 'block' : 'none';
+      });
+
+      document.getElementById('payBtn').addEventListener('click', async () => {
+        const payBtn = document.getElementById('payBtn');
+        payBtn.disabled = true;
+        document.getElementById('status').textContent = 'Creando sesión de pago...';
+
+        // recolecta datos
+        const payload = {
+          items: cart,
+          isGift: !!document.getElementById('isGift').checked,
+          giftMessage: document.getElementById('giftMessage').value || '',
+          shipping: {
+            fullname: document.getElementById('fullname').value,
+            email: document.getElementById('email').value,
+            addr: document.getElementById('addr').value,
+            city: document.getElementById('city').value,
+            zip: document.getElementById('zip').value,
+            country: document.getElementById('country').value
+          }
+        };
+
+        // validaciones básicas
+        if (!payload.shipping.fullname || !payload.shipping.email || !payload.shipping.addr) {
+          document.getElementById('status').textContent = 'Rellena nombre, email y dirección antes de pagar.';
+          payBtn.disabled = false;
+          return;
+        }
+
+        try {
+          // llamamos a nuestro servidor (endpoint /create-checkout-session)
+          const res = await fetch('/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (data && data.url) {
+            // redirige a Stripe Checkout
+            window.location.href = data.url;
+          } else {
+            throw new Error(data.error || 'No se pudo crear la sesión de pago');
+          }
+        } catch(err){
+          console.error(err);
+          document.getElementById('status').textContent = 'Error creando la sesión de pago: ' + (err.message || err);
+          payBtn.disabled = false;
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
