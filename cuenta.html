@@ -1,201 +1,234 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Mi cuenta — LIXBY</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .wrap { max-width:1100px; margin:36px auto; padding:20px; }
-    .account-grid { display:grid; grid-template-columns: 360px 1fr; gap:18px; align-items:start; }
-    @media(max-width:980px){ .account-grid { grid-template-columns: 1fr; } }
-    .panel { padding:18px; border-radius:12px; background:var(--bg-elev); border:1px solid var(--stroke); }
-    .avatar-large { width:120px; height:120px; border-radius:12px; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:28px; color:var(--muted); }
-    .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
-    .input-wide { padding:10px 12px; border-radius:8px; border:1px solid var(--stroke); background:transparent; color:var(--text); }
-    .section-title { font-weight:700; margin-bottom:8px; }
-    .small-muted { color:var(--muted); font-size:0.95rem; }
-    .btn-row { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
-    .list-item { padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); margin-bottom:8px; background:transparent; }
-    /* Encabezado fijo (sticky/fixed) */
-    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 120; padding:10px 24px; background: rgba(255,255,255,0.02); backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px) saturate(120%); border-bottom: 1px solid rgba(255,255,255,0.03); border-radius: 0; box-shadow: none; }
-    .nav-inner { max-width:1200px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:64px; padding:0 6px; }
-    main { padding-top: calc(64px + 12px); }
+    :root { color-scheme: dark; }
+    body { background:#0b0f14; color:#f5f5f5; font-family:Inter,system-ui,sans-serif; margin:0; }
+    /* HEADER PEGADO ARRIBA */
+    header {
+      position: sticky; top: 0; z-index: 1000;
+      padding:12px 24px; display:flex; justify-content:space-between; align-items:center;
+      background:#0f141b; border-bottom:1px solid #1b2230; backdrop-filter: blur(6px);
+    }
+    .brand { font-weight:800; cursor:pointer; user-select:none; }
+    main { max-width:1100px; margin:40px auto; padding:0 20px; display:grid; gap:20px; }
+    .card { background:#111820; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+    h2 { margin-top:0; font-size:1.2rem; }
+    .profile-avatar { width:90px; height:90px; border-radius:50%; background:#222; display:block; margin-bottom:10px; object-fit:cover; }
+    .btn { padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer; border:none; }
+    .btn.primary { background:#2f6bff; color:#fff; }
+    .btn.ghost { background:transparent; border:1px solid #333; color:#eee; }
+    .grid-2 { display:grid; grid-template-columns:1fr 2fr; gap:20px; }
+    @media (max-width:900px){ .grid-2 { grid-template-columns:1fr; } }
+    label { display:block; margin-top:12px; font-weight:600; }
+    input, textarea { width:100%; padding:8px; border-radius:8px; border:1px solid #333; background:#1a1f27; color:#fff; }
+    .section { margin-top:20px; }
+    .muted { color:#9aa5b1; }
   </style>
 </head>
 <body>
-  <header class="nav"><div class="nav-inner"><div class="brand" id="brand">LIXBY</div><div class="nav-right"><a class="btn ghost" href="index.html">Volver</a></div></div></header>
+  <header>
+    <div class="brand" id="brand" role="link" tabindex="0" aria-label="Ir al inicio">LIXBY</div>
+    <a href="index.html" class="btn ghost">Volver</a>
+  </header>
 
-  <main class="wrap" id="accountMain" role="main" aria-labelledby="accountHeading">
-    <h1 id="accountHeading" class="sr-only">Mi cuenta</h1>
+  <main>
+    <div class="grid-2">
+      <!-- Columna perfil -->
+      <div class="card">
+        <img id="profileAvatar" class="profile-avatar" src="" alt="Avatar">
+        <h2 id="profileName">Invitado</h2>
+        <p id="profileEmail" class="muted"></p>
+        <p id="profileStatus" class="muted">No autenticado</p>
+        <button id="loginNowBtn" class="btn primary">Iniciar sesión</button>
+        <button id="signOutBtn" class="btn ghost" style="display:none">Cerrar sesión</button>
+      </div>
 
-    <div class="account-grid">
-      <aside class="panel" id="leftPanel" aria-labelledby="leftTitle">
-        <h2 id="leftTitle" class="section-title">Tu perfil</h2>
-        <div style="display:flex;gap:12px;align-items:center">
-          <div id="avatarBox" class="avatar-large">LX</div>
-          <div style="flex:1">
-            <div id="displayName" style="font-weight:700">Invitado</div>
-            <div id="displayEmail" class="small-muted">No autenticado</div>
-            <div style="margin-top:8px" id="loginButtons"><button id="btnOpenAuth" class="btn primary">Iniciar sesión</button></div>
-          </div>
+      <!-- Columna información de la cuenta -->
+      <div class="card">
+        <h2>Información de la cuenta</h2>
+        <label for="displayNameInput">Nombre visible</label>
+        <input id="displayNameInput" type="text" placeholder="Tu nombre">
+        <label for="phoneInput">Teléfono</label>
+        <input id="phoneInput" type="text" placeholder="+34 600 000 000">
+        <label for="addressInput">Dirección de envío</label>
+        <textarea id="addressInput" rows="2"></textarea>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button id="saveProfileBtn" class="btn primary">Guardar cambios</button>
         </div>
-
-        <hr style="margin:12px 0;border:none;border-top:1px solid var(--stroke)">
-
-        <h3 class="section-title">Información personal</h3>
-        <div id="personalBlock" class="small-muted">Inicia sesión para ver y editar tu información.</div>
-      </aside>
-
-      <section class="panel" id="mainPanel" aria-labelledby="mainTitle">
-        <h2 id="mainTitle" class="section-title">Información de la cuenta</h2>
-
-        <div id="accountContent">
-          <div id="profileSection">
-            <div class="field">
-              <label for="nameInput">Nombre visible</label>
-              <input id="nameInput" class="input-wide" />
-            </div>
-            <div class="field">
-              <label for="phoneInput">Teléfono</label>
-              <input id="phoneInput" class="input-wide" />
-            </div>
-            <div class="field">
-              <label for="shippingInput">Dirección de envío</label>
-              <textarea id="shippingInput" rows="3" class="input-wide"></textarea>
-            </div>
-            <div class="btn-row">
-              <button id="saveProfile" class="btn primary">Guardar cambios</button>
-              <button id="signOutBtn" class="btn ghost">Cerrar sesión</button>
-            </div>
-            <div id="profileMsg" class="small-muted" style="margin-top:10px"></div>
-          </div>
-
-          <hr style="margin:18px 0;border:none;border-top:1px solid var(--stroke)">
-
-          <h3 class="section-title">Pedidos recientes</h3>
-          <div id="ordersList" class="small-muted">Inicia sesión para ver tus pedidos.</div>
-
-          <h3 class="section-title" style="margin-top:18px">Favoritos</h3>
-          <div id="favsList" class="small-muted">Inicia sesión para ver tus favoritos.</div>
-        </div>
-      </section>
+      </div>
     </div>
 
+    <!-- Sección información personal -->
+    <div class="card section">
+      <h2>Información personal</h2>
+      <p id="personalInfo" class="muted">Inicia sesión para ver y editar tu información personal.</p>
+    </div>
+
+    <!-- Sección productos favoritos -->
+    <div class="card section">
+      <h2>Favoritos</h2>
+      <div id="favoritesList" class="muted">Inicia sesión para ver tus productos favoritos.</div>
+    </div>
+
+    <!-- Sección productos comprados -->
+    <div class="card section">
+      <h2>Productos comprados</h2>
+      <div id="purchasedList" class="muted">Inicia sesión para ver tus productos comprados.</div>
+    </div>
+
+    <!-- Sección pedidos y envíos -->
+    <div class="card section">
+      <h2>Pedidos y envíos</h2>
+      <div id="ordersList" class="muted">Inicia sesión para ver tus pedidos y envíos.</div>
+    </div>
   </main>
 
   <script type="module" src="auth-firebase-minimal.js"></script>
+
   <script>
-    // comportamiento de la página de cuenta — sincroniza con appAuth
-    const brand = document.getElementById('brand');
-    brand.addEventListener('click', ()=> location.href='index.html');
+  (function(){
+    // --- Navegación ---
+    const brandEl = document.getElementById('brand');
+    brandEl.addEventListener('click', ()=> location.href='index.html');
+    brandEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); brandEl.click(); } });
 
-    document.getElementById('btnOpenAuth').addEventListener('click', ()=> {
-      // muestra overlay si existe
-      const o = document.getElementById('lixbyAuthOverlay');
-      if (o) { o.style.display='flex'; o.setAttribute('aria-hidden','false'); }
-      else location.href = 'login.html';
-    });
-
-    // elementos de la página
-    const avatarBox = document.getElementById('avatarBox');
-    const displayNameEl = document.getElementById('displayName');
-    const displayEmailEl = document.getElementById('displayEmail');
-    const nameInput = document.getElementById('nameInput');
-    const phoneInput = document.getElementById('phoneInput');
-    const shippingInput = document.getElementById('shippingInput');
-    const saveProfile = document.getElementById('saveProfile');
+    // --- UI refs ---
+    const profileNameEl = document.getElementById('profileName');
+    const profileEmailEl = document.getElementById('profileEmail');
+    const profileStatusEl = document.getElementById('profileStatus');
+    const avatarImgEl = document.getElementById('profileAvatar');
+    const loginBtn = document.getElementById('loginNowBtn');
     const signOutBtn = document.getElementById('signOutBtn');
-    const profileMsg = document.getElementById('profileMsg');
+    const saveBtn = document.getElementById('saveProfileBtn');
+
+    const displayNameInput = document.getElementById('displayNameInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const addressInput = document.getElementById('addressInput');
+
+    const personalInfo = document.getElementById('personalInfo');
+    const favoritesList = document.getElementById('favoritesList');
+    const purchasedList = document.getElementById('purchasedList');
     const ordersList = document.getElementById('ordersList');
-    const favsList = document.getElementById('favsList');
-    const loginButtons = document.getElementById('loginButtons');
-    const personalBlock = document.getElementById('personalBlock');
-    const profileSection = document.getElementById('profileSection');
 
-    function showSignedOut() {
-      displayNameEl.textContent = 'Invitado';
-      displayEmailEl.textContent = 'No autenticado';
-      avatarBox.textContent = 'LX';
-      nameInput.value=''; phoneInput.value=''; shippingInput.value='';
-      profileMsg.textContent = '';
-      ordersList.innerHTML = 'Inicia sesión para ver tus pedidos.';
-      favsList.innerHTML = 'Inicia sesión para ver tus favoritos.';
-      loginButtons.style.display = 'block';
-      personalBlock.style.display = 'block';
-      profileSection.style.display = 'none';
+    const LS_USER = 'lixby_user';
+
+    // --- Helpers ---
+    function readLocalSnapshot(){
+      try { return JSON.parse(localStorage.getItem(LS_USER)||'null'); } catch(e){ return null; }
     }
-
-    // suscripción al estado de autenticación
-    if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
-      window.appAuth.onAuthState(async (u) => {
-        if (!u) { showSignedOut(); return; }
-        // usuario autenticado: actualizar UI
-        loginButtons.style.display = 'none';
-        personalBlock.style.display = 'none';
-        profileSection.style.display = 'block';
-
-        // información básica de usuario en el header
-        const display = u.name || u.email || 'Usuario';
-        displayNameEl.textContent = display;
-        displayEmailEl.textContent = u.email || (u.isAnonymous ? 'Invitado' : '');
-        avatarBox.textContent = (display && display[0]) ? display[0].toUpperCase() : 'U';
-
-        // cargar datos de perfil desde localStorage si existen
-        const localRaw = localStorage.getItem('lixby_user');
-        let local = null;
-        try { local = localRaw ? JSON.parse(localRaw) : null; } catch(e){ local=null; }
-        nameInput.value = (local && (local.firstName || local.name)) || '';
-        phoneInput.value = (local && local.phone) || '';
-        shippingInput.value = (local && local.shipping && (local.shipping.address || '')) || '';
-
-        // cargar pedidos/favoritos (demo o de caché)
-        ordersList.innerHTML = '<div class="small-muted">Cargando pedidos…</div>';
-        favsList.innerHTML = '<div class="small-muted">Cargando favoritos…</div>';
-        // si no se cargan datos, mostrar mensaje alternativo
-        setTimeout(() => {
-          if (ordersList.innerHTML.includes('Cargando')) {
-            ordersList.innerHTML = '<div class="small-muted">No tienes pedidos recientes.</div>';
-          }
-          if (favsList.innerHTML.includes('Cargando')) {
-            favsList.innerHTML = '<div class="small-muted">No tienes productos favoritos.</div>';
-          }
-        }, 1000);
-      });
-    } else {
-      showSignedOut();
-    }
-
-    saveProfile.addEventListener('click', async ()=>{
-      const user = (window.appAuth && window.appAuth._rawAuth && window.appAuth._rawAuth.currentUser) || null;
-      if (!user) { alert('Autentícate primero'); return; }
-      profileMsg.textContent = 'Guardando…';
-      saveProfile.disabled = true;
+    function currentFirebaseUser(){
       try {
-        if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') throw new Error('No disponible');
-        const extra = { firstName: nameInput.value.trim(), lastName: '', dob: null, phone: phoneInput.value.trim(), shipping: { address: shippingInput.value.trim() } };
-        await window.appAuth.updateProfileExtra(extra);
-        profileMsg.textContent = 'Perfil actualizado ✔';
-        setTimeout(()=> profileMsg.textContent = '', 2800);
-      } catch (e) {
-        console.error(e);
-        profileMsg.textContent = 'Error al guardar';
-      } finally { saveProfile.disabled = false; }
+        const auth = window.appAuth && window.appAuth._rawAuth;
+        const u = auth && auth.currentUser;
+        if (!u) return null;
+        return {
+          uid: u.uid,
+          displayName: u.displayName || (u.email ? u.email.split('@')[0] : 'Usuario'),
+          email: u.email || '',
+          photoURL: u.photoURL || '',
+          isAnonymous: !!u.isAnonymous
+        };
+      } catch(e){ return null; }
+    }
+    function placeholderAvatarForName(name, size=96){
+      const initials = (String(name||'Lixby').trim().split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase() || 'LX');
+      return `https://via.placeholder.com/${size}?text=${encodeURIComponent(initials)}`;
+    }
+
+    function renderAccountUI(u){
+      const isUser = !!u && !!u.uid;
+      const displayName = (u && (u.name || u.displayName)) || 'Invitado';
+      const email = (u && u.email) || '';
+      const isAnon = !!(u && u.isAnonymous);
+
+      profileNameEl.textContent = displayName;
+      profileEmailEl.textContent = email || (isAnon ? 'Invitado' : '');
+      profileStatusEl.textContent = isUser ? (isAnon ? 'Invitado (autenticado)' : 'Autenticado') : 'No autenticado';
+
+      const photo = (u && u.photoURL) || placeholderAvatarForName(displayName, 120);
+      avatarImgEl.src = photo; avatarImgEl.alt = displayName + ' avatar';
+
+      loginBtn.style.display = isUser ? 'none' : '';
+      signOutBtn.style.display = isUser ? '' : 'none';
+      saveBtn.disabled = !isUser;
+
+      // Rellenar inputs básicos si hay datos cacheados
+      if (isUser) {
+        const snap = readLocalSnapshot();
+        displayNameInput.value = (snap && (snap.firstName || snap.name || snap.displayName)) || displayName || '';
+        phoneInput.value = (snap && (snap.phone || '')) || '';
+        addressInput.value = (snap && snap.address) || (snap && snap.shipping && snap.shipping.address) || '';
+        personalInfo.textContent = 'Puedes editar tu información personal desde aquí.';
+        favoritesList.textContent = 'Cargando favoritos…';
+        purchasedList.textContent = 'Cargando compras…';
+        ordersList.textContent = 'Cargando pedidos…';
+      } else {
+        displayNameInput.value = ''; phoneInput.value=''; addressInput.value='';
+        personalInfo.textContent = 'Inicia sesión para ver y editar tu información personal.';
+        favoritesList.textContent = 'Inicia sesión para ver tus productos favoritos.';
+        purchasedList.textContent = 'Inicia sesión para ver tus productos comprados.';
+        ordersList.textContent = 'Inicia sesión para ver tus pedidos y envíos.';
+      }
+    }
+
+    // Primer pintado: usa snapshot si existe
+    renderAccountUI(readLocalSnapshot());
+
+    // Rehidratación robusta: detecta sesión real aunque el módulo no exponga onAuthState
+    let lastUid = null, tries = 0;
+    async function tickAuth(){
+      const fb = currentFirebaseUser();
+      const ls = readLocalSnapshot();
+      const candidate = fb || ls || null;
+      const nowUid = candidate && candidate.uid || null;
+      if (nowUid !== lastUid) {
+        renderAccountUI(candidate);
+        lastUid = nowUid;
+      }
+      // reintenta unas cuantas veces al cargar por si Firebase tarda
+      if (!fb && tries < 40) { tries++; setTimeout(tickAuth, 500); }
+    }
+    tickAuth();
+
+    // Acciones
+    loginBtn.addEventListener('click', ()=>{
+      const overlay = document.getElementById('lixbyAuthOverlay') || document.getElementById('authOverlay');
+      if (overlay) { overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); }
+      else location.href='login.html';
     });
 
     signOutBtn.addEventListener('click', async ()=>{
-      if (!confirm('¿Cerrar sesión?')) return;
       try {
         if (window.appAuth && typeof window.appAuth.signOut === 'function') {
           await window.appAuth.signOut();
-        } else {
-          location.href='index.html';
         }
-      } catch(e) {
-        console.warn(e);
-        alert('Error cerrando sesión');
+      } catch(e){ console.warn(e); }
+      localStorage.removeItem(LS_USER);
+      renderAccountUI(null);
+    });
+
+    saveBtn.addEventListener('click', async ()=>{
+      const payload = {
+        displayName: displayNameInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        address: addressInput.value.trim()
+      };
+      try {
+        if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') {
+          alert('Función no disponible ahora mismo'); return;
+        }
+        await window.appAuth.updateProfileExtra(payload);
+        alert('Perfil actualizado');
+      } catch(e){
+        console.error(e); alert('No se pudo guardar el perfil');
       }
     });
+  })();
   </script>
 </body>
 </html>
