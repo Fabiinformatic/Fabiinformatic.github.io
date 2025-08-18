@@ -385,8 +385,9 @@
       }
       if (applePayTop) applePayTop.addEventListener('click', ()=> paySim('Apple Pay'));
       if (applePayBottom) applePayBottom.addEventListener('click', ()=> paySim('Apple Pay'));
-      if (continueTop) continueTop.addEventListener('click', ()=> paySim('Continuar con el pago'));
-      if (continueBottom) continueBottom.addEventListener('click', ()=> paySim('Continuar con el pago'));
+      if (continueTop) continueTop.addEventListener('click', ()=> location.href = 'confirmar-pedido.html');
+      if (continueBottom) continueBottom.addEventListener('click', ()=> location.href = 'confirmar-pedido.html');
+
 
       if (clearCartBtn) clearCartBtn.addEventListener('click', () => {
         if (!cart || cart.length === 0) return;
