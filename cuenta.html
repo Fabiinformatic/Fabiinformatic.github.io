@@ -1,158 +1,138 @@
-<!-- (presupongo que tu HTML de cuenta está intacto y solo reemplazamos/añadimos el script que gestiona la UI de cuenta) -->
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mi cuenta — LIXBY</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { background:#0b0f14; color:#f5f5f5; font-family:Inter,system-ui,sans-serif; margin:0; }
+    header { padding:12px 24px; display:flex; justify-content:space-between; align-items:center; background:#0f141b; }
+    .brand { font-weight:800; cursor:pointer; }
+    main { max-width:1100px; margin:40px auto; padding:0 20px; display:grid; gap:20px; }
+    .card { background:#111820; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.3); }
+    h2 { margin-top:0; font-size:1.2rem; }
+    .profile-avatar { width:90px; height:90px; border-radius:50%; background:#222; display:block; margin-bottom:10px; object-fit:cover; }
+    .btn { padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer; border:none; }
+    .btn.primary { background:#2f6bff; color:#fff; }
+    .btn.ghost { background:transparent; border:1px solid #333; color:#eee; }
+    .grid-2 { display:grid; grid-template-columns:1fr 2fr; gap:20px; }
+    label { display:block; margin-top:12px; font-weight:600; }
+    input, textarea { width:100%; padding:8px; border-radius:8px; border:1px solid #333; background:#1a1f27; color:#fff; }
+    .section { margin-top:20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand" id="brand">LIXBY</div>
+    <a href="index.html" class="btn ghost">Volver</a>
+  </header>
 
-<script>
-(function(){
-  // IDs de elementos en tu cuenta.html (ajusta si tus ids son distintos)
-  const profileNameEl = document.getElementById('profileName'); // muestra nombre visible
-  const profileEmailEl = document.getElementById('profileEmail');
-  const profileStatusEl = document.getElementById('profileStatus');
-  const avatarImgEl = document.getElementById('profileAvatar'); // img element to render avatar
-  const loginBtn = document.getElementById('loginNowBtn'); // botón "Iniciar sesión" en la página
-  const signOutBtn = document.getElementById('signOutBtn'); // botón "Cerrar sesión"
-  const saveBtn = document.getElementById('saveProfileBtn');
+  <main>
+    <div class="grid-2">
+      <!-- Columna perfil -->
+      <div class="card">
+        <img id="profileAvatar" class="profile-avatar" src="" alt="Avatar">
+        <h2 id="profileName">Invitado</h2>
+        <p id="profileEmail"></p>
+        <p id="profileStatus">No autenticado</p>
+        <button id="loginNowBtn" class="btn primary">Iniciar sesión</button>
+        <button id="signOutBtn" class="btn ghost" style="display:none">Cerrar sesión</button>
+      </div>
 
-  // Util: leer snapshot local (usado por el auth module)
-  function readLocalSnapshot(){
-    try {
-      const raw = localStorage.getItem('lixby_user');
-      if (!raw) return null;
-      return JSON.parse(raw);
-    } catch(e){ return null; }
-  }
+      <!-- Columna información de la cuenta -->
+      <div class="card">
+        <h2>Información de la cuenta</h2>
+        <label for="displayNameInput">Nombre visible</label>
+        <input id="displayNameInput" type="text" placeholder="Tu nombre">
+        <label for="phoneInput">Teléfono</label>
+        <input id="phoneInput" type="text" placeholder="+34 600 000 000">
+        <label for="addressInput">Dirección de envío</label>
+        <textarea id="addressInput" rows="2"></textarea>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button id="saveProfileBtn" class="btn primary">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
 
-  // Genera URL de placeholder con iniciales (misma estrategia que el módulo de auth)
-  function placeholderAvatarForName(name, size=96){
-    const initials = (String(name||'Lixby').trim().split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase() || 'LX');
-    return `https://via.placeholder.com/${size}?text=${encodeURIComponent(initials)}`;
-  }
+    <!-- Sección información personal -->
+    <div class="card section">
+      <h2>Información personal</h2>
+      <p id="personalInfo">Inicia sesión para ver y editar tu información personal.</p>
+    </div>
 
-  // Render UI de la cuenta según objeto `u` (puede ser null)
-  function renderAccountUI(u){
-    // safe defaults
-    const isUser = !!u && !!u.uid;
-    const displayName = (u && (u.name || u.displayName)) || 'Invitado';
-    const email = (u && u.email) || '';
-    const isAnon = !!(u && u.isAnonymous);
+    <!-- Sección productos favoritos -->
+    <div class="card section">
+      <h2>Favoritos</h2>
+      <div id="favoritesList">Inicia sesión para ver tus productos favoritos.</div>
+    </div>
 
-    if (profileNameEl) profileNameEl.textContent = displayName;
-    if (profileEmailEl) profileEmailEl.textContent = email;
-    if (profileStatusEl) profileStatusEl.textContent = isUser ? (isAnon ? 'Invitado (autenticado como anónimo)' : 'Autenticado') : 'No autenticado';
+    <!-- Sección productos comprados -->
+    <div class="card section">
+      <h2>Productos comprados</h2>
+      <div id="purchasedList">Inicia sesión para ver tus productos comprados.</div>
+    </div>
 
-    // Avatar: si hay photoURL, úsala; si no, placeholder con iniciales (misma apariencia que header)
-    const photo = (u && u.photoURL) || placeholderAvatarForName(displayName, 120);
-    if (avatarImgEl) {
-      avatarImgEl.src = photo;
-      avatarImgEl.alt = (displayName ? (displayName + ' avatar') : 'Avatar invitado');
+    <!-- Sección pedidos y envíos -->
+    <div class="card section">
+      <h2>Pedidos y envíos</h2>
+      <div id="ordersList">Inicia sesión para ver tus pedidos y envíos.</div>
+    </div>
+  </main>
+
+  <script type="module" src="auth-firebase-minimal.js"></script>
+  <!-- Script de gestión de cuenta (el que compartiste) -->
+  <script>
+  (function(){
+    const profileNameEl = document.getElementById('profileName');
+    const profileEmailEl = document.getElementById('profileEmail');
+    const profileStatusEl = document.getElementById('profileStatus');
+    const avatarImgEl = document.getElementById('profileAvatar');
+    const loginBtn = document.getElementById('loginNowBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const saveBtn = document.getElementById('saveProfileBtn');
+
+    function readLocalSnapshot(){
+      try { return JSON.parse(localStorage.getItem('lixby_user')||'null'); } catch(e){ return null; }
     }
-
-    // Mostrar/ocultar botones
-    if (loginBtn) loginBtn.style.display = isUser ? 'none' : '';
-    if (signOutBtn) signOutBtn.style.display = isUser ? '' : 'none';
-
-    // Si estás mostrando campos editables, habilítalos solo si autenticado (o según tu lógica)
-    if (saveBtn) saveBtn.disabled = !isUser;
-  }
-
-  // Fallback inicial: intenta usar localStorage snapshot
-  try {
-    const snap = readLocalSnapshot();
-    if (snap) renderAccountUI(snap);
-    else renderAccountUI(null);
-  } catch(e){
-    renderAccountUI(null);
-  }
-
-  // 1) Si el módulo de auth está cargado y provee onAuthState, suscríbete (recomendado)
-  if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
-    try {
-      window.appAuth.onAuthState(function(u){
-        // u puede ser objeto minimal (uid,name,email,photoURL,isAnonymous) o null
-        renderAccountUI(u || null);
-      });
-    } catch(e){
-      console.warn('onAuthState subscription failed', e);
+    function placeholderAvatarForName(name, size=96){
+      const initials = (String(name||'Lixby').trim().split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase() || 'LX');
+      return `https://via.placeholder.com/${size}?text=${encodeURIComponent(initials)}`;
     }
-  } else if (window.lixbyAuth && typeof window.lixbyAuth._rawAuth !== 'undefined') {
-    // si no hay onAuthState pero hay rawAuth, intenta utilizar auth observer (opcional)
-    try {
-      const raw = window.lixbyAuth._rawAuth;
-      if (raw && typeof raw.onAuthStateChanged === 'function') {
-        raw.onAuthStateChanged(function(user){
-          if (user) {
-            // create minimal representation
-            const u = { uid: user.uid, name: user.displayName || (user.email? user.email.split('@')[0] : 'Usuario'), email: user.email, photoURL: user.photoURL, isAnonymous: !!user.isAnonymous };
-            renderAccountUI(u);
-            try { localStorage.setItem('lixby_user', JSON.stringify(u)); } catch(e){}
-          } else {
-            renderAccountUI(null);
-            try { localStorage.removeItem('lixby_user'); } catch(e){}
-          }
-        });
-      }
-    } catch(e){ /* ignore */ }
-  } else {
-    // última defensa: escucha cambios de localStorage desde otras pestañas
-    window.addEventListener('storage', function(ev){
-      if (ev.key === 'lixby_user') {
-        try {
-          const val = ev.newValue ? JSON.parse(ev.newValue) : null;
-          renderAccountUI(val);
-        } catch(e){ renderAccountUI(null); }
-      }
+    function renderAccountUI(u){
+      const isUser = !!u && !!u.uid;
+      const displayName = (u && (u.name || u.displayName)) || 'Invitado';
+      const email = (u && u.email) || '';
+      const isAnon = !!(u && u.isAnonymous);
+      if (profileNameEl) profileNameEl.textContent = displayName;
+      if (profileEmailEl) profileEmailEl.textContent = email;
+      if (profileStatusEl) profileStatusEl.textContent = isUser ? (isAnon ? 'Invitado (autenticado como anónimo)' : 'Autenticado') : 'No autenticado';
+      const photo = (u && u.photoURL) || placeholderAvatarForName(displayName, 120);
+      if (avatarImgEl) { avatarImgEl.src = photo; avatarImgEl.alt = displayName + ' avatar'; }
+      if (loginBtn) loginBtn.style.display = isUser ? 'none' : '';
+      if (signOutBtn) signOutBtn.style.display = isUser ? '' : 'none';
+      if (saveBtn) saveBtn.disabled = !isUser;
+    }
+    const snap = readLocalSnapshot(); renderAccountUI(snap);
+    if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
+      window.appAuth.onAuthState(u => renderAccountUI(u||null));
+    }
+    if (loginBtn) loginBtn.addEventListener('click', ()=> location.href='login.html');
+    if (signOutBtn) signOutBtn.addEventListener('click', async ()=>{
+      if (window.appAuth && typeof window.appAuth.signOut === 'function') await window.appAuth.signOut();
+      localStorage.removeItem('lixby_user'); renderAccountUI(null);
     });
-  }
-
-  // Abre modal de auth (usa API expuesta por auth module si existe)
-  function openAuthModal(){
-    if (window.lixbyAuth && typeof window.lixbyAuth.show === 'function') { return window.lixbyAuth.show(); }
-    if (window.appAuth && typeof window.appAuth.show === 'function') { return window.appAuth.show(); }
-    // fallback: navegar a login.html
-    location.href = 'login.html';
-  }
-
-  if (loginBtn) loginBtn.addEventListener('click', function(){ openAuthModal(); });
-  if (avatarImgEl) avatarImgEl.addEventListener('click', function(){ openAuthModal(); });
-
-  // Cerrar sesión: preferir la API expuesta
-  if (signOutBtn) signOutBtn.addEventListener('click', async function(){
-    try {
-      if (window.appAuth && typeof window.appAuth.signOut === 'function') {
-        await window.appAuth.signOut();
-      } else if (window.lixbyAuth && typeof window.lixbyAuth.signOut === 'function') {
-        await window.lixbyAuth.signOut();
-      } else {
-        // fallback: limpiar snapshot local
-        localStorage.removeItem('lixby_user');
-      }
-      // actualizar UI
-      renderAccountUI(null);
-    } catch(err) {
-      console.error('Sign out failed', err);
-      alert('No se pudo cerrar sesión. Revisa la consola.');
-    }
-  });
-
-  // Si tienes un botón "guardar perfil", puedes guardar cambios vía appAuth.updateProfileExtra
-  if (saveBtn) {
-    saveBtn.addEventListener('click', async function(){
-      if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') {
-        alert('Función de actualización de perfil no disponible.');
-        return;
-      }
-      // Ejemplo simple: tomar campos por id y enviar
-      const nameField = document.getElementById('displayNameInput');
-      const telField = document.getElementById('phoneInput');
-      const addrField = document.getElementById('addressInput');
-      const payload = {};
-      if (nameField) payload.displayName = nameField.value.trim();
-      if (telField) payload.phone = telField.value.trim();
-      if (addrField) payload.address = addrField.value.trim();
-      try {
-        await window.appAuth.updateProfileExtra(payload);
-        alert('Perfil actualizado');
-      } catch(e){ console.error(e); alert('Error actualizando perfil'); }
+    if (saveBtn) saveBtn.addEventListener('click', async ()=>{
+      if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') { alert('Función no disponible'); return; }
+      const payload = {
+        displayName: document.getElementById('displayNameInput').value.trim(),
+        phone: document.getElementById('phoneInput').value.trim(),
+        address: document.getElementById('addressInput').value.trim()
+      };
+      await window.appAuth.updateProfileExtra(payload);
+      alert('Perfil actualizado');
     });
-  }
-
-})();
-</script>
+  })();
+  </script>
+</body>
+</html>
