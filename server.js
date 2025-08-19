@@ -36,6 +36,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
     const pi = event.data.object;
     console.log('payment_intent.succeeded — id:', pi.id);
     // TODO: marcar pedido como pagado, enviar correo, etc.
+  } else if (event.type === 'payment_link.created') {
+    console.log('payment_link.created', event.data.object.id);
   }
 
   res.json({ received: true });
@@ -137,6 +139,63 @@ app.post('/create-payment-intent', async (req, res) => {
   } catch (err) {
     console.error('create-payment-intent', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+/* NUEVO: crear un Payment Link dinámico (Plan B: Stripe-hosted link) */
+app.post('/create-payment-link', async (req, res) => {
+  try {
+    const { items, shipping, isGift, giftMessage } = req.body;
+    if (!items || items.length === 0) return res.status(400).json({ error: 'Carrito vacío' });
+
+    const line_items = items.map(it => {
+      const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseFloat(String(it.price||0).replace(/[^\d.-]/g,'')) || 0;
+      const qty = Number(it.qty || 1);
+      const addon = it.appleCare ? APPLECARE : 0;
+      return {
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: it.name || 'Producto Lixby',
+            description: it.description || '',
+            images: it.image ? [it.image] : []
+          },
+          unit_amount: Math.round((price + addon) * 100)
+        },
+        quantity: qty
+      };
+    });
+
+    // metadata para tu reconciliación interna
+    const metadata = {
+      isGift: isGift ? '1' : '0',
+      giftMessage: giftMessage || '',
+      shipping_name: shipping?.fullname || '',
+      shipping_email: shipping?.email || '',
+      shipping_addr: shipping?.addr || '',
+      shipping_city: shipping?.city || '',
+      shipping_zip: shipping?.zip || '',
+      shipping_country: shipping?.country || ''
+    };
+
+    const domain = process.env.DOMAIN || `http://localhost:${port}`;
+
+    // Crear Payment Link vía API de Stripe
+    const pl = await stripe.paymentLinks.create({
+      line_items,
+      metadata,
+      // al completar, redirigimos al success.html de tu web (opcional)
+      after_completion: {
+        type: 'redirect',
+        redirect: { url: `${domain}/success.html` }
+      }
+    });
+
+    // pl.url contiene la URL "https://buy.stripe.com/..."
+    return res.json({ url: pl.url, id: pl.id });
+  } catch (err) {
+    console.error('create-payment-link', err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
