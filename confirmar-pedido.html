@@ -6,7 +6,6 @@
   <title>Confirmar pedido — LIXBY</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    /* (mantengo exactamente tus estilos) */
     body{font-family:Inter,system-ui,Arial;background:#0b0c10;color:#e9eef2;margin:0;padding:20px}
     .wrap{max-width:920px;margin:0 auto}
     h1{font-size:1.6rem}
@@ -90,6 +89,7 @@
 
   <script>
     (function(){
+      const PAYMENT_LINK = 'https://buy.stripe.com/fZu3cufIXcsZ069c0Uffy00'; // enlace fijo plan B
       const KEY = 'lixby_cart_v1';
       function parseValue(v){
         if (typeof v === 'number') return v;
@@ -150,15 +150,14 @@
         });
 
         subTotalEl.textContent = fmt(subtotal);
-        grandTotalEl.textContent = fmt(subtotal); // sin envío ni impuestos por simplicidad
+        grandTotalEl.textContent = fmt(subtotal);
       }
 
-      // gift toggle
       document.getElementById('isGift').addEventListener('change', (e)=>{
         document.getElementById('giftMessageWrap').style.display = e.target.checked ? 'block' : 'none';
       });
 
-      // --- Comportamiento actualizado del botón: crear Payment Link en el servidor y redirigir ---
+      // BOTÓN: redirigir directamente al Payment Link fijo de Stripe (Plan B)
       document.getElementById('payBtn').addEventListener('click', async () => {
         const payBtn = document.getElementById('payBtn');
         payBtn.disabled = true;
@@ -187,28 +186,18 @@
         }
 
         try {
-          // Guardamos el pedido temporalmente en localStorage para que success.html u otros usen info si hace falta
+          // guardamos pedido temporalmente en localStorage (por si quieres recuperar en success / backoffice)
           localStorage.setItem('lixby_order', JSON.stringify(payloadOrder));
 
-          // === NUEVA PARTE: pedimos al servidor que cree un Payment Link y nos devuelva la URL ===
-          document.getElementById('status').textContent = 'Creando enlace de pago en Stripe...';
-          const res = await fetch('/create-payment-link', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadOrder)
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data?.error || 'Error creando payment link');
-          }
-          // data.url -> e.g. https://buy.stripe.com/xxxx
-          // Añadimos prefilled_email para mejorar la UX (opcional)
-          const prefilled = payloadOrder.shipping?.email ? `?prefilled_email=${encodeURIComponent(payloadOrder.shipping.email)}` : '';
-          // redirigimos al Payment Link de Stripe
-          window.location.href = (data.url || '') + prefilled;
+          // construimos URL final (añadimos prefilled_email para mejor UX)
+          const email = payloadOrder.shipping.email ? encodeURIComponent(payloadOrder.shipping.email) : '';
+          const url = PAYMENT_LINK + (email ? `?prefilled_email=${email}` : '');
+
+          // redirigir directamente al Payment Link (Plan B)
+          window.location.href = url;
         } catch (err) {
           console.error(err);
-          document.getElementById('status').textContent = 'Error preparando el enlace de pago: ' + (err.message || err);
+          document.getElementById('status').textContent = 'Error al preparar el pedido: ' + (err.message || err);
           payBtn.disabled = false;
         }
       });
