@@ -1,42 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Carrito — LIXBY</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#0b0c10;
       --panel:#0f1316;
-      --card:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.005));
       --muted:#aab3ba;
       --text:#e9eef2;
       --accent:#0a84ff;
-      --accent-dark:#000;
-      --shadow: 0 10px 30px rgba(0,0,0,0.6);
       --radius:12px;
-      --toast-bg: rgba(0,0,0,0.72);
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:var(--text);}
     .wrap{max-width:1200px;margin:28px auto;padding:24px;}
-    header.simple{display:flex;align-items:center;justify-content:space-between;padding:16px 0;margin-bottom:18px}
-    header.simple .brand{font-weight:700;cursor:pointer}
-
     h1{margin:14px 0 18px;font-size:2rem}
-
-    .top-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-    .top-actions .left{font-size:1.05rem}
-    .top-actions .right{display:flex;gap:12px}
-
     .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-    .btn-apple{background:#000;color:#fff}
     .btn-primary{background:var(--accent);color:#00121a}
-
     .bag-list{margin-top:20px}
-    .item{display:flex;gap:16px;padding:18px;border-radius:12px;margin-bottom:14px;background:var(--panel);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02);align-items:flex-start}
-    .thumb{flex:0 0 120px}
+    .item{display:flex;gap:16px;padding:18px;border-radius:12px;margin-bottom:14px;background:var(--panel);border:1px solid rgba(255,255,255,0.02);align-items:flex-start}
     .thumb img{width:120px;height:120px;object-fit:cover;border-radius:10px}
     .info{flex:1;min-width:0}
     .title{font-weight:700;margin:0 0 6px}
@@ -44,89 +28,35 @@
     .meta{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
     .qty{display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
     .qty button{background:transparent;border:0;padding:6px 10px;cursor:pointer;color:var(--text)}
-    .qty button:focus{outline:2px solid var(--accent); outline-offset:2px}
     .qty span{padding:6px 10px;min-width:36px;text-align:center}
     .remove{background:transparent;border:0;color:#ff6b6b;cursor:pointer}
-    .remove:focus{outline:2px solid #ff6b6b; outline-offset:2px}
-
     .price{flex:0 0 160px;text-align:right;font-weight:700}
-
-    .summary{width:360px;flex:0 0 360px;margin-left:20px;background:var(--panel);padding:18px;border-radius:12px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02)}
+    .summary{width:360px;flex:0 0 360px;margin-left:20px;background:var(--panel);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
     .summary-row{display:flex;justify-content:space-between;padding:8px 0;color:var(--muted)}
     .summary-row.total{font-weight:700;color:var(--text);font-size:1.05rem}
     .layout{display:flex;gap:20px;align-items:flex-start}
     .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
-    .applecare{display:flex;gap:10px;align-items:flex-start;margin-top:10px;color:var(--muted);font-size:0.95rem;border-left:3px solid rgba(255,255,255,0.02);padding-left:10px}
-
-    /* toast (undo) */
-    .toast {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      background: var(--toast-bg);
-      color: #fff;
-      padding: 12px 14px;
-      border-radius: 10px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      z-index: 9999;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-      font-weight:600;
-    }
-    .toast button { background:transparent;border:1px solid rgba(255,255,255,0.12); color:#fff; padding:6px 8px; border-radius:8px; cursor:pointer; }
-
-    @media (max-width:960px){
-      .layout{flex-direction:column}
-      .summary{width:100%;margin-left:0}
-      .thumb img{width:100%;height:auto;aspect-ratio:1/1}
-    }
-
-    /* small visually-hidden helper */
-    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-  </style>
-
-  <style id="lixby-glass-style">
-    .glass {
-      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
-      -webkit-backdrop-filter: blur(10px) saturate(120%);
-      backdrop-filter: blur(10px) saturate(120%);
-      box-shadow: 0 6px 26px rgba(2,6,12,0.48);
-      color: inherit;
-    }
-    .btn, .icon-btn {
-      transition: transform .14s cubic-bezier(.2,.9,.3,1), box-shadow .14s ease;
-    }
-    .btn:focus, .icon-btn:focus, button:focus { outline: 3px solid rgba(10,132,255,0.14); outline-offset: 3px; }
+    @media (max-width:960px){ .layout{flex-direction:column} .summary{width:100%;margin-left:0} .thumb img{width:100%;height:auto} }
   </style>
 </head>
 <body>
-  <a class="sr-only" href="#bag" id="skip">Saltar al contenido</a>
-
   <div class="wrap">
-    <header class="simple">
-      <div class="brand" onclick="location.href='index.html'">LIXBY</div>
-      <nav style="color:var(--muted);display:flex;gap:18px">
-        <a href="index.html#productos" style="color:var(--muted);text-decoration:none">Inicio</a>
-        <a href="index.html#productos" style="color:var(--muted);text-decoration:none">Productos</a>
-        <a href="index.html#contacto" style="color:var(--muted);text-decoration:none">Contáctanos</a>
-      </nav>
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;margin-bottom:18px">
+      <div style="font-weight:700;cursor:pointer" onclick="location.href='index.html'">LIXBY</div>
+      <div style="color:var(--muted)">Tu carrito</div>
     </header>
 
     <h1>Tu carrito</h1>
 
-    <div class="top-actions" style="margin-bottom:12px">
-      <div class="left" id="topText" aria-live="polite">Aquí tienes lo que hay en tu bolsa.</div>
-      <div class="right">
-        <button class="btn btn-apple" id="applePayTop">Pagar con Apple Pay</button>
-        <button class="btn btn-primary" id="continueTop">Continuar con el pago</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div id="topText" style="color:var(--muted)">Aquí tienes lo que hay en tu bolsa.</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" id="checkoutDirect">Pagar ahora (Stripe)</button>
         <button class="btn" id="clearCart">Vaciar carrito</button>
       </div>
     </div>
 
-    <div class="layout">
+    <div class="layout" style="margin-top:18px">
       <div style="flex:1">
         <div id="bag" class="bag-list" role="list" aria-label="Elementos de la bolsa"></div>
         <div id="emptyMsg" class="empty" style="display:none;margin-top:12px" aria-hidden="true">
@@ -141,46 +71,109 @@
         <div class="summary-row"><div>Subtotal</div><div id="sub">0,00 €</div></div>
         <div class="summary-row"><div>Envío</div><div id="ship">GRATIS</div></div>
         <div class="summary-row total"><div>Tu total:</div><div id="tot">0,00 €</div></div>
-        <div style="font-size:0.94rem;color:var(--muted);margin-top:8px">Incluye <span id="vat">0,00 €</span> de IVA (21%)</div>
-        <div style="margin-top:12px;display:flex;gap:10px;justify-content:space-between">
-          <button class="btn btn-apple" id="applePayBottom">Pagar con Apple Pay</button>
-          <button class="btn btn-primary" id="continueBottom">Continuar con el pago</button>
-        </div>
+        <div style="font-size:0.94rem;color:var(--muted);margin-top:8px">Incluye IVA si aplica</div>
       </aside>
     </div>
   </div>
 
-  <!-- toast undo -->
-  <div id="undoToast" class="toast" style="display:none" role="status" aria-live="assertive">
-    <div id="undoText">Artículo eliminado</div>
-    <div style="display:flex;gap:8px">
-      <button id="undoBtn">Deshacer</button>
-      <button id="dismissToast" aria-label="Cerrar">✕</button>
-    </div>
-  </div>
+  <!-- inline payment map + helpers (same map as confirmar) -->
+  <script>
+    (function(global){
+      const PAYMENT_MAP = [
+        { product: 'one air', color: 'black', storage: '128', url: 'https://buy.stripe.com/fZu3cufIXcsZ069c0Uffy00' },
+        { product: 'one air', color: 'black', storage: '256', url: 'https://buy.stripe.com/00w4gy0O364BdWZ4ysffy01' },
+        { product: 'one air', color: 'black', storage: '512', url: 'https://buy.stripe.com/4gM3cu7cr0Kh5qt9SMffy02' },
+
+        { product: 'one air', color: 'white', storage: '128', url: 'https://buy.stripe.com/8x2cN454jakRf130icffy03' },
+        { product: 'one air', color: 'white', storage: '256', url: 'https://buy.stripe.com/8x25kC54jdx3dWZaWQffy04' },
+        { product: 'one air', color: 'white', storage: '512', url: 'https://buy.stripe.com/6oU14m68n50xdWZghaffy05' },
+
+        { product: 'one', color: 'blue', storage: '128', url: 'https://buy.stripe.com/dRmeVc8gvcsZ9GJ8OIffy06' },
+        { product: 'one', color: 'blue', storage: '256', url: 'https://buy.stripe.com/14A6oG54jdx3g57fd6ffy07' },
+        { product: 'one', color: 'blue', storage: '512', url: 'https://buy.stripe.com/4gM8wOgN1eB7bOR7KEffy08' },
+        { product: 'one', color: 'blue', storage: '1024', url: 'https://buy.stripe.com/8x27sK54j1Ol6uxfd6ffy09' }
+      ];
+
+      function norm(s){
+        if (!s) return '';
+        return String(s).toLowerCase()
+          .replace(/\u00f1/g,'n')
+          .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u')
+          .replace(/[^a-z0-9 ]/g,' ')
+          .replace(/\s+/g,' ')
+          .trim();
+      }
+
+      function normalizeStorage(s){
+        if (!s) return '';
+        s = String(s).toLowerCase().replace(/\s+/g,'');
+        if (s.match(/1tb|1024/)) return '1024';
+        const m = s.match(/(\d{2,4})/);
+        return m ? m[1] : s.replace(/[^0-9]/g,'');
+      }
+
+      function buildCandidate(item){
+        const parts = [];
+        if (item.sku) parts.push(item.sku);
+        if (item.name) parts.push(item.name);
+        if (item.color) parts.push(item.color);
+        if (item.storage) parts.push(String(item.storage));
+        if (item.description) parts.push(item.description);
+        return norm(parts.join(' '));
+      }
+
+      function matchItem(item){
+        const c = buildCandidate(item);
+        if (!c) return null;
+        for (const r of PAYMENT_MAP){
+          const p = norm(r.product);
+          const col = norm(r.color);
+          const st = normalizeStorage(r.storage);
+          const pm = c.indexOf(p) !== -1;
+          const cm = col ? (c.indexOf(col) !== -1) : true;
+          const sm = st ? (c.indexOf(st) !== -1 || c.indexOf(st + 'gb') !== -1) : true;
+          if (pm && cm && sm) return r.url;
+        }
+        for (const r of PAYMENT_MAP){
+          const p = norm(r.product);
+          const col = norm(r.color);
+          const st = normalizeStorage(r.storage);
+          const pm = c.indexOf(p) !== -1;
+          const cm = col ? (c.indexOf(col) !== -1) : false;
+          const sm = st ? (c.indexOf(st) !== -1) : false;
+          if (pm && (cm || sm)) return r.url;
+        }
+        return null;
+      }
+
+      global.getPaymentLinkForItem = matchItem;
+      global.getPaymentLinkForCart = function(cart){
+        if (!Array.isArray(cart) || cart.length === 0) return null;
+        if (cart.length === 1) return matchItem(cart[0]);
+        const urls = cart.map(i => matchItem(i)).filter(Boolean);
+        if (urls.length === cart.length){
+          const uniq = Array.from(new Set(urls));
+          if (uniq.length === 1) return uniq[0];
+        }
+        return null;
+      };
+      global._LIXBY_PAYMENT_MAP = PAYMENT_MAP;
+    })(window);
+  </script>
 
   <script>
     (function(){
       'use strict';
-      const KEY = 'lixby_cart_v1'; // misma clave que tu script.js
+      const KEY = 'lixby_cart_v1';
       const APPLECARE = 169.00;
       const bag = document.getElementById('bag');
       const subEl = document.getElementById('sub');
       const totEl = document.getElementById('tot');
-      const vatEl = document.getElementById('vat');
       const summaryAside = document.getElementById('summaryAside');
       const emptyMsg = document.getElementById('emptyMsg');
       const topText = document.getElementById('topText');
-      const applePayTop = document.getElementById('applePayTop');
-      const applePayBottom = document.getElementById('applePayBottom');
-      const continueTop = document.getElementById('continueTop');
-      const continueBottom = document.getElementById('continueBottom');
+      const checkoutDirect = document.getElementById('checkoutDirect');
       const clearCartBtn = document.getElementById('clearCart');
-
-      const undoToast = document.getElementById('undoToast');
-      const undoText = document.getElementById('undoText');
-      const undoBtn = document.getElementById('undoBtn');
-      const dismissToast = document.getElementById('dismissToast');
 
       const nf = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
 
@@ -201,293 +194,144 @@
       let cart = [];
       try { cart = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ cart = []; }
 
-      let lastRemoved = null;
-      let undoTimer = null;
-
-      function openToast(text){
-        if (!undoToast) return;
-        undoText.textContent = text || 'Artículo eliminado';
-        undoToast.style.display = 'flex';
-        if (undoTimer) clearTimeout(undoTimer);
-        undoTimer = setTimeout(() => hideToast(), 6000);
-      }
-      function hideToast(){
-        if (!undoToast) return;
-        undoToast.style.display = 'none';
-        lastRemoved = null;
-        if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
-      }
-
-      if (dismissToast) dismissToast.addEventListener('click', hideToast);
-      if (undoBtn) undoBtn.addEventListener('click', () => {
-        if (!lastRemoved) { hideToast(); return; }
-        const { item, idx } = lastRemoved;
-        cart.splice(Math.min(idx, cart.length), 0, item);
-        persist();
-        hideToast();
-        lastRemoved = null;
-        render();
-        focusFirstQtyButton();
-      });
-
-      function persist(){
-        try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e){}
-        try { window.dispatchEvent(new Event('cartUpdated')); } catch(e){}
-      }
-
-      function saveAndRerender(){
-        persist();
-        render();
-      }
-
-      function focusFirstQtyButton(){
-        if (!bag) return;
-        const btn = bag.querySelector('.qty button');
-        if (btn) btn.focus();
-      }
+      function persist(){ try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e){} }
 
       function render(){
-        if (!bag) return;
         bag.innerHTML = '';
         if (!cart || cart.length === 0) {
-          if (summaryAside) summaryAside.style.display = 'none';
-          if (emptyMsg) { emptyMsg.style.display = 'block'; emptyMsg.setAttribute('aria-hidden','false'); }
-          if (topText) topText.textContent = 'Tu bolsa está vacía.';
-          disablePaymentButtons(true);
+          summaryAside.style.display = 'none';
+          emptyMsg.style.display = 'block';
+          topText.textContent = 'Tu bolsa está vacía.';
+          checkoutDirect.disabled = true;
           return;
         }
-        if (emptyMsg) { emptyMsg.style.display = 'none'; emptyMsg.setAttribute('aria-hidden','true'); }
-        if (summaryAside) summaryAside.style.display = 'block';
-        disablePaymentButtons(false);
-
+        emptyMsg.style.display = 'none';
+        summaryAside.style.display = 'block';
+        checkoutDirect.disabled = false;
         let subtotal = 0;
-        const frag = document.createDocumentFragment();
-
         cart.forEach((it, idx) => {
           const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseValue(it.price);
           const qty = Number(it.qty || 1);
-          const hasAC = !!it.appleCare;
-          const addon = hasAC ? APPLECARE : 0;
-          const line = (price + addon) * qty;
+          const add = it.appleCare ? APPLECARE : 0;
+          const line = (price + add) * qty;
           subtotal += line;
 
           const item = document.createElement('div');
           item.className = 'item';
-          item.setAttribute('role','listitem');
-
-          // Use escaped values when injecting into attributes/text nodes
-          const imgSrc = escapeHtml(it.image || 'https://via.placeholder.com/400');
-          const title = escapeHtml(it.name || 'Producto');
-          const desc = escapeHtml(it.description || '');
-
+          const img = encodeURI(it.image || 'https://via.placeholder.com/400');
+          const title = (it.name || 'Producto');
+          const desc = (it.description || '');
           item.innerHTML = `
-            <div class="thumb"><img src="${imgSrc}" alt="${title}"></div>
+            <div class="thumb"><img src="${img}" alt="${title}"></div>
             <div class="info">
               <div class="title">${title}</div>
               <div class="mini">${desc}</div>
 
-              <div class="applecare">
-                <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer">
-                  <input type="checkbox" data-idx="${idx}" class="acbox" ${hasAC ? 'checked' : ''} aria-label="Añadir AppleCare para ${title}">
-                  <div>
-                    <div style="font-weight:700">Añadir AppleCare+ — ${fmt(APPLECARE)}</div>
-                    <div style="color:var(--muted);margin-top:6px;font-size:0.95rem">Protección por daños accidentales y prioridad en reparación.</div>
-                  </div>
-                </label>
-              </div>
-
               <div class="meta">
-                <div class="qty" data-idx="${idx}" role="group" aria-label="Control de cantidad para ${title}">
-                  <button aria-label="Disminuir cantidad" data-action="dec">−</button>
-                  <span class="qval" aria-live="polite" tabindex="0">${qty}</span>
-                  <button aria-label="Aumentar cantidad" data-action="inc">+</button>
+                <div class="qty" data-idx="${idx}" role="group" aria-label="Control de cantidad">
+                  <button data-action="dec" aria-label="Disminuir">−</button>
+                  <span class="qval" tabindex="0">${qty}</span>
+                  <button data-action="inc" aria-label="Aumentar">+</button>
                 </div>
-                <button class="remove" data-idx="${idx}" aria-label="Eliminar ${title}">Eliminar</button>
+                <label style="margin-left:8px">
+                  <input type="checkbox" class="acbox" data-idx="${idx}" ${(it.appleCare ? 'checked' : '')}> AppleCare
+                </label>
+                <button class="remove" data-idx="${idx}" style="margin-left:8px">Eliminar</button>
               </div>
             </div>
             <div class="price">${fmt(line)}</div>
           `;
-          frag.appendChild(item);
+          bag.appendChild(item);
         });
 
-        bag.appendChild(frag);
+        const total = subtotal;
+        subEl.textContent = fmt(subtotal);
+        totEl.textContent = fmt(total);
+        topText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
 
-        const shipping = 0;
-        const total = subtotal + shipping;
-        const vatRate = 0.21;
-        const vatAmount = Math.round((total - total / (1 + vatRate)) * 100) / 100;
-
-        if (subEl) subEl.textContent = fmt(subtotal);
-        if (totEl) totEl.textContent = fmt(total);
-        if (vatEl) vatEl.textContent = fmt(vatAmount);
-        if (topText) topText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
-
-        // attach events safely
-        (bag.querySelectorAll('.qty') || []).forEach(q => {
+        // attach events
+        bag.querySelectorAll('.qty').forEach(q => {
           const idx = Number(q.getAttribute('data-idx'));
           const inc = q.querySelector('[data-action="inc"]');
           const dec = q.querySelector('[data-action="dec"]');
           const qval = q.querySelector('.qval');
-
-          if (inc) inc.addEventListener('click', () => {
-            try { cart[idx].qty = (Number(cart[idx].qty || 1) + 1); if (qval) qval.textContent = cart[idx].qty; saveAndRerender(); } catch(e){ console.warn(e); }
-          });
-          if (dec) dec.addEventListener('click', () => {
-            try { const current = Math.max(1, Number(cart[idx].qty || 1) - 1); cart[idx].qty = current; if (qval) qval.textContent = current; saveAndRerender(); } catch(e){ console.warn(e); }
-          });
-          if (qval) {
-            qval.addEventListener('keydown', (ev) => {
-              if (ev.key === 'ArrowUp') { ev.preventDefault(); inc && inc.click(); }
-              if (ev.key === 'ArrowDown') { ev.preventDefault(); dec && dec.click(); }
-            });
-          }
+          inc && inc.addEventListener('click', ()=> { cart[idx].qty = (Number(cart[idx].qty || 1) + 1); persist(); render(); });
+          dec && dec.addEventListener('click', ()=> { cart[idx].qty = Math.max(1, Number(cart[idx].qty || 1) - 1); persist(); render(); });
         });
 
-        (bag.querySelectorAll('.remove') || []).forEach(b => {
-          b.addEventListener('click', () => {
-            try {
-              const idx = Number(b.getAttribute('data-idx'));
-              lastRemoved = { item: cart[idx], idx };
-              cart.splice(idx,1);
-              persist();
-              render();
-              openToast(`Eliminado: ${(lastRemoved && lastRemoved.item && lastRemoved.item.name) ? lastRemoved.item.name : 'Artículo'}`);
-            } catch(e){ console.warn(e); }
+        bag.querySelectorAll('.remove').forEach(b => {
+          b.addEventListener('click', ()=> {
+            const idx = Number(b.getAttribute('data-idx'));
+            if (!confirm('Eliminar este artículo?')) return;
+            cart.splice(idx,1);
+            persist();
+            render();
           });
         });
 
-        (bag.querySelectorAll('.acbox') || []).forEach(cb => {
+        bag.querySelectorAll('.acbox').forEach(cb => {
           cb.addEventListener('change', (e) => {
-            try {
-              const idx = Number(cb.getAttribute('data-idx'));
-              cart[idx].appleCare = !!e.target.checked;
-              saveAndRerender();
-            } catch(e){ console.warn(e); }
+            const idx = Number(cb.getAttribute('data-idx'));
+            cart[idx].appleCare = !!e.target.checked;
+            persist();
+            render();
           });
         });
-      }
 
-      function escapeHtml(str){
-        if (!str && str !== 0) return '';
-        return String(str).replace(/[&<>"]/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
-      }
+      } // render end
 
-      function paySim(method){
+      // checkout direct handler
+      checkoutDirect.addEventListener('click', () => {
         if (!cart || cart.length === 0) { alert('Tu carrito está vacío'); return; }
-        let total = 0;
-        cart.forEach(it => {
-          const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseValue(it.price);
-          const qty = Number(it.qty || 1);
-          const add = it.appleCare ? APPLECARE : 0;
-          total += (price + add) * qty;
-        });
-        alert(method + ' — Simulación. Total: ' + fmt(total));
-      }
-      if (applePayTop) applePayTop.addEventListener('click', ()=> paySim('Apple Pay'));
-      if (applePayBottom) applePayBottom.addEventListener('click', ()=> paySim('Apple Pay'));
-      if (continueTop) continueTop.addEventListener('click', ()=> location.href = 'confirmar-pedido.html');
-      if (continueBottom) continueBottom.addEventListener('click', ()=> location.href = 'confirmar-pedido.html');
+        // try to use order in localStorage to get email
+        let savedOrder = null;
+        try { savedOrder = JSON.parse(localStorage.getItem('lixby_order') || 'null'); } catch(e){ savedOrder = null; }
 
+        // 1. try to get single URL for full cart
+        let url = null;
+        try { url = window.getPaymentLinkForCart ? window.getPaymentLinkForCart(cart) : null; } catch(e){ url = null; }
 
-      if (clearCartBtn) clearCartBtn.addEventListener('click', () => {
-        if (!cart || cart.length === 0) return;
-        if (!confirm('Vaciar el carrito? Esta acción no se puede deshacer.')) return;
-        cart = [];
-        persist();
-        render();
-        setTimeout(()=> setStatus('Carrito vaciado'), 200);
-      });
+        // 2. fallback: use first item url
+        if (!url) {
+          url = (window.getPaymentLinkForItem && cart[0]) ? window.getPaymentLinkForItem(cart[0]) : null;
+        }
 
-      function disablePaymentButtons(disabled){
-        [applePayTop, applePayBottom, continueTop, continueBottom].forEach(b => { if (b) b.disabled = !!disabled; });
-      }
+        if (url) {
+          const email = savedOrder?.shipping?.email || '';
+          const final = url + (email ? `?prefilled_email=${encodeURIComponent(email)}` : '');
+          // save minimal order for success/backoffice
+          try { localStorage.setItem('lixby_order', JSON.stringify({ items: cart, shipping: savedOrder?.shipping || {} })); } catch(e){}
+          window.location.href = final;
+          return;
+        }
 
-      window.addEventListener('storage', (ev)=>{
-        if (ev.key === KEY) {
-          try { cart = JSON.parse(ev.newValue) || []; } catch(e){ cart = []; }
-          render();
+        // last fallback: ask user
+        if (confirm('No existe un enlace automático para este carrito. ¿Quieres ir al enlace general de pago?')) {
+          const fallback = (window._LIXBY_PAYMENT_MAP && window._LIXBY_PAYMENT_MAP[0] && window._LIXBY_PAYMENT_MAP[0].url) || '';
+          if (!fallback) { alert('No hay enlaces configurados. Contacta con soporte.'); return; }
+          const email = savedOrder?.shipping?.email || '';
+          try { localStorage.setItem('lixby_order', JSON.stringify({ items: cart, shipping: savedOrder?.shipping || {} })); } catch(e){}
+          window.location.href = fallback + (email ? `?prefilled_email=${encodeURIComponent(email)}` : '');
         }
       });
 
-      function setStatus(msg){
-        try {
-          if (topText) topText.textContent = msg;
-          setTimeout(()=> {
-            if (!cart || cart.length === 0) {
-              if (topText) topText.textContent = 'Tu bolsa está vacía.';
-            } else {
-              const total = cart.reduce((s,it)=> s + ((parseValue(it.priceNum||it.price) + (it.appleCare? APPLECARE:0)) * (it.qty||1)), 0);
-              if (topText) topText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
-            }
-          }, 2500);
-        } catch(e){}
-      }
+      clearCartBtn.addEventListener('click', ()=> {
+        if (!cart || cart.length === 0) return;
+        if (!confirm('Vaciar el carrito?')) return;
+        cart = [];
+        persist();
+        render();
+      });
 
+      // init
       render();
-      focusFirstQtyButton();
 
+      // expose for debugging
       window.__LIXBY_CART = {
         get: () => JSON.parse(JSON.stringify(cart || [])),
         clear: () => { cart = []; persist(); render(); }
       };
-
     })();
-  </script>
-
-  <script>
-  (function(){
-    'use strict';
-    // keyboard for qval
-    document.addEventListener('keydown', (ev) => {
-      const el = document.activeElement;
-      if (!el) return;
-      if (el.classList && el.classList.contains('qval')) {
-        if (ev.key === 'ArrowUp') {
-          ev.preventDefault();
-          const inc = el.parentElement && el.parentElement.querySelector('[data-action="inc"]');
-          inc && inc.click();
-        } else if (ev.key === 'ArrowDown') {
-          ev.preventDefault();
-          const dec = el.parentElement && el.parentElement.querySelector('[data-action="dec"]');
-          dec && dec.click();
-        }
-      }
-    });
-
-    const bag = document.getElementById('bag');
-    if (bag) {
-      const qObserver = new MutationObserver((muts) => {
-        muts.forEach(m => {
-          m.addedNodes.forEach(n => {
-            if (n.nodeType !== 1) return;
-            n.querySelectorAll && n.querySelectorAll('.qval').forEach(s => s.setAttribute('tabindex','0'));
-            n.querySelectorAll && n.querySelectorAll('.qty button').forEach(btn => {
-              btn.addEventListener('keyup', (ev) => { if (ev.key === 'Enter') btn.click(); });
-            });
-          });
-        });
-      });
-      qObserver.observe(bag, { childList:true, subtree:true });
-      document.querySelectorAll('.qval').forEach(s => s.setAttribute('tabindex','0'));
-    }
-
-    const undoToast = document.getElementById('undoToast');
-    const undoBtn = document.getElementById('undoBtn');
-    const dismissToast = document.getElementById('dismissToast');
-    if (undoToast) {
-      const tObs = new MutationObserver(() => {
-        const shown = undoToast.style.display !== 'none' && undoToast.style.display !== '';
-        if (shown) {
-          const txt = document.getElementById('undoText')?.textContent || 'Artículo eliminado';
-          const announcements = document.getElementById('topText');
-          if (announcements) announcements.textContent = txt;
-          try { undoBtn && undoBtn.focus(); } catch(e){}
-        }
-      });
-      tObs.observe(undoToast, { attributes: true, attributeFilter: ['style'] });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && undoToast.style.display !== 'none') { dismissToast && dismissToast.click(); } });
-    }
-  })();
   </script>
 </body>
 </html>
