@@ -20,22 +20,22 @@
     .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
     .btn-primary{background:var(--accent);color:#00121a}
     .bag-list{margin-top:20px}
-    .item{display:flex;gap:16px;padding:18px;border-radius:12px;margin-bottom:14px;background:var(--panel);border:1px solid rgba(255,255,255,0.02);align-items:flex-start}
+    .item{display:flex;gap:16px;padding:18px;border-radius:12px;margin-bottom:14px;background:var(--panel);border:1px solid rgba(255,255,255,0.2);align-items:flex-start}
     .thumb img{width:120px;height:120px;object-fit:cover;border-radius:10px}
     .info{flex:1;min-width:0}
     .title{font-weight:700;margin:0 0 6px}
     .mini{color:var(--muted);margin-bottom:8px}
     .meta{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
-    .qty{display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,0.04);border-radius:8px;overflow:hidden}
+    .qty{display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,0.2);border-radius:8px;overflow:hidden}
     .qty button{background:transparent;border:0;padding:6px 10px;cursor:pointer;color:var(--text)}
     .qty span{padding:6px 10px;min-width:36px;text-align:center}
     .remove{background:transparent;border:0;color:#ff6b6b;cursor:pointer}
     .price{flex:0 0 160px;text-align:right;font-weight:700}
-    .summary{width:360px;flex:0 0 360px;margin-left:20px;background:var(--panel);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+    .summary{width:360px;flex:0 0 360px;margin-left:20px;background:var(--panel);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.2)}
     .summary-row{display:flex;justify-content:space-between;padding:8px 0;color:var(--muted)}
     .summary-row.total{font-weight:700;color:var(--text);font-size:1.05rem}
     .layout{display:flex;gap:20px;align-items:flex-start}
-    .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+    .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border-radius:12px;border:1px solid rgba(255,255,255,0.2)}
     @media (max-width:960px){ .layout{flex-direction:column} .summary{width:100%;margin-left:0} .thumb img{width:100%;height:auto} }
   </style>
 </head>
@@ -51,7 +51,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div id="topText" style="color:var(--muted)">Aquí tienes lo que hay en tu bolsa.</div>
       <div style="display:flex;gap:10px">
-        <button class="btn btn-primary" id="checkoutDirect">Pagar ahora (Stripe)</button>
+        <button class="btn btn-primary" id="checkoutDirect">Pagar ahora</button>
         <button class="btn" id="clearCart">Vaciar carrito</button>
       </div>
     </div>
@@ -70,7 +70,7 @@
         <div style="font-weight:700;margin-bottom:6px">Resumen</div>
         <div class="summary-row"><div>Subtotal</div><div id="sub">0,00 €</div></div>
         <div class="summary-row"><div>Envío</div><div id="ship">GRATIS</div></div>
-        <div class="summary-row total"><div>Tu total:</div><div id="tot">0,00 €</div></div>
+        <div class="summary-row total"><div>Tu total:</div><div id="tot">0,00 € (Depende del país)</div></div>
         <div style="font-size:0.94rem;color:var(--muted);margin-top:8px">Incluye IVA si aplica</div>
       </aside>
     </div>
@@ -134,15 +134,6 @@
           const sm = st ? (c.indexOf(st) !== -1 || c.indexOf(st + 'gb') !== -1) : true;
           if (pm && cm && sm) return r.url;
         }
-        for (const r of PAYMENT_MAP){
-          const p = norm(r.product);
-          const col = norm(r.color);
-          const st = normalizeStorage(r.storage);
-          const pm = c.indexOf(p) !== -1;
-          const cm = col ? (c.indexOf(col) !== -1) : false;
-          const sm = st ? (c.indexOf(st) !== -1) : false;
-          if (pm && (cm || sm)) return r.url;
-        }
         return null;
       }
 
@@ -165,7 +156,6 @@
     (function(){
       'use strict';
       const KEY = 'lixby_cart_v1';
-      const APPLECARE = 169.00;
       const bag = document.getElementById('bag');
       const subEl = document.getElementById('sub');
       const totEl = document.getElementById('tot');
@@ -212,8 +202,7 @@
         cart.forEach((it, idx) => {
           const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseValue(it.price);
           const qty = Number(it.qty || 1);
-          const add = it.appleCare ? APPLECARE : 0;
-          const line = (price + add) * qty;
+          const line = price * qty;
           subtotal += line;
 
           const item = document.createElement('div');
@@ -233,9 +222,6 @@
                   <span class="qval" tabindex="0">${qty}</span>
                   <button data-action="inc" aria-label="Aumentar">+</button>
                 </div>
-                <label style="margin-left:8px">
-                  <input type="checkbox" class="acbox" data-idx="${idx}" ${(it.appleCare ? 'checked' : '')}> AppleCare
-                </label>
                 <button class="remove" data-idx="${idx}" style="margin-left:8px">Eliminar</button>
               </div>
             </div>
@@ -246,7 +232,7 @@
 
         const total = subtotal;
         subEl.textContent = fmt(subtotal);
-        totEl.textContent = fmt(total);
+        totEl.textContent = fmt(total) + ' (Depende del país)';
         topText.textContent = 'El total de tu bolsa es de ' + fmt(total) + '.';
 
         // attach events
@@ -254,7 +240,6 @@
           const idx = Number(q.getAttribute('data-idx'));
           const inc = q.querySelector('[data-action="inc"]');
           const dec = q.querySelector('[data-action="dec"]');
-          const qval = q.querySelector('.qval');
           inc && inc.addEventListener('click', ()=> { cart[idx].qty = (Number(cart[idx].qty || 1) + 1); persist(); render(); });
           dec && dec.addEventListener('click', ()=> { cart[idx].qty = Math.max(1, Number(cart[idx].qty || 1) - 1); persist(); render(); });
         });
@@ -269,49 +254,28 @@
           });
         });
 
-        bag.querySelectorAll('.acbox').forEach(cb => {
-          cb.addEventListener('change', (e) => {
-            const idx = Number(cb.getAttribute('data-idx'));
-            cart[idx].appleCare = !!e.target.checked;
-            persist();
-            render();
-          });
-        });
-
       } // render end
 
       // checkout direct handler
       checkoutDirect.addEventListener('click', () => {
         if (!cart || cart.length === 0) { alert('Tu carrito está vacío'); return; }
-        // try to use order in localStorage to get email
-        let savedOrder = null;
-        try { savedOrder = JSON.parse(localStorage.getItem('lixby_order') || 'null'); } catch(e){ savedOrder = null; }
 
-        // 1. try to get single URL for full cart
-        let url = null;
-        try { url = window.getPaymentLinkForCart ? window.getPaymentLinkForCart(cart) : null; } catch(e){ url = null; }
-
-        // 2. fallback: use first item url
-        if (!url) {
-          url = (window.getPaymentLinkForItem && cart[0]) ? window.getPaymentLinkForItem(cart[0]) : null;
-        }
-
-        if (url) {
-          const email = savedOrder?.shipping?.email || '';
-          const final = url + (email ? `?prefilled_email=${encodeURIComponent(email)}` : '');
-          // save minimal order for success/backoffice
-          try { localStorage.setItem('lixby_order', JSON.stringify({ items: cart, shipping: savedOrder?.shipping || {} })); } catch(e){}
-          window.location.href = final;
+        if (cart.length > 1) {
+          alert('Actualmente solo se puede pagar un producto por compra. Por favor compra cada modelo por separado.');
           return;
         }
 
-        // last fallback: ask user
-        if (confirm('No existe un enlace automático para este carrito. ¿Quieres ir al enlace general de pago?')) {
-          const fallback = (window._LIXBY_PAYMENT_MAP && window._LIXBY_PAYMENT_MAP[0] && window._LIXBY_PAYMENT_MAP[0].url) || '';
-          if (!fallback) { alert('No hay enlaces configurados. Contacta con soporte.'); return; }
+        let savedOrder = null;
+        try { savedOrder = JSON.parse(localStorage.getItem('lixby_order') || 'null'); } catch(e){ savedOrder = null; }
+
+        let url = window.getPaymentLinkForItem(cart[0]);
+        if (url) {
           const email = savedOrder?.shipping?.email || '';
+          const final = url + (email ? `?prefilled_email=${encodeURIComponent(email)}` : '');
           try { localStorage.setItem('lixby_order', JSON.stringify({ items: cart, shipping: savedOrder?.shipping || {} })); } catch(e){}
-          window.location.href = fallback + (email ? `?prefilled_email=${encodeURIComponent(email)}` : '');
+          window.location.href = final;
+        } else {
+          alert('No existe un enlace automático para este producto. Contacta con soporte.');
         }
       });
 
@@ -326,11 +290,6 @@
       // init
       render();
 
-      // expose for debugging
-      window.__LIXBY_CART = {
-        get: () => JSON.parse(JSON.stringify(cart || [])),
-        clear: () => { cart = []; persist(); render(); }
-      };
     })();
   </script>
 </body>
