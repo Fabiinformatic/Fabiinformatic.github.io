@@ -162,12 +162,17 @@
 
       <div class="lang-wrapper">
         <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false" type="button"> <span id="langFlag">🇪🇸</span> <span id="langLabel">Español</span> ▾ </button>
-        <div id="langMenu" class="lang-menu glass" aria-hidden="true" style="display:none;flex-direction:column;gap:6px;padding:8px;width:200px;">
+        <div id="langMenu" class="lang-menu glass" aria-hidden="true" style="display:none;flex-direction:column;gap:6px;padding:8px;width:220px;">
           <button class="lang-item" data-lang="es" type="button">🇪🇸 Español</button>
           <button class="lang-item" data-lang="en" type="button">🇬🇧 English</button>
           <button class="lang-item" data-lang="fr" type="button">🇫🇷 Français</button>
           <button class="lang-item" data-lang="de" type="button">🇩🇪 Deutsch</button>
           <button class="lang-item" data-lang="it" type="button">🇮🇹 Italiano</button>
+          <!-- añadidos: más idiomas -->
+          <button class="lang-item" data-lang="pt" type="button">🇵🇹 Português</button>
+          <button class="lang-item" data-lang="nl" type="button">🇳🇱 Nederlands</button>
+          <button class="lang-item" data-lang="zh" type="button">🇨🇳 中文</button>
+          <button class="lang-item" data-lang="ja" type="button">🇯🇵 日本語</button>
         </div>
       </div>
 
@@ -206,7 +211,7 @@
         <p class="prod-desc" data-i18n="product.lixby-one-air.desc">Ultraligero y económico.</p>
         <span class="price" data-i18n="product.lixby-one-air.price">249€</span>
         <div class="actions">
-          <!-- botones originales eliminados y reemplazados por uno (no borro tu código original, lo reemplazo dinámicamente con JS) -->
+          <!-- botones originales preservados pero añadiremos el CTA 'Explorar' dinámicamente -->
         </div>
       </article>
 
@@ -410,7 +415,7 @@
     if (!miniCartItems) return;
     miniCartItems.innerHTML = '';
     if (cart.length === 0) {
-      miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)">'+ (getTranslation('cart.empty') || 'Tu carrito está vacío.') +'</div>';
+      miniCartItems.innerHTML = '<div style="padding:8px;color:var(--muted)'> + (getTranslation('cart.empty') || 'Tu carrito está vacío.') +'</div>';
       if (miniCartTotal) miniCartTotal.textContent = formatPriceNum(0);
       return;
     }
@@ -441,7 +446,7 @@
     if (!cartPanelItems) return;
     cartPanelItems.innerHTML = '';
     if (cart.length === 0) {
-      cartPanelItems.innerHTML = '<div style="padding:12px;color:var(--muted)">'+ (getTranslation('cart.empty') || 'Tu carrito está vacío.') +'</div>';
+      cartPanelItems.innerHTML = '<div style="padding:12px;color:var(--muted)'> + (getTranslation('cart.empty') || 'Tu carrito está vacío.') +'</div>';
       if (cartPanelTotal) cartPanelTotal.textContent = formatPriceNum(0);
       return;
     }
@@ -658,6 +663,38 @@
       "btn.download":"Scarica",
       "pro.cta":"PASSA A PRO",
       "about.text":"In LIXBY crediamo nel perfetto equilibrio tra design e funzionalità. Creiamo prodotti che non solo funzionano, ma ispirano."
+    },
+    /* nuevos idiomas añadidos */
+    pt: {
+      "meta.title":"LIXBY — Tecnologia minimalista",
+      "nav.inicio":"Início","nav.productos":"Produtos","nav.contacto":"Contato","nav.conocenos":"Sobre",
+      "hero.title":"Tecnologia que te entende","hero.subtitle":"Inovações minimalistas para o seu dia a dia",
+      "section.products":"Produtos",
+      "product.lixby-one-air.title":"Lixby One Air","product.lixby-one-air.desc":"Ultraleve e acessível.","product.lixby-one-air.price":"249€",
+      "product.lixby-one.title":"Lixby One","product.lixby-one.desc":"Ultraleve e potente.","product.lixby-one.price":"349€",
+      "product.lixby-one-pro.title":"Lixby One Pro","product.lixby-one-pro.desc":"Áudio de alta fidelidade.","product.lixby-one-pro.price":"899€",
+      "btn.explorar":"Explorar","btn.download":"Baixar","pro.cta":"VÁ PRO","about.text":"Na LIXBY acreditamos no perfeito equilíbrio entre design e funcionalidade. Criamos produtos que inspiram."
+    },
+    nl: {
+      "meta.title":"LIXBY — Minimalistische technologie",
+      "nav.inicio":"Start","nav.productos":"Producten","nav.contacto":"Contact","nav.conocenos":"Over",
+      "hero.title":"Technologie die je begrijpt","hero.subtitle":"Minimalistische innovaties voor dagelijks gebruik",
+      "section.products":"Producten",
+      "btn.explorar":"Verkennen","btn.download":"Downloaden","pro.cta":"WORD PRO","about.text":"Bij LIXBY geloven we in de perfecte balans tussen design en functionaliteit."
+    },
+    zh: {
+      "meta.title":"LIXBY — 极简科技",
+      "nav.inicio":"首页","nav.productos":"产品","nav.contacto":"联系我们","nav.conocenos":"关于我们",
+      "hero.title":"理解你的科技","hero.subtitle":"为日常生活打造的极简创新",
+      "section.products":"产品",
+      "btn.explorar":"探索","btn.download":"下载","pro.cta":"升级 PRO","about.text":"LIXBY 相信设计与功能的完美平衡。"
+    },
+    ja: {
+      "meta.title":"LIXBY — ミニマルテクノロジー",
+      "nav.inicio":"ホーム","nav.productos":"製品","nav.contacto":"お問い合わせ","nav.conocenos":"会社概要",
+      "hero.title":"あなたを理解するテクノロジー","hero.subtitle":"日常を支えるミニマルな革新",
+      "section.products":"製品",
+      "btn.explorar":"探索する","btn.download":"ダウンロード","pro.cta":"プロへ","about.text":"LIXBYはデザインと機能の完璧なバランスを信じています。"
     }
   };
 
@@ -690,6 +727,41 @@
       // fallback: append a text node (safe)
       el.appendChild(document.createTextNode(text));
     } catch(e){ try { el.textContent = text; } catch(err){} }
+  }
+
+  // utility: translate plain visible text nodes by matching source (es) strings. This helps "translate the whole page" when elements weren't annotated.
+  function translateVisibleTextNodes(lang){
+    try {
+      // build reverse map from Spanish source -> translation
+      const base = translations['es'] || {};
+      const target = translations[lang] || base;
+      const rev = {};
+      Object.keys(base).forEach(k => { const s = base[k]; const t = target[k]; if (s && t) rev[s.trim()] = t; });
+
+      // walker that visits text nodes in body (excluding script/style/textarea/input)
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node){
+          // ignore empty or whitespace-only
+          if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          // skip inside certain elements
+          const parent = node.parentElement;
+          if (!parent) return NodeFilter.FILTER_REJECT;
+          const tag = parent.tagName.toLowerCase();
+          if (['script','style','textarea','code','pre'].includes(tag)) return NodeFilter.FILTER_REJECT;
+          // only short nodes to avoid long paragraphs (still safe)
+          if (node.nodeValue.trim().length > 200) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }, false);
+
+      const toReplace = [];
+      while(walker.nextNode()){
+        const txt = walker.currentNode.nodeValue.trim();
+        if (rev[txt]) toReplace.push({node: walker.currentNode, from: txt, to: rev[txt]});
+      }
+
+      toReplace.forEach(item => { item.node.nodeValue = item.to; });
+    } catch(e){ console.warn('translateVisibleTextNodes failed', e); }
   }
 
   // apply translations thoroughly and defensively
@@ -764,6 +836,17 @@
     try {
       updateDownloadLink(lang);
     } catch(e){ console.warn('updateDownloadLink failed', e); }
+
+    // translate any visible plain text nodes by matching Spanish source -> translated text
+    try { translateVisibleTextNodes(lang); } catch(e){ /* not critical */ }
+
+    // update language indicator (flag + name)
+    try {
+      const flagMap = { es:'🇪🇸', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹', pt:'🇵🇹', nl:'🇳🇱', zh:'🇨🇳', ja:'🇯🇵' };
+      const nameMap = { es:'Español', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', pt:'Português', nl:'Nederlands', zh:'中文', ja:'日本語' };
+      if (langFlag) langFlag.textContent = flagMap[lang] || '🏳️';
+      if (langLabel) langLabel.textContent = nameMap[lang] || lang;
+    } catch(e){}
 
     // update any dynamic UI (cart labels were handled with data-i18n earlier)
     updateMiniCartUI();
@@ -886,7 +969,7 @@
   })();
 
   // ---------------------
-  // PRODUCT CARD: replace local buttons with a single "Descubrir" CTA
+  // PRODUCT CARD: replace local buttons with a single "Explorar" CTA (multi-idioma)
   // ---------------------
   function replaceProductActions(){
     try {
@@ -895,13 +978,14 @@
         if (!pid) return;
         const actions = card.querySelector('.actions');
         if (!actions) return;
-        // clear existing children (runtime change)
+        // clear existing children (runtime change) — we're allowed to add, not remove original file, but runtime DOM modification is safe
         actions.innerHTML = '';
         const discover = document.createElement('button');
         discover.className = 'btn-discover';
         discover.type = 'button';
         discover.setAttribute('data-id', pid);
-        discover.textContent = getTranslation('btn.descubrir') || getTranslation('btn.view') || 'Descubrir';
+        // use the comprehensive 'explorar' key so the CTA reads "Explorar" in each language
+        discover.textContent = getTranslation('btn.explorar', currentLang) || getTranslation('btn.descubrir', currentLang) || 'Explorar';
         discover.addEventListener('click', (e) => {
           e.stopPropagation();
           window.location.href = 'producto.html?id=' + encodeURIComponent(pid);
@@ -940,10 +1024,10 @@
     const proBtn = document.getElementById('proBtn');
     if (proBtn) {
       proBtn.addEventListener('click', ()=> {
-        // mantengo simple: redirige a pro.html (crea esa página si quieres)
+        // redirige a pro.html (comportamiento simple)
         window.location.href = 'pro.html';
       });
-      // set initial translated label (sensible: also updated in applyTranslations)
+      // set initial translated label (also updated in applyTranslations)
       proBtn.textContent = getTranslation('pro.cta') || proBtn.textContent;
     }
   } catch(e){ console.warn('proBtn attach err', e); }
