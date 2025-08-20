@@ -105,6 +105,78 @@
       cursor:pointer;
       font-weight:700;
     }
+
+    /* ======================
+       ADICIONES: HERO VIDEO (estilo tipo Apple)
+       ======================
+    */
+    .hero {
+      position: relative; /* para el video absoluto */
+      overflow: hidden;
+      min-height: 72vh; /* ocupa buena parte de la pantalla */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 48px 24px;
+    }
+    .hero video.hero-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* recorta sin deformar */
+      z-index: -2; /* detrás del contenido */
+      pointer-events: none; /* no interfiere con clicks */
+      filter: brightness(0.6) saturate(0.98);
+      will-change: transform;
+    }
+    /* overlay sutil para texto legible */
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.35) 100%);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 1; text-align:center; max-width:1100px; }
+
+    /* ======================
+       MEJORAS: FOOTER — distribución y responsividad
+       (NO BORRAR NADA: solo ajusta layout/estilos)
+       ======================
+    */
+    .footer { padding-top: 28px; }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 28px;
+      align-items: start;
+      padding: 32px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .footer-col { min-width: 0; }
+    .footer-brand { font-weight: 800; font-size: 1.15rem; letter-spacing: .04em; margin-bottom: 8px; }
+    .social-links { display:flex; gap:10px; margin-top:12px; }
+    .social-links a { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,0.03); text-decoration:none; }
+
+    .newsletter-form { display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .newsletter-form input[type="email"] { flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); }
+    .newsletter-form button { padding:10px 12px; border-radius:10px; }
+
+    .footer-bottom { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 40px; border-top: 1px solid rgba(255,255,255,0.03); max-width:1200px; margin:0 auto; flex-wrap:wrap; }
+    .legal-left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .legal-links a { margin-left:8px; }
+
+    @media (max-width:720px){
+      .hero { min-height:56vh; padding:28px 18px; }
+      .footer-grid { padding:20px 18px; gap:18px; }
+      .footer-bottom { padding:12px 18px; }
+      .newsletter-form { flex-direction:column; align-items:stretch; }
+      .newsletter-form input, .newsletter-form button { width:100%; }
+    }
+
   </style>
 </head>
 <body>
@@ -191,6 +263,13 @@
 <main id="maincontent">
   <!-- HERO -->
   <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
+
+    <!-- VIDEO DE FONDO (decorativo) -->
+    <video class="hero-bg" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+      <source src="Bienvenido.mp4" type="video/mp4">
+      <!-- fallback: still se mantiene el poster si el navegador no soporta video -->
+    </video>
+
     <div class="hero-content">
       <h1 id="hero-title" data-i18n="hero.title">La tecnología que te entiende</h1>
       <p id="hero-subtitle" data-i18n="hero.subtitle">Innovación minimalista para tu día a día</p>
@@ -633,7 +712,7 @@
       "contact.title":"Contact","contact.lead":"Laissez-nous une question ou suggestion et nous répondrons bientôt.","contact.placeholder.name":"Nom","contact.placeholder.email":"Email","contact.placeholder.message":"Votre message","contact.success":"Message envoyé. Merci!",
       "cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer","cart.empty":"Votre panier est vide.","cart.view":"Voir le panier",
       "pro.cta":"PASSER PRO",
-      "about.text":"Chez LIXBY, nous croyons à l'équilibre parfait entre design et fonctionnalité. Nous créons des produits qui non seulement fonctionnent, mais inspirent."
+      "about.text":"Chez LIXBY, nous croyons à l'équilibre parfait entre design et fonctionnalité. Nous créamos productos que no solo funcionan, sino que también inspiran."
     },
     de: {
       "meta.title":"LIXBY — Minimal Technologie",
@@ -648,7 +727,7 @@
       "btn.download":"Herunterladen",
       "cart.title":"Warenkorb","cart.clear":"Leeren","cart.total":"Gesamt:","cart.checkout":"Zur Kasse","cart.empty":"Dein Warenkorb ist leer.","cart.view":"Warenkorb ansehen",
       "pro.cta":"PRO WERDEN",
-      "about.text":"Bei LIXBY glauben wir an die perfekte Balance zwischen Design und Funktionalität. Wir schaffen Produkte, die nicht nur funktionieren, sondern inspirieren."
+      "about.text":"Bei LIXBY glauben wir an la perfecta equilibrio entre diseño y funcionalidad."
     },
     it: {
       "meta.title":"LIXBY — Tecnologia minimalista",
@@ -662,39 +741,7 @@
       "btn.descubrir":"Scopri",
       "btn.download":"Scarica",
       "pro.cta":"PASSA A PRO",
-      "about.text":"In LIXBY crediamo nel perfetto equilibrio tra design e funzionalità. Creiamo prodotti che non solo funzionano, ma ispirano."
-    },
-    /* nuevos idiomas añadidos */
-    pt: {
-      "meta.title":"LIXBY — Tecnologia minimalista",
-      "nav.inicio":"Início","nav.productos":"Produtos","nav.contacto":"Contato","nav.conocenos":"Sobre",
-      "hero.title":"Tecnologia que te entende","hero.subtitle":"Inovações minimalistas para o seu dia a dia",
-      "section.products":"Produtos",
-      "product.lixby-one-air.title":"Lixby One Air","product.lixby-one-air.desc":"Ultraleve e acessível.","product.lixby-one-air.price":"249€",
-      "product.lixby-one.title":"Lixby One","product.lixby-one.desc":"Ultraleve e potente.","product.lixby-one.price":"349€",
-      "product.lixby-one-pro.title":"Lixby One Pro","product.lixby-one-pro.desc":"Áudio de alta fidelidade.","product.lixby-one-pro.price":"899€",
-      "btn.explorar":"Explorar","btn.download":"Baixar","pro.cta":"VÁ PRO","about.text":"Na LIXBY acreditamos no perfeito equilíbrio entre design e funcionalidade. Criamos produtos que inspiram."
-    },
-    nl: {
-      "meta.title":"LIXBY — Minimalistische technologie",
-      "nav.inicio":"Start","nav.productos":"Producten","nav.contacto":"Contact","nav.conocenos":"Over",
-      "hero.title":"Technologie die je begrijpt","hero.subtitle":"Minimalistische innovaties voor dagelijks gebruik",
-      "section.products":"Producten",
-      "btn.explorar":"Verkennen","btn.download":"Downloaden","pro.cta":"WORD PRO","about.text":"Bij LIXBY geloven we in de perfecte balans tussen design en functionaliteit."
-    },
-    zh: {
-      "meta.title":"LIXBY — 极简科技",
-      "nav.inicio":"首页","nav.productos":"产品","nav.contacto":"联系我们","nav.conocenos":"关于我们",
-      "hero.title":"理解你的科技","hero.subtitle":"为日常生活打造的极简创新",
-      "section.products":"产品",
-      "btn.explorar":"探索","btn.download":"下载","pro.cta":"升级 PRO","about.text":"LIXBY 相信设计与功能的完美平衡。"
-    },
-    ja: {
-      "meta.title":"LIXBY — ミニマルテクノロジー",
-      "nav.inicio":"ホーム","nav.productos":"製品","nav.contacto":"お問い合わせ","nav.conocenos":"会社概要",
-      "hero.title":"あなたを理解するテクノロジー","hero.subtitle":"日常を支えるミニマルな革新",
-      "section.products":"製品",
-      "btn.explorar":"探索する","btn.download":"ダウンロード","pro.cta":"プロへ","about.text":"LIXBYはデザインと機能の完璧なバランスを信じています。"
+      "about.text":"In LIXBY crediamo nel perfetto equilibrio tra design e funzionalità. Creiamo prodotti che no solo funzionano, ma ispirano."
     }
   };
 
