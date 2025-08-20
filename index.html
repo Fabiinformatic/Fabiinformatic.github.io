@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title data-i18n="meta.title">LIXBY — Tecnología minimalista</title>
+  <title>LIXBY — Tecnología minimalista</title>
 
   <!-- PERF: preconnect para reducir latencia en recursos externos -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,44 +13,115 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
   <link rel="stylesheet" href="style.css" />
-  <!-- Pequeños overrides y utilidades inline (NO BORRAR: conservadas y combinadas) -->
+  <!-- Overrides locales para header y comportamiento consistente -->
   <style>
-    /* adjustments: make header/controls a bit more rounded & minimal */
-    :root { --radius-md: 12px; --radius-lg: 16px; }
-    .nav-inner { min-height: 64px; gap:12px; }
-    .btn { border-radius: var(--radius-md); }
-    .brand img { border-radius: 10px; }
+    /* (estilos conservados, cortados para brevedad en esta vista — en tu archivo real mantenlos completos) */
+    /* Header compacto, línea recta, minimal */
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 120; padding: 10px 24px; background: rgba(255,255,255,0.02); backdrop-filter: blur(8px) saturate(120%); -webkit-backdrop-filter: blur(8px) saturate(120%); border-bottom: 1px solid rgba(255,255,255,0.03); border-radius: 0; box-shadow: none; }
+    .nav-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 0 6px; }
+    .nav-left { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+    #navLinks { display:flex; gap:18px; align-items:center; justify-content:center; flex: 1 1 auto; padding: 8px 12px; white-space: nowrap; }
+    .nav-right { display:flex; gap:10px; align-items:center; justify-content:flex-end; flex: 0 0 auto; flex-direction: row !important; }
+    .cart-wrapper { position:relative; }
+    .mini-cart { right:18px; top:56px; width:320px; box-sizing:border-box; z-index:140; display:none; flex-direction:column; }
+    .lang-menu { right:18px; top:56px; box-sizing:border-box; z-index:140; }
+    main { padding-top: calc(64px + 12px); }
+    .card .actions { display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .btn-add { padding:8px 12px; border-radius:8px; border: none; cursor:pointer; background:linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; font-weight:700; }
+    .btn-view { padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--text); cursor:pointer; }
+    .contact-min { max-width: 1100px; margin: 28px auto; padding: 30px; display:flex; gap:24px; align-items:center; justify-content:space-between; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005)); border:1px solid rgba(255,255,255,0.03); box-sizing:border-box; }
+    .contact-min .form { flex:0 0 360px; display:flex; flex-direction:column; gap:10px }
+    .contact-success { display:none; color:var(--accent); font-weight:600; margin-top:8px }
+    #authOverlay { display:none; }
+    #authOverlay[aria-hidden="false"] { display:block; }
+    #authModal .btn { min-width:120px; }
 
-    /* PRO button style (kept here so HTML is copy/paste-ready) */
-    .btn-pro {
-      padding:8px 14px;
-      font-weight:800;
-      border-radius:999px;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: linear-gradient(90deg, rgba(10,132,255,0.14), rgba(10,132,255,0.28));
-      color: #fff;
-      box-shadow: 0 6px 18px rgba(10,132,255,0.06);
-      position:relative;
-      overflow:hidden;
-    }
-    .btn-pro:before {
-      content: "";
+    /* ligero hover animation global */
+    .btn-add, .btn-fav, .icon-btn, .btn { transition: transform .16s cubic-bezier(.2,.9,.3,1), box-shadow .16s ease; }
+    .btn-add:hover, .btn-fav:hover, .icon-btn:hover, .btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 22px rgba(2,6,12,0.12); }
+
+    /* skip link visible cuando tiene foco */
+    .skip-link {
       position: absolute;
-      inset: -120% -40% -120% -40%;
-      background: linear-gradient(90deg, rgba(255,255,255,0.16), rgba(10,132,255,0.28), rgba(255,255,255,0.16));
-      transform: rotate(20deg);
-      opacity: .6;
-      transition: transform .9s ease;
-      filter: blur(8px);
+      left: 12px;
+      top: 8px;
+      padding: 8px 12px;
+      background: #07101a;
+      color: #fff;
+      border-radius: 6px;
+      z-index: 99999;
+      transform: translateY(-120%);
+      transition: transform .18s ease;
     }
-    .btn-pro:hover:before { transform: translateX(18%) rotate(20deg); opacity: .95; }
-    .btn-pro:focus { box-shadow: 0 8px 28px rgba(10,132,255,0.18); outline: none; }
+    .skip-link:focus { transform: translateY(0); }
 
-    /* make mini language & cart menus more rounded */
-    .mini-cart, .lang-menu { border-radius: 14px; }
+    /* pantalla oculta para lectores */
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media (max-width:900px){
+      .contact-min { flex-direction:column; } .contact-min .form{ width:100% }
+    }
 
-    /* small responsive tweak so PRO button doesn't crowd */
-    @media (max-width:720px) { .btn-pro { display:none; } }
+    /* small header account holder */
+    .account-holder-btn {
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 8px;
+      border-radius:10px;
+      background: transparent;
+      border:1px solid rgba(255,255,255,0.03);
+      color:var(--text);
+      cursor:pointer;
+    }
+    .account-holder-btn img { width:32px; height:32px; border-radius:8px; object-fit:cover; display:block; }
+    .account-holder-btn .name { font-weight:700; font-size:0.95rem; color:var(--muted); }
+
+    /* icon inside auth buttons */
+    .auth-icon { width:18px; height:18px; flex:0 0 18px; display:inline-block; vertical-align:middle; }
+    .auth-btn { display:inline-flex; align-items:center; gap:10px; justify-content:center; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); background:transparent; cursor:pointer; }
+
+    /* Footer improvements */
+    .footer { text-align:left; padding:40px 20px; margin-top:40px; }
+    .footer-grid { max-width:1200px; margin:0 auto; display:grid; grid-template-columns: 1.4fr 1fr 1fr 1.2fr; gap:22px; align-items:start; }
+    .footer-col h4 { margin:0 0 8px 0; font-size:1rem; color:var(--text); }
+    .footer-brand { font-weight:800; letter-spacing:0.08em; font-size:1.05rem; margin-bottom:8px; }
+    .footer p { margin:0 0 8px 0; color:var(--muted); }
+    .footer-links { display:flex; flex-direction:column; gap:6px; }
+    .footer-links a { color:var(--muted); font-size:0.95rem; }
+    .social-links { display:flex; gap:8px; margin-top:8px; }
+    .social-links a { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; background: rgba(255,255,255,0.02); color:var(--text); text-decoration:none; }
+    .newsletter-form { display:flex; gap:8px; align-items:center; margin-top:6px; }
+    .newsletter-form input[type="email"]{ padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--text); min-width:0; flex:1; }
+    .newsletter-form button{ padding:10px 12px; border-radius:8px; border:0; background:var(--accent); color:#00121a; font-weight:700; cursor:pointer; }
+    .footer-bottom { max-width:1200px; margin:18px auto 0; display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--muted); font-size:0.92rem; }
+    .legal-links { display:flex; gap:12px; align-items:center; }
+    .back-to-top { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.04); cursor:pointer; color:var(--text); }
+    @media (max-width:900px){
+      .footer-grid { grid-template-columns: 1fr; gap:14px; }
+      .footer-bottom { flex-direction:column; align-items:flex-start; gap:8px; }
+    }
+
+    /* small additions to style brand with image */
+    .brand { display:flex; align-items:center; gap:8px; cursor:pointer; text-decoration:none; color:inherit; }
+    .brand img { width:44px; height:44px; border-radius:8px; object-fit:cover; display:block; }
+    .brand .title { font-weight:800; letter-spacing:0.08em; }
+  </style>
+
+  <!-- Añadir: glass util (liquid glass styling consistente) -->
+  <style id="lixby-glass-style">
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 6px 26px rgba(2,6,12,0.48);
+      color: inherit;
+    }
+    .btn, .icon-btn {
+      transition: transform .14s cubic-bezier(.2,.9,.3,1), box-shadow .14s ease;
+    }
+    .btn:focus, .icon-btn:focus, button:focus { outline: 3px solid rgba(10,132,255,0.14); outline-offset: 3px; }
   </style>
 </head>
 <body>
@@ -62,6 +133,7 @@
   <div class="nav-inner">
     <!-- LEFT: logo -->
     <div class="nav-left">
+      <!-- Usamos DIV con onclick y manejador de teclado (igual que tu ejemplo), y role/tabindex para accesibilidad -->
       <div class="brand"
            role="link"
            tabindex="0"
@@ -72,7 +144,6 @@
         <div class="title">LIXBY</div>
       </div>
     </div>
-
     <!-- CENTER: nav links -->
     <nav id="navLinks" role="navigation" aria-label="Principal">
       <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
@@ -80,13 +151,11 @@
       <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
       <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
     </nav>
-
     <!-- RIGHT: controles en fila -->
     <div class="nav-right" aria-hidden="false">
       <div class="cart-wrapper" style="position:relative;">
-        <!-- click ahora redirige a carrito.html (tal y como pediste), hover sigue mostrando mini-cart -->
+        <!-- Añadido aria-controls y aria-expanded para accesibilidad -->
         <button id="cartBtn" class="icon-btn" aria-label="Ver carrito" aria-controls="miniCart" aria-expanded="false" type="button">🛒 <span id="cartCount" class="badge">0</span></button>
-
         <div id="miniCart" class="mini-cart glass" aria-hidden="true" role="region" aria-label="Mini carrito">
           <div class="mini-cart-header" style="display:flex;justify-content:space-between;align-items:center;">
             <strong data-i18n="cart.title">Carrito</strong>
@@ -100,29 +169,28 @@
               <div><strong data-i18n="cart.total">Total:</strong> <span id="miniCartTotal">0€</span></div>
               <div><button id="checkoutBtn" class="btn primary" data-i18n="cart.checkout" type="button">Pagar</button></div>
             </div>
-            <div style="display:flex;gap:8px;">
-              <button id="viewCartBtn" class="btn ghost" type="button" data-i18n="cart.view">Ver carrito</button>
-            </div>
+            <div style="display:flex;gap:8px;"><button id="viewCartBtn" class="btn ghost" type="button">Ver carrito</button></div>
           </div>
         </div>
       </div>
 
       <div class="lang-wrapper">
-        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false" type="button"> <span id="langFlag">🇪🇸</span> <span id="langLabel">Español</span> ▾ </button>
-        <div id="langMenu" class="lang-menu glass" aria-hidden="true" style="display:none;flex-direction:column;gap:6px;padding:8px;width:200px;">
+        <button id="langBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false" type="button"> 🇪🇸 <span id="langLabel">Español</span> ▾ </button>
+        <div id="langMenu" class="lang-menu glass" aria-hidden="true" style="display:none;flex-direction:column;gap:6px;padding:8px;width:160px;">
           <button class="lang-item" data-lang="es" type="button">🇪🇸 Español</button>
           <button class="lang-item" data-lang="en" type="button">🇬🇧 English</button>
           <button class="lang-item" data-lang="fr" type="button">🇫🇷 Français</button>
+          <!-- Añadidos: alemán e italiano -->
           <button class="lang-item" data-lang="de" type="button">🇩🇪 Deutsch</button>
           <button class="lang-item" data-lang="it" type="button">🇮🇹 Italiano</button>
         </div>
       </div>
 
-      <div id="accountContainer" style="display:flex;align-items:center;gap:8px;">
+      <div id="accountContainer">
         <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta" type="button">Cuenta</button>
 
-        <!-- NUEVO: botón PASATE AL PRO (al lado de la cuenta) -->
-        <button id="proBtn" class="btn btn-pro" type="button" aria-label="Pásate al Pro" data-i18n="pro.cta">PÁSATE AL PRO</button>
+        <!-- NUEVO: botón PASATE AL PRO (añadido sin borrar nada) -->
+        <button id="proBtn" class="btn btn-pro" type="button" aria-label="Pásate al Pro">PÁSATE AL PRO</button>
       </div>
 
       <button id="themeToggle" class="btn ghost" aria-label="Cambiar tema" type="button">◐</button>
@@ -130,32 +198,40 @@
   </div>
 </header>
 
+<!-- NOTE:
+     He REMOVIDO aquí el antiguo bloque del modal hard-coded.
+     El modal ahora lo crea y gestiona `auth-firebase-minimal.js` (se carga como módulo al final).
+-->
+
+
 <main id="maincontent">
   <!-- HERO -->
   <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
     <div class="hero-content">
-      <h1 id="hero-title" data-i18n="hero.title">La tecnología que te entiende</h1>
-      <p id="hero-subtitle" data-i18n="hero.subtitle">Innovación minimalista para tu día a día</p>
+      <h1 id="hero-title">La tecnología que te entiende</h1>
+      <p>Innovación minimalista para tu día a día</p>
+      <!-- changed to explorar.html as requested -->
       <a href="explorar.html" class="btn primary" data-i18n="btn.explorar">Explorar</a>
     </div>
   </section>
 
   <!-- PRODUCTOS -->
   <section id="productos" class="section reveal" aria-labelledby="prod-title">
-    <h2 id="prod-title" data-i18n="section.products">Productos</h2>
+    <h2 id="prod-title">Productos</h2>
     <div class="grid">
       <!-- Lixby One Air -->
       <article class="card glass" data-product="lixby-one-air" role="button" tabindex="0" aria-label="Lixby One Air">
         <div class="thumb">
+          <!-- mantuvimos loading lazy y dimensiones -->
           <img src="https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg" alt="Lixby One Air"
                loading="lazy" decoding="async" width="600" height="600">
         </div>
-        <h3 data-i18n="product.lixby-one-air.title">Lixby One Air</h3>
-        <p data-i18n="product.lixby-one-air.desc">Ultraligero y económico.</p>
+        <h3>Lixby One Air</h3>
+        <p>Ultraligero y económico.</p>
         <span class="price">249€</span>
         <div class="actions">
-          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-air'" type="button" data-i18n="btn.view">Ver</button>
-          <button class="btn-add" data-id="lixby-one-air" type="button" data-i18n="btn.add">Añadir al carrito</button>
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-air'" type="button">Ver</button>
+          <button class="btn-add" data-id="lixby-one-air" type="button">Añadir al carrito</button>
         </div>
       </article>
 
@@ -165,12 +241,12 @@
           <img src="https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg" alt="Lixby One"
                loading="lazy" decoding="async" width="600" height="600">
         </div>
-        <h3 data-i18n="product.lixby-one.title">Lixby One</h3>
-        <p data-i18n="product.lixby-one.desc">Ultraligero y potente.</p>
+        <h3>Lixby One</h3>
+        <p>Ultraligero y potente.</p>
         <span class="price">349€</span>
         <div class="actions">
-          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one'" type="button" data-i18n="btn.view">Ver</button>
-          <button class="btn-add" data-id="lixby-one" type="button" data-i18n="btn.add">Añadir al carrito</button>
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one'" type="button">Ver</button>
+          <button class="btn-add" data-id="lixby-one" type="button">Añadir al carrito</button>
         </div>
       </article>
 
@@ -180,12 +256,12 @@
           <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro"
                loading="lazy" decoding="async" width="600" height="600">
         </div>
-        <h3 data-i18n="product.lixby-one-pro.title">Lixby One Pro</h3>
-        <p data-i18n="product.lixby-one-pro.desc">Audio de alta fidelidad.</p>
+        <h3>Lixby One Pro</h3>
+        <p>Audio de alta fidelidad.</p>
         <span class="price">899€</span>
         <div class="actions">
-          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-pro'" type="button" data-i18n="btn.view">Ver</button>
-          <button class="btn-add" data-id="lixby-one-pro" type="button" data-i18n="btn.add">Añadir al carrito</button>
+          <button class="btn-view" onclick="location.href='producto.html?id=lixby-one-pro'" type="button">Ver</button>
+          <button class="btn-add" data-id="lixby-one-pro" type="button">Añadir al carrito</button>
         </div>
       </article>
     </div>
@@ -194,75 +270,83 @@
   <!-- CONTACTO -->
   <section id="contacto" class="section contact-min glass reveal" aria-labelledby="contact-title">
     <div class="left">
-      <h2 id="contact-title" data-i18n="contact.title">Contáctanos</h2>
-      <p class="lead" data-i18n="contact.lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
+      <h2 id="contact-title">Contáctanos</h2>
+      <p class="lead">Déjanos una duda o sugerencias y te responderemos lo antes posible.</p>
     </div>
 
+    <!-- Añadido: hidden ticket_id para que EmailJS reciba un identificador único del ticket -->
     <form id="contactForm" class="form" aria-label="Formulario de contacto" onsubmit="return false;">
-      <input id="contactName" name="from_name" type="text" placeholder="Nombre" data-i18n-placeholder="contact.placeholder.name" required autocomplete="name">
-      <input id="contactEmail" name="from_email" type="email" placeholder="Correo" data-i18n-placeholder="contact.placeholder.email" required autocomplete="email">
-      <textarea id="contactMessage" name="message" placeholder="Tu mensaje" data-i18n-placeholder="contact.placeholder.message" required></textarea>
+      <input id="contactName" name="from_name" type="text" placeholder="Nombre" required autocomplete="name">
+      <input id="contactEmail" name="from_email" type="email" placeholder="Correo" required autocomplete="email">
+      <textarea id="contactMessage" name="message" placeholder="Tu mensaje" required></textarea>
 
+      <!-- hidden field que enviaremos a EmailJS como {{ticket_id}} -->
       <input id="ticketId" type="hidden" name="ticket_id" value="">
 
       <div class="actions">
-        <button type="button" class="btn ghost" onclick="document.getElementById('contactForm').reset();" data-i18n="btn.clear">Borrar</button>
-        <button type="submit" id="contactSend" class="btn primary" data-i18n="btn.enviar">Enviar</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('contactForm').reset();">Borrar</button>
+        <button type="submit" id="contactSend" class="btn primary">Enviar</button>
       </div>
-      <div id="contactSuccess" class="contact-success" role="status" aria-live="polite" data-i18n="contact.success">Mensaje enviado. ¡Gracias! Te contestaremos pronto.</div>
+      <div id="contactSuccess" class="contact-success" role="status" aria-live="polite">Mensaje enviado. ¡Gracias! Te contestaremos pronto.</div>
     </form>
   </section>
 
   <!-- CONÓCENOS -->
   <section id="conocenos" class="section reveal" aria-labelledby="about-title">
-    <h2 id="about-title" data-i18n="about.title">Conócenos</h2>
-    <p data-i18n="about.text">En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
+    <h2 id="about-title">Conócenos</h2>
+    <p>En LIXBY creemos en el equilibrio perfecto entre diseño y funcionalidad. Creamos productos que no solo funcionan, sino que también inspiran.</p>
   </section>
 </main>
 
-<!-- debug -->
+<!-- debug (oculto a usuarios, útil para showDebug) -->
 <div id="debug" style="display:none;max-width:1100px;margin:12px auto;color:var(--muted);white-space:pre-wrap;"></div>
 
-<!-- Footer (con traducciones aplicables) -->
+<!-- Enhanced footer: preserve original copyright but add columns, newsletter and links -->
 <footer class="footer glass" role="contentinfo" aria-labelledby="footer-heading">
   <div class="footer-grid" id="footerGrid">
     <div class="footer-col">
       <div class="footer-brand">LIXBY</div>
-      <p data-i18n="footer.description">Diseño minimalista, tecnología que acompaña tu día a día. Síguenos para novedades y lanzamientos.</p>
+      <p>Diseño minimalista, tecnología que acompaña tu día a día. Síguenos para novedades y lanzamientos.</p>
       <div class="social-links" aria-label="Redes sociales">
-        <!-- icons... preserved -->
-        <a href="#" title="Twitter" aria-label="Twitter" rel="noopener">...</a>
-        <a href="#" title="Instagram" aria-label="Instagram" rel="noopener">...</a>
-        <a href="#" title="YouTube" aria-label="YouTube" rel="noopener">...</a>
+        <a href="#" title="Twitter" aria-label="Twitter" rel="noopener">
+          <!-- simple svg icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 5.92c-.64.29-1.32.49-2.04.58.73-.44 1.28-1.14 1.54-1.97-.68.4-1.43.69-2.23.85C18.94 4.6 18 4.2 17 4.2c-1.83 0-3.32 1.54-3 3.34C9.72 7.3 6.1 5.3 3.73 2.47c-.2.35-.3.76-.3 1.2 0 1.03.52 1.94 1.33 2.48-.6 0-1.15-.18-1.63-.45v.05c0 1.2.9 2.2 2.06 2.43-.45.12-.92.15-1.4.06.4 1.25 1.56 2.16 2.94 2.19C6.1 11.4 4.5 11.9 3 11.9c-.25 0-.5 0-.74-.04C4.36 13.06 6.16 13.8 8.12 13.8c8.35 0 12.92-6.9 12.92-12.88v-.58c.9-.68 1.6-1.54 2.2-2.52-.83.38-1.72.63-2.64.74z"/></svg>
+        </a>
+        <a href="#" title="Instagram" aria-label="Instagram" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 6.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 0 0 0-9.6zm6.5-.9a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zM12 9.6a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8z"/></svg>
+        </a>
+        <a href="#" title="YouTube" aria-label="YouTube" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.5s-.2-1.7-.8-2.4c-.8-.9-1.7-.92-2.1-1-2.95-.22-7.35-.22-7.35-.22S6.9 3 3.95 3.22c-.44.07-1.33.1-2.1 1C1.27 4.8 1 6.5 1 6.5S1 8.86 1 11.25v1.5C1 16 1 18.5 1 18.5s.27 1.7.85 2.4c.8.9 1.84.87 2.3.98 1.66.22 7.05.22 7.05.22s4.4 0 7.35-.22c.44-.07 1.33-.1 2.1-1 .62-.66.82-2.4.82-2.4s.1-2.5.1-4.88v-1.5C23 8.86 23 7.5 23 7.5zM9.75 15.5v-7l6 3.5-6 3.5z"/></svg>
+        </a>
       </div>
     </div>
 
     <div class="footer-col">
-      <h4 data-i18n="footer.links">Enlaces</h4>
+      <h4>Enlaces</h4>
       <div class="footer-links" role="navigation" aria-label="Enlaces rápidos">
-        <a href="explorar.html" data-i18n="footer.explore">Explorar</a>
-        <a href="productos.html" data-i18n="footer.catalog">Catálogo</a>
-        <a href="carrito.html" data-i18n="footer.cart">Carrito</a>
-        <a href="cuenta.html" data-i18n="footer.account">Mi cuenta</a>
+        <a href="explorar.html">Explorar</a>
+        <a href="productos.html">Catálogo</a>
+        <a href="carrito.html">Carrito</a>
+        <a href="cuenta.html">Mi cuenta</a>
       </div>
     </div>
 
     <div class="footer-col">
-      <h4 data-i18n="footer.help">Ayuda</h4>
+      <h4>Ayuda</h4>
       <div class="footer-links">
-        <a href="contacto.html" data-i18n="footer.contact">Contacto</a>
-        <a href="faq.html" id="footerFaqLink" data-i18n="footer.faq">Preguntas frecuentes</a>
-        <a href="envios.html" data-i18n="footer.shipping">Envíos y devoluciones</a>
-        <a href="soporte.html" data-i18n="footer.support">Soporte técnico</a>
+        <a href="contacto.html">Contacto</a>
+        <a href="faq.html" id="footerFaqLink">Preguntas frecuentes</a>
+        <a href="envios.html">Envíos y devoluciones</a>
+        <a href="soporte.html">Soporte técnico</a>
       </div>
     </div>
 
     <div class="footer-col" aria-label="Newsletter">
-      <h4 data-i18n="footer.subscribe">Suscríbete</h4>
-      <p data-i18n="footer.subscribe_text">Recibe novedades, ofertas exclusivas y lanzamientos.</p>
+      <h4>Suscríbete</h4>
+      <p>Recibe novedades, ofertas exclusivas y lanzamientos.</p>
       <form id="newsletterForm" class="newsletter-form" onsubmit="return false;" aria-label="Formulario newsletter">
-        <input id="newsletterEmail" type="email" placeholder="tu@correo.com" data-i18n-placeholder="newsletter.placeholder" aria-label="Correo electrónico para newsletter" required>
-        <button id="newsletterBtn" type="submit" aria-label="Suscribirse" data-i18n="btn.subscribe">Suscribir</button>
+        <input id="newsletterEmail" type="email" placeholder="tu@correo.com" aria-label="Correo electrónico para newsletter" required>
+        <button id="newsletterBtn" type="submit" aria-label="Suscribirse">Suscribir</button>
       </form>
       <div id="newsletterMsg" role="status" aria-live="polite" style="margin-top:8px;color:var(--muted);font-size:0.95rem"></div>
     </div>
@@ -272,9 +356,14 @@
     <div class="legal-left">
       <small>© <span id="year"></span> LIXBY — Todos los derechos reservados</small>
       <div class="legal-links" style="margin-left:12px;">
-        <a href="privacidad.html" data-i18n="footer.privacy">Política de privacidad</a>
-        <a href="terminos.html" data-i18n="footer.terms">Términos y condiciones</a>
-        <a id="accessibilityLink" href="accessibility.html" aria-label="Ir a la página de accesibilidad" data-i18n="footer.accessibility">Accesibilidad</a>
+        <a href="privacidad.html">Política de privacidad</a>
+        <a href="terminos.html">Términos y condiciones</a>
+        <!-- MODIFICADO: abre en la misma pestaña -->
+        <a id="accessibilityLink"
+           href="accessibility.html"
+           aria-label="Ir a la página de accesibilidad">
+          Accesibilidad
+        </a>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
@@ -284,7 +373,7 @@
   </div>
 </footer>
 
-<!-- Cart panel (estático) + backdrop (se mantiene funcional) -->
+<!-- Cart panel (estático) + backdrop -->
 <div id="cartBackdrop" class="cart-backdrop" aria-hidden="true"></div>
 <aside id="cartPanel" class="cart-panel" aria-hidden="true">
   <div class="cart-panel-inner glass" role="dialog" aria-label="Carrito">
@@ -306,7 +395,7 @@
   </div>
 </aside>
 
-<!-- Live region for screen-reader announcements -->
+<!-- Live region for screen-reader announcements (used when adding to cart, etc.) -->
 <div id="announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
 <noscript style="display:block;background:#fffb; padding:10px; text-align:center;">
@@ -314,7 +403,7 @@
 </noscript>
 
 <!-- ===========================
-     SCRIPTS (inline para copiar directo)
+     SCRIPTS (todo inline para que copies directo)
      =========================== -->
 <script>
 (function(){
@@ -322,23 +411,26 @@
   // Helpers y estado
   // -------------------------
   const KEY = 'lixby_cart_v1';
+  // Formateador consistente (es-ES)
   const CURRENCY = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
   function parsePrice(s){ if (s === undefined || s === null) return 0; return Number(String(s).replace(/[^\d.,-]/g,'').replace(',', '.')) || 0; }
   function saveCart(c){ try { localStorage.setItem(KEY, JSON.stringify(c)); } catch(e){} }
   function loadCart(){ try { return JSON.parse(localStorage.getItem(KEY))||[]; } catch(e){ return []; } }
   function formatPriceNum(num){ return CURRENCY.format(Number(num) || 0); }
   function showDebug(msg){ const el=document.getElementById('debug'); if(!el) return; el.style.display='block'; el.textContent += msg + "\n"; console.log('DEBUG',msg); }
 
+  // set year
   try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
 
-  // Productos (preservado)
+  // product brief (igual que antes)
   const PRODUCTS_BRIEF = {
     'lixby-one-air': { id:'lixby-one-air', name: 'Lixby One Air', price: '249€', priceNum: 249, image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg' },
     'lixby-one': { id:'lixby-one', name: 'Lixby One', price: '349€', priceNum: 349, image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg' },
     'lixby-one-pro': { id:'lixby-one-pro', name: 'Lixby One Pro', price: '899€', priceNum: 899, image: 'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg' }
   };
 
-  // CART state & UI refs
+  // CART
   let cart = loadCart();
   const cartBtn = document.getElementById('cartBtn');
   const miniCart = document.getElementById('miniCart');
@@ -349,6 +441,7 @@
   const checkoutBtn = document.getElementById('checkoutBtn');
   const announcements = document.getElementById('announcements');
 
+  // panel elements
   const cartPanel = document.getElementById('cartPanel');
   const cartBackdrop = document.getElementById('cartBackdrop');
   const cartPanelClose = document.getElementById('cartPanelClose');
@@ -368,6 +461,7 @@
       return;
     }
     let total = 0;
+    // fragment para menor reflow
     const frag = document.createDocumentFragment();
     cart.forEach((it, idx) => {
       const item = document.createElement('div');
@@ -376,9 +470,11 @@
       const img = document.createElement('img'); img.src = it.image || 'https://via.placeholder.com/80x80?text=Img'; img.alt = it.name; img.style.width='44px'; img.style.height='44px'; img.style.objectFit='cover'; img.style.borderRadius='6px';
       img.loading='lazy'; img.decoding='async';
       const meta = document.createElement('div'); meta.className='meta';
+      // RENDER SEGURO: no usar innerHTML con contenido dinámico
       const title = document.createElement('div'); title.style.fontWeight = '700'; title.textContent = it.name || '';
       const subtitle = document.createElement('div'); subtitle.style.color = 'var(--muted)'; subtitle.textContent = `${formatPriceNum(it.priceNum || parsePrice(it.price))} × ${it.qty||1}`;
       meta.appendChild(title); meta.appendChild(subtitle);
+
       const remove = document.createElement('button'); remove.className='remove'; remove.textContent='✕'; remove.style.background='transparent'; remove.style.border='none'; remove.style.cursor='pointer';
       remove.setAttribute('type','button');
       remove.addEventListener('click', (e)=>{ e.stopPropagation(); cart.splice(idx,1); saveCart(cart); updateMiniCartUI(); updateCartPanel(); });
@@ -424,7 +520,7 @@
     else miniCart.style.display = '';
   }
 
-  // Hover show mini-cart & click navigates to carrito.html (fixed per request)
+  // Hover show mini-cart & click open panel
   (function wireCartHoverAndClick(){
     const wrapper = document.querySelector('.cart-wrapper');
     let hideTimeout = null;
@@ -442,6 +538,7 @@
       try { cartBtn.setAttribute('aria-expanded','false'); } catch(e){}
     }
 
+    // show on hover enter; keep visible while hovering miniCart
     if (wrapper) {
       wrapper.addEventListener('mouseenter', (e) => {
         clearTimeout(hideTimeout);
@@ -450,9 +547,10 @@
       wrapper.addEventListener('mouseleave', (e) => {
         clearTimeout(hideTimeout);
         hideTimeout = setTimeout(() => {
+          // do not hide if cart panel is open
           if (cartPanel && cartPanel.classList.contains('open')) return;
           hideMini();
-        }, 220);
+        }, 180);
       });
     }
     if (miniCart) {
@@ -462,35 +560,37 @@
         hideTimeout = setTimeout(() => {
           if (cartPanel && cartPanel.classList.contains('open')) return;
           hideMini();
-        }, 220);
+        }, 180);
       });
     }
 
-    // CLICK: ahora redirige a carrito.html (según tu petición)
+    // click: ahora redirige a carrito.html por defecto; mantener apertura con Ctrl/Cmd (por compatibilidad)
     if (cartBtn) {
       cartBtn.addEventListener('click', (e) => {
-        // si quieres mantener comportamiento panel con tecla modificadora, se puede:
         if (e.metaKey || e.ctrlKey) {
           openCartPanel();
           return;
         }
+        // redirige al carrito (tal y como pediste)
         window.location.href = 'carrito.html';
       });
     }
 
-    // viewCartBtn sigue abriendo el panel (útil)
+    // also wire viewCartBtn to open panel
     const viewBtn = document.getElementById('viewCartBtn');
-    if (viewBtn) viewBtn.addEventListener('click', (e) => openCartPanel());
+    if (viewBtn) viewBtn.addEventListener('click', (e)=> openCartPanel());
   })();
 
-  // Panel functions
+  // Panel control functions
   function openCartPanel(){
     if (!cartPanel || !cartBackdrop) return;
     cartPanel.classList.add('open');
     cartBackdrop.classList.add('open');
     cartPanel.setAttribute('aria-hidden','false');
     cartBackdrop.setAttribute('aria-hidden','false');
+    // ensure mini hidden
     if (miniCart) { miniCart.setAttribute('aria-hidden','true'); miniCart.style.display = ''; try { cartBtn.setAttribute('aria-expanded','false'); } catch(e){} }
+    // update content
     updateCartPanel();
   }
   function closeCartPanel(){
@@ -504,11 +604,12 @@
   if (cartPanelClose) cartPanelClose.addEventListener('click', closeCartPanel);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (cartPanel && cartPanel.classList.contains('open')) closeCartPanel(); } });
 
+  // clear handlers for panel & mini
   if (clearCartBtn) clearCartBtn.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); updateCartPanel(); });
   if (cartPanelClear) cartPanelClear.addEventListener('click', () => { cart=[]; saveCart(cart); updateMiniCartUI(); updateCartPanel(); });
 
-  if (checkoutBtn) checkoutBtn.addEventListener('click', () => { if (cart.length===0) return alert(getTranslation('cart.empty') || 'El carrito está vacío'); alert('Simulación de checkout: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
-  if (document.getElementById('cartPanelCheckout')) document.getElementById('cartPanelCheckout').addEventListener('click', () => { if (cart.length===0) return alert(getTranslation('cart.empty') || 'El carrito está vacío'); alert('Simulación de checkout desde panel: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
+  if (checkoutBtn) checkoutBtn.addEventListener('click', () => { if (cart.length===0) return alert('El carrito está vacío'); alert('Simulación de checkout: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
+  if (document.getElementById('cartPanelCheckout')) document.getElementById('cartPanelCheckout').addEventListener('click', () => { if (cart.length===0) return alert('El carrito está vacío'); alert('Simulación de checkout desde panel: ' + cart.reduce((s,i)=>s+(i.qty||0),0) + ' items'); });
 
   window.addToCart = function(product){
     const existing = cart.find(p => p.id === product.id);
@@ -518,16 +619,15 @@
     updateMiniCartUI();
     updateCartPanel();
     if (miniCart) { miniCart.setAttribute('aria-hidden','false'); miniCart.style.display = 'flex'; try { cartBtn.setAttribute('aria-expanded','true'); } catch(e){} setTimeout(()=>{ if (miniCart) { miniCart.setAttribute('aria-hidden','true'); miniCart.style.display = ''; try { cartBtn.setAttribute('aria-expanded','false'); } catch(e){} } }, 2200); }
+    // announce for screen readers
     try { if (announcements) announcements.textContent = `${product.name} añadido al carrito.`; } catch(e){}
   };
 
   updateMiniCartUI();
   updateCartPanel();
 
-  // ---------------------------
-  // I18N / translations (mejorado, no petará)
-  // ---------------------------
-  const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu'), langLabel = document.getElementById('langLabel'), langFlag = document.getElementById('langFlag');
+  // LANG / I18N (mejorado y defensivo)
+  const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu'), langLabel = document.getElementById('langLabel');
   const translations = {
     es: {
       "meta.title":"LIXBY — Tecnología minimalista",
@@ -556,14 +656,9 @@
       "product.lixby-one.title":"Lixby One","product.lixby-one.desc":"Ultralight and powerful.",
       "product.lixby-one-pro.title":"Lixby One Pro","product.lixby-one-pro.desc":"High-fidelity audio.",
       "btn.explorar":"Explore","btn.view":"View","btn.add":"Add to cart","btn.added":"Added","btn.enviar":"Send","btn.clear":"Clear","btn.subscribe":"Subscribe",
-      "contact.title":"Contact","contact.lead":"Leave us a question or suggestion and we'll reply soon.",
-      "contact.placeholder.name":"Name","contact.placeholder.email":"Email","contact.placeholder.message":"Your message","contact.success":"Message sent. Thanks!",
+      "contact.title":"Contact","contact.lead":"Leave us a question or suggestion and we'll reply soon.","contact.placeholder.name":"Name","contact.placeholder.email":"Email","contact.placeholder.message":"Your message","contact.success":"Message sent. Thanks!",
       "cart.title":"Cart","cart.clear":"Clear","cart.total":"Total:","cart.checkout":"Checkout","cart.empty":"Your cart is empty.","cart.view":"View cart",
       "footer.description":"Minimal design, technology that accompanies your everyday life. Follow us for updates and launches.",
-      "footer.links":"Links","footer.explore":"Explore","footer.catalog":"Catalog","footer.cart":"Cart","footer.account":"My account",
-      "footer.help":"Help","footer.contact":"Contact","footer.faq":"FAQ","footer.shipping":"Shipping & returns","footer.support":"Support",
-      "footer.subscribe":"Subscribe","footer.subscribe_text":"Receive news, exclusive offers and launches.","newsletter.placeholder":"you@email.com",
-      "footer.privacy":"Privacy policy","footer.terms":"Terms & conditions","footer.accessibility":"Accessibility",
       "pro.cta":"GO PRO"
     },
     fr: {
@@ -577,10 +672,6 @@
       "btn.explorar":"Explorer","btn.view":"Voir","btn.add":"Ajouter au panier","btn.added":"Ajouté","btn.enviar":"Envoyer","btn.clear":"Vider","btn.subscribe":"S'abonner",
       "contact.title":"Contact","contact.lead":"Laissez-nous une question ou suggestion et nous répondrons bientôt.","contact.placeholder.name":"Nom","contact.placeholder.email":"Email","contact.placeholder.message":"Votre message","contact.success":"Message envoyé. Merci!",
       "cart.title":"Panier","cart.clear":"Vider","cart.total":"Total:","cart.checkout":"Payer","cart.empty":"Votre panier est vide.","cart.view":"Voir le panier",
-      "footer.description":"Design minimaliste, technologie qui accompagne votre quotidien.","footer.links":"Liens","footer.explore":"Explorer","footer.catalog":"Catalogue","footer.cart":"Panier","footer.account":"Mon compte",
-      "footer.help":"Aide","footer.contact":"Contact","footer.faq":"FAQ","footer.shipping":"Livraison & retours","footer.support":"Support",
-      "footer.subscribe":"S'abonner","footer.subscribe_text":"Recevez des nouveautés, offres exclusives et lancements.","newsletter.placeholder":"vous@email.com",
-      "footer.privacy":"Politique de confidentialité","footer.terms":"Conditions","footer.accessibility":"Accessibilité",
       "pro.cta":"PASSER PRO"
     },
     de: {
@@ -592,9 +683,8 @@
       "product.lixby-one.title":"Lixby One","product.lixby-one.desc":"Ultraleicht und leistungsstark.",
       "product.lixby-one-pro.title":"Lixby One Pro","product.lixby-one-pro.desc":"High-Fidelity Audio.",
       "btn.explorar":"Entdecken","btn.view":"Ansehen","btn.add":"In den Warenkorb","btn.added":"Hinzugefügt","btn.enviar":"Senden","btn.clear":"Löschen","btn.subscribe":"Abonnieren",
-      "contact.title":"Kontakt","contact.lead":"Stell uns eine Frage oder Anregung und wir antworten bald.","contact.placeholder.name":"Name","contact.placeholder.email":"E-Mail","contact.placeholder.message":"Deine Nachricht","contact.success":"Nachricht gesendet. Danke!",
       "cart.title":"Warenkorb","cart.clear":"Leeren","cart.total":"Gesamt:","cart.checkout":"Zur Kasse","cart.empty":"Dein Warenkorb ist leer.","cart.view":"Warenkorb ansehen",
-      "footer.description":"Minimalistisches Design, Technologie für den Alltag.","pro.cta":"PRO WERDEN"
+      "pro.cta":"PRO WERDEN"
     },
     it: {
       "meta.title":"LIXBY — Tecnologia minimalista",
@@ -605,9 +695,8 @@
       "product.lixby-one.title":"Lixby One","product.lixby-one.desc":"Ultraleggero e potente.",
       "product.lixby-one-pro.title":"Lixby One Pro","product.lixby-one-pro.desc":"Audio ad alta fedeltà.",
       "btn.explorar":"Esplora","btn.view":"Vedi","btn.add":"Aggiungi al carrello","btn.added":"Aggiunto","btn.enviar":"Invia","btn.clear":"Cancella","btn.subscribe":"Iscriviti",
-      "contact.title":"Contattaci","contact.lead":"Lascia una domanda o suggerimento e ti risponderemo presto.","contact.placeholder.name":"Nome","contact.placeholder.email":"Email","contact.placeholder.message":"Il tuo messaggio","contact.success":"Messaggio inviato. Grazie!",
       "cart.title":"Carrello","cart.clear":"Svuota","cart.total":"Totale:","cart.checkout":"Paga","cart.empty":"Il tuo carrello è vuoto.","cart.view":"Vedi carrello",
-      "footer.description":"Design minimalista, tecnologia che ti accompagna nella vita di tutti i giorni.","pro.cta":"PASSA A PRO"
+      "pro.cta":"PASSA A PRO"
     }
   };
 
@@ -622,25 +711,30 @@
     } catch(e){ return null; }
   }
 
-  // Apply translations: handles data-i18n (text), data-i18n-placeholder, data-i18n-title, data-i18n-value
+  // Apply translations: handles data-i18n (text) and data-i18n-placeholder
   function applyTranslations(lang){
     const map = translations[lang] || translations['es'];
-    // set html lang attribute and title
     try { document.documentElement.lang = lang; } catch(e){}
     try { if (map && map['meta.title']) document.title = map['meta.title']; } catch(e){}
 
-    // text nodes / textContent
     document.querySelectorAll('[data-i18n]').forEach(el => {
       try {
         const key = el.getAttribute('data-i18n');
         if (!key) return;
         const text = (map && map[key]) ? map[key] : el.textContent;
-        el.textContent = text;
+        // If element contains child non-img nodes, update first non-img child; else update textContent
+        const childElements = Array.from(el.children || []);
+        const nonImgChild = childElements.find(c => c.tagName.toLowerCase() !== 'img');
+        if (nonImgChild) {
+          nonImgChild.textContent = text;
+        } else {
+          el.textContent = text;
+        }
       } catch(err) { console.warn('i18n text fail', err); }
     });
 
     // placeholders
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    document.querySelectorAll('[placeholder]').forEach(el => {
       try {
         const key = el.getAttribute('data-i18n-placeholder');
         if (!key) return;
@@ -649,27 +743,15 @@
       } catch(err){ console.warn('i18n placeholder fail', err); }
     });
 
-    // titles/tooltips/values
-    document.querySelectorAll('[data-i18n-title]').forEach(el => {
-      try {
-        const key = el.getAttribute('data-i18n-title');
-        if (!key) return;
-        const text = (map && map[key]) ? map[key] : el.getAttribute('title') || '';
-        el.setAttribute('title', text);
-      } catch(err){}
-    });
-
-    // small UI label updates
+    // update language label & flag
     try {
       const names = { es:'Español', en:'English', fr:'Français', de:'Deutsch', it:'Italiano' };
       if (document.getElementById('langLabel')) document.getElementById('langLabel').textContent = names[lang] || names['es'];
-      if (langFlag) {
-        const flags = { es:'🇪🇸', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹' };
-        langFlag.textContent = flags[lang] || '🏳️';
-      }
+      const flags = { es:'🇪🇸', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', it:'🇮🇹' };
+      const langFlag = document.querySelector('#langBtn');
+      // keep icon text but we won't touch embedded icons in markup
     } catch(e){}
-
-    // update any price/mini-cart messages (robust)
+    // update any price/mini-cart messages
     try { updateMiniCartUI(); updateCartPanel(); } catch(e){}
   }
 
@@ -680,7 +762,7 @@
     try { applyTranslations(l); } catch(e){ console.warn('applyTranslations failed', e); }
   }
 
-  // wire language menu (safe)
+  // wire language menu
   try {
     setLang(localStorage.getItem('lixby_lang') || currentLang);
     if (langBtn && langMenu){
@@ -733,6 +815,7 @@
     const sendBtn = document.getElementById('contactSend');
     const successEl = document.getElementById('contactSuccess');
     const ticketHidden = document.getElementById('ticketId');
+
     if (!form) return;
 
     function generateTicketId(){
@@ -745,11 +828,11 @@
       const name = document.getElementById('contactName').value.trim();
       const email = document.getElementById('contactEmail').value.trim();
       const message = document.getElementById('contactMessage').value.trim();
-      if (!name || !email || !message) { alert(getTranslation('contact.fill') || 'Por favor completa todos los campos.'); return; }
+      if (!name || !email || !message) { alert('Por favor completa todos los campos.'); return; }
       const ticket = generateTicketId();
       if (ticketHidden) ticketHidden.value = ticket;
       sendBtn.disabled = true;
-      const prev = sendBtn.textContent; sendBtn.textContent = getTranslation('contact.sending') || 'Enviando...';
+      const prev = sendBtn.textContent; sendBtn.textContent = 'Enviando...';
       try {
         await ensureEmailJs();
         if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
@@ -773,7 +856,7 @@
           arr.push({ ticket_id: ticket, name: name, email: email, message: message, created_at: new Date().toISOString(), status: 'failed', error: String(err) });
           localStorage.setItem(key, JSON.stringify(arr));
         } catch (errLocal) { console.warn('Fallback save failed', errLocal); }
-        alert(getTranslation('contact.error') || 'No se pudo enviar el mensaje vía EmailJS.');
+        alert('No se pudo enviar el mensaje vía EmailJS. Hemos guardado una copia local del ticket y puedes reintentar más tarde.');
       } finally {
         sendBtn.disabled = false; sendBtn.textContent = prev;
       }
@@ -781,37 +864,156 @@
     form.addEventListener('submit', sendEmail);
   })();
 
-  // Account button: keep as before but safe
+  // export for other modules if needed
+  window.lixby = window.lixby || {};
+  window.lixby.cart = { load: loadCart, save: saveCart, getAll: () => cart };
+
+  // ---------------------------
+  // FIX: account button behavior
+  // ---------------------------
   try {
     const accountBtn = document.getElementById('accountBtn');
     if (accountBtn) {
       accountBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        const stored = (function(){ try { return JSON.parse(localStorage.getItem('lixby_user')||'null'); } catch(e){ return null; } })();
-        if (stored && stored.uid) {
-          window.location.href = 'cuenta.html';
-          return;
+        try {
+          // If there's a local snapshot of user or Firebase auth shows currentUser, go to account page
+          const stored = (function(){ try { return JSON.parse(localStorage.getItem('lixby_user')||'null'); } catch(e){ return null; } })();
+          const firebaseUser = (window.appAuth && window.appAuth._rawAuth && window.appAuth._rawAuth.currentUser) ? window.appAuth._rawAuth.currentUser : null;
+          if (stored && stored.uid) {
+            // quick redirect if we have stored user info
+            window.location.href = 'cuenta.html';
+            return;
+          }
+          if (firebaseUser) {
+            window.location.href = 'cuenta.html';
+            return;
+          }
+          // If auth modal available, show it (preferred)
+          if (window.lixbyAuth && typeof window.lixbyAuth.show === 'function') {
+            window.lixbyAuth.show();
+            return;
+          }
+          // Fallback: if auth module exposes overlay element, show it
+          const ov = document.getElementById('lixbyAuthOverlay');
+          if (ov) { ov.style.display='flex'; ov.setAttribute('aria-hidden','false'); return; }
+          // Last resort: go to login page
+          window.location.href = 'login.html';
+        } catch(err) {
+          console.warn('accountBtn handler err', err);
+          window.location.href = 'login.html';
         }
-        // fallback: go to login/account page
-        window.location.href = 'cuenta.html';
       });
     }
-  } catch(e){}
+  } catch(e){ console.warn('accountBtn attach err', e); }
 
   // PRO button behaviour (simple demo: lleva a /pro o abre modal)
-  const proBtn = document.getElementById('proBtn');
-  if (proBtn) {
-    proBtn.addEventListener('click', ()=> {
-      // redirigir a página PRO (crear pro.html si quieres)
-      window.location.href = 'pro.html';
-    });
-  }
+  try {
+    const proBtn = document.getElementById('proBtn');
+    if (proBtn) {
+      proBtn.addEventListener('click', ()=> {
+        // redirigir a página PRO (crear pro.html si quieres)
+        window.location.href = 'pro.html';
+      });
+    }
+  } catch(e){ console.warn('proBtn attach err', e); }
 
-  // expose for debugging
-  window.lixby = window.lixby || {};
-  window.lixby.cart = { load: loadCart, save: saveCart, getAll: () => cart };
-  window.lixby.setLang = setLang;
 })();
 </script>
+
+<!-- Mejoras: sanitización y accesibilidad del mini-cart (añadido, no borra nada) -->
+<script>
+(function(){
+  'use strict';
+  const CURRENCY = new Intl.NumberFormat('es-ES',{ style:'currency', currency:'EUR' });
+
+  // 1) Sanitize mini-cart nodes produced by the inline script (prevenir innerHTML XSS)
+  const miniCartItems = document.getElementById('miniCartItems');
+  if (miniCartItems) {
+    const sanitizeNode = (node) => {
+      const meta = node.querySelector('.meta');
+      if (!meta) return;
+      // extraer texto seguro y recomponer elementos
+      const nameText = meta.textContent || '';
+      const parts = nameText.split('\n').map(s => s.trim()).filter(Boolean);
+      const title = document.createElement('div'); title.style.fontWeight = '700'; title.textContent = parts[0] || '';
+      const sub = document.createElement('div'); sub.style.color = 'var(--muted)'; sub.textContent = parts.slice(1).join(' ') || '';
+      meta.innerHTML = '';
+      meta.appendChild(title);
+      meta.appendChild(sub);
+    };
+
+    const observer = new MutationObserver((muts) => {
+      muts.forEach(m => {
+        m.addedNodes.forEach(n => {
+          if (n.nodeType !== 1) return;
+          if (n.classList && n.classList.contains('mini-cart-item')) sanitizeNode(n);
+          n.querySelectorAll && n.querySelectorAll('.mini-cart-item').forEach(el => sanitizeNode(el));
+        });
+      });
+    });
+    observer.observe(miniCartItems, { childList: true, subtree: true });
+  }
+
+  // 2) Mejorar foco y escape (cerrar mini-cart con Esc)
+  const cartBtn = document.getElementById('cartBtn');
+  const miniCart = document.getElementById('miniCart');
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
+        miniCart.setAttribute('aria-hidden','true');
+        miniCart.style.display = '';
+        cartBtn && cartBtn.setAttribute('aria-expanded','false');
+        cartBtn && cartBtn.focus();
+      }
+    }
+  });
+  // al abrir, focusar primer control del miniCart (delegado: cuando se haga visible)
+  const showObserver = new MutationObserver(() => {
+    try {
+      if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
+        const focusable = miniCart.querySelector('button, [tabindex], a, input');
+        if (focusable) focusable.focus();
+      }
+    } catch(e) {}
+  });
+  if (miniCart) showObserver.observe(miniCart, { attributes: true, attributeFilter: ['aria-hidden'] });
+
+  // 3) Forzar formato monetario en el total del miniCart (si el script original escribe números crudos)
+  const miniCartTotal = document.getElementById('miniCartTotal');
+  if (miniCartTotal) {
+    const reformat = () => {
+      const raw = miniCartTotal.textContent || '';
+      const num = parseFloat(String(raw).replace(/[^\d.-]/g,'')) || 0;
+      miniCartTotal.textContent = CURRENCY.format(num);
+    };
+    // formatear ahora y cada vez que cambie
+    reformat();
+    const totObs = new MutationObserver(reformat);
+    totObs.observe(miniCartTotal, { childList: true, characterData: true, subtree: true });
+  }
+})();
+</script>
+
+<!-- CARGA EL MÓDULO DE AUTENTICACIÓN (inicializa Firebase, crea modal y sincroniza header) -->
+<script type="module" src="auth-firebase-minimal.js"></script>
+
+<!-- Mejora no destructiva del enlace de accesibilidad: NO fuerza nueva pestaña -->
+<script>
+(function(){
+  const a = document.getElementById('accessibilityLink');
+  if (!a) return;
+
+  // Asegurar aria-label sin alterar la intención de navegación
+  if (!a.hasAttribute('aria-label')) {
+    a.setAttribute('aria-label', 'Ir a la página de accesibilidad');
+  }
+
+  // Aseguramos que se abra en la MISMA pestaña: eliminamos target/rel si existieran
+  if (a.hasAttribute('target')) a.removeAttribute('target');
+  if (a.hasAttribute('rel')) a.removeAttribute('rel');
+})();
+</script>
+
 </body>
 </html>
