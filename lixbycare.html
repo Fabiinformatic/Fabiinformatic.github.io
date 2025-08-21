@@ -1,37 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>LixbyCare+ — Garantía LIXBY</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
   <style>
-    :root{ --bg:#f6f8fa; --card:#fff; --text:#0b0f19; --muted:#6c7178; --accent:#0a84ff; }
-    html.dark { --bg:#0b0f14; --card:#0f1418; --text:#e6eef6; --muted:#9aa0a6; --accent:#38a3ff; }
-    body { margin:0; font-family:Inter, system-ui, -apple-system; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
-    .container { max-width:920px; margin:36px auto; padding:20px; }
-    header { display:flex;align-items:center;justify-content:space-between; gap:8px; background:transparent; margin-bottom:24px; }
-    .brand { display:flex;align-items:center;gap:12px; cursor:pointer; }
-    .brand img { width:52px;height:52px;border-radius:12px;object-fit:cover; }
-    h1{ margin:0 0 8px; font-size:1.6rem; }
-    .hero { display:flex; gap:18px; align-items:center; background:var(--card); padding:20px; border-radius:14px; box-shadow: 0 12px 36px rgba(2,6,12,0.06); }
+    :root { --bg:#f6f8fa; --card:#fff; --text:#0b0f19; --muted:#6c7178; --accent:#0a84ff; }
+    html.dark { --bg:#07101a; --card:#0f1418; --text:#e6eef6; --muted:#9aa0a6; --accent:#38a3ff; }
+    body { margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+    .container { max-width:920px;margin:36px auto;padding:20px; }
+    header { display:flex;align-items:center;justify-content:space-between;margin-bottom:24px; }
+    .brand { display:flex;align-items:center;gap:12px;cursor:pointer; }
+    .hero { display:flex;gap:18px;align-items:center;background:var(--card);padding:20px;border-radius:14px;box-shadow:0 12px 36px rgba(2,6,12,0.06); }
     .hero img { width:120px;height:120px;object-fit:contain; }
-    .hero .meta { max-width:600px; }
-    .meta p { color:var(--muted); margin:8px 0 0; }
-    .sections { margin-top:20px; display:grid; gap:16px; }
-    .section-card { background:var(--card); padding:16px; border-radius:12px; box-shadow: 0 8px 22px rgba(2,6,12,0.04); }
-    .cta-row { display:flex; gap:12px; margin-top:12px; }
-    .btn { padding:10px 14px; border-radius:10px; font-weight:800; border:none; cursor:pointer; }
-    .btn-primary { background:var(--accent); color:#00121a; }
-    footer { margin-top:28px; color:var(--muted); font-size:0.95rem; text-align:center; }
-    @media (max-width:720px){ .hero { flex-direction:column; align-items:flex-start; } .hero img { width:96px;height:96px; } }
+    h1{ margin:0 0 8px;font-size:1.6rem; }
+    .sections { margin-top:20px;display:grid;gap:16px; }
+    .section-card { background:var(--card);padding:16px;border-radius:12px;box-shadow:0 8px 22px rgba(2,6,12,0.04); }
+    .cta-row { display:flex;gap:12px;margin-top:12px; }
+    .btn { padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800; }
+    .btn-primary { background:var(--accent);color:#00121a; }
+    footer { margin-top:28px;color:var(--muted);text-align:center; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <div class="brand" onclick="location.href='index.html'">
-        <img src="https://i.imgur.com/dOCYmkx.jpeg" alt="Lixby logo">
+        <img src="https://i.imgur.com/dOCYmkx.jpeg" alt="Lixby logo" width="52" height="52" style="border-radius:12px;">
         <div style="font-weight:800;">LIXBY</div>
       </div>
       <a href="cuenta.html" class="btn" style="background:transparent;border:1px solid rgba(0,0,0,0.06);">Mi cuenta</a>
@@ -39,10 +35,10 @@
 
     <main>
       <div class="hero" role="region" aria-labelledby="lixbycare-title">
-        <img src="https://cdn-icons-png.flaticon.com/512/985/985723.png" alt="LixbyCare+ icon" />
-        <div class="meta">
+        <img src="https://cdn-icons-png.flaticon.com/512/985/985723.png" alt="LixbyCare+ icon">
+        <div>
           <h1 id="lixbycare-title">LixbyCare+</h1>
-          <p>Con LixbyCare+ disfrutas de una protección completa: 2 años de garantía oficial, soporte prioritario, reparaciones con piezas originales y 30 días de devolución sin preguntas.</p>
+          <p style="color:var(--muted);margin:6px 0 0;">Con LixbyCare+ disfrutas de una protección completa: 2 años de garantía oficial, soporte prioritario, reparaciones con piezas originales y 30 días de devolución sin preguntas.</p>
           <div class="cta-row">
             <a href="garantia.html" class="btn" style="border:1px solid rgba(0,0,0,0.06);">Leer términos</a>
             <a href="contacto.html" class="btn btn-primary">Solicitar LixbyCare+</a>
@@ -55,8 +51,8 @@
           <h3>Qué cubre</h3>
           <ul>
             <li>Defectos de fabricación y materiales.</li>
-            <li>Soporte telefónico prioritario (24-72h).</li>
-            <li>Reparación con materiales originales en centros autorizados.</li>
+            <li>Soporte telefónico prioritario.</li>
+            <li>Reparación con piezas originales en centros autorizados.</li>
           </ul>
         </div>
 
@@ -64,8 +60,8 @@
           <h3>Proceso de reclamación</h3>
           <ol>
             <li>Contacta con soporte desde tu cuenta o en <a href="contacto.html">Contacto</a>.</li>
-            <li>Abre un ticket; recibirás un número y seguimiento.</li>
-            <li>En caso de reparación, recibirás instrucciones y opciones de recogida o envío.</li>
+            <li>Abre un ticket; recibirás número y seguimiento.</li>
+            <li>Si necesitas reparación, te indicaremos recogida o envío.</li>
           </ol>
         </div>
 
@@ -81,20 +77,18 @@
     </footer>
   </div>
 
-<script>
-  document.getElementById('yearCare').textContent = new Date().getFullYear();
-
-  // apply theme according to index preference (reads same key)
-  (function applyThemeFromIndex(){
-    const KEY = 'lixby_theme_pref';
-    const stored = localStorage.getItem(KEY);
-    if(stored === 'dark') document.documentElement.classList.add('dark');
-    else if(stored === 'light') document.documentElement.classList.remove('dark');
-    else {
-      // auto: respect system
-      if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
-    }
-  })();
-</script>
+  <script>
+    document.getElementById('yearCare').textContent = new Date().getFullYear();
+    // apply theme according to index preference (reads same key)
+    (function applyThemeFromIndex(){
+      const KEY = 'lixby_theme';
+      const stored = localStorage.getItem(KEY);
+      if(stored === 'dark') document.documentElement.classList.add('dark');
+      else if(stored === 'light') document.documentElement.classList.add('light');
+      else {
+        if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
 </body>
 </html>
