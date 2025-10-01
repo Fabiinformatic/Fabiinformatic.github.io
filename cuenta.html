@@ -7,27 +7,121 @@
   <link rel="stylesheet" href="style.css">
   <style>
     :root { color-scheme: dark; }
-    body { background:#0b0f14; color:#f5f5f5; font-family:Inter,system-ui,sans-serif; margin:0; }
-    /* HEADER PEGADO ARRIBA */
+    body { background: transparent; color: var(--text); font-family: 'Inter', system-ui, sans-serif; margin:0; }
+
+    /* HEADER FIJO */
     header {
       position: sticky; top: 0; z-index: 1000;
       padding:12px 24px; display:flex; justify-content:space-between; align-items:center;
-      background:#0f141b; border-bottom:1px solid #1b2230; backdrop-filter: blur(6px);
+      background: rgba(15,20,27,0.85); border-bottom:1px solid #1b2230; backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
-    .brand { font-weight:800; cursor:pointer; user-select:none; }
-    main { max-width:1100px; margin:40px auto; padding:0 20px; display:grid; gap:20px; }
-    .card { background:#111820; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.3); }
-    h2 { margin-top:0; font-size:1.2rem; }
-    .profile-avatar { width:90px; height:90px; border-radius:50%; background:#222; display:block; margin-bottom:10px; object-fit:cover; }
-    .btn { padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer; border:none; }
-    .btn.primary { background:#2f6bff; color:#fff; }
-    .btn.ghost { background:transparent; border:1px solid #333; color:#eee; }
-    .grid-2 { display:grid; grid-template-columns:1fr 2fr; gap:20px; }
-    @media (max-width:900px){ .grid-2 { grid-template-columns:1fr; } }
-    label { display:block; margin-top:12px; font-weight:600; }
-    input, textarea { width:100%; padding:8px; border-radius:8px; border:1px solid #333; background:#1a1f27; color:#fff; }
-    .section { margin-top:20px; }
-    .muted { color:#9aa5b1; }
+    .brand { font-weight:800; cursor:pointer; user-select:none; letter-spacing:0.04em; font-size:1.15rem; transition: color .18s var(--ease-bouncy);}
+    .brand:focus-visible { outline: none; color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft);}
+    .btn.ghost { background:transparent; border:1px solid var(--stroke); color:var(--text); }
+    main {
+      max-width:1100px; margin:50px auto 60px; padding:0 20px;
+      display: grid; gap: 28px;
+      animation: minimal-fade-in 0.88s var(--ease-bouncy) 0.07s 1 both;
+    }
+    @media (max-width:700px){ main { margin:24px auto 50px; padding:0 6px; } }
+    .account-layout {
+      display: grid; grid-template-columns: 340px 1fr; gap: 28px; align-items: flex-start;
+    }
+    @media (max-width:900px) {
+      .account-layout { grid-template-columns:1fr; gap:18px; }
+    }
+    .glass-card {
+      background: var(--bg-elev);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px) saturate(120%);
+      -webkit-backdrop-filter: blur(14px) saturate(120%);
+      padding: 32px 26px;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .45s var(--ease-bouncy), border-color .23s var(--ease-bouncy), background .23s var(--ease-bouncy);
+      animation: minimal-fade-in 0.9s var(--ease-bouncy);
+      opacity: 1;
+    }
+    .glass-card.section { margin-top:0; }
+    h2 { margin-top:0; font-size:1.18rem; letter-spacing:0.01em; }
+    .profile-avatar {
+      width:100px; height:100px; border-radius:18px;
+      background: linear-gradient(135deg, rgba(10,132,255,0.10), rgba(255,255,255,0.06));
+      display:block; margin-bottom:14px; object-fit:cover;
+      border: 2px solid var(--accent-soft);
+      box-shadow: 0 4px 18px rgba(10,132,255,0.09);
+      transition: box-shadow .26s var(--ease-bouncy), border-color .18s var(--ease-bouncy);
+    }
+    .profile-avatar:hover { box-shadow: 0 8px 32px rgba(10,132,255,0.15); border-color: var(--accent); }
+    .profile-info { text-align:center; margin-bottom: 18px;}
+    .profile-info h2 { margin-bottom:6px; }
+    .muted { color:var(--muted); font-size:0.96em; }
+    .profile-status {
+      display:inline-block; margin-top:6px; padding:2px 10px;
+      border-radius: 8px; background: var(--glass-strong); color:var(--accent); font-weight:600; font-size:0.9em;
+    }
+    .profile-actions { display:flex; gap:10px; justify-content:center; margin:18px 0 0; }
+    .btn { padding:9px 16px; border-radius:var(--radius-md); font-weight:700; font-size:1em; }
+    .btn[disabled] { opacity:.5; pointer-events:none; }
+    .account-form label { display:block; margin-top:18px; font-weight:600; color:var(--muted);}
+    .account-form input, .account-form textarea {
+      width:100%; padding:10px; border-radius:9px; border:1px solid var(--stroke);
+      background: rgba(255,255,255,0.03); color:var(--text); font-size:1em; margin-top:4px;
+      transition: border-color .18s var(--ease-bouncy), box-shadow .18s var(--ease-bouncy);
+    }
+    .account-form input:focus, .account-form textarea:focus {
+      border-color: var(--accent); outline: none; box-shadow: var(--focus-ring);
+    }
+    .save-actions { margin-top:22px; display:flex; gap:10px; }
+    /* Secciones personales */
+    .sections-list { display:grid; gap:22px; }
+    .section-title {
+      display:flex; align-items:center; gap:8px;
+      font-size:1.06rem; font-weight:700; margin-bottom:10px;
+    }
+    .section-badge {
+      background: var(--accent-soft); color: var(--accent);
+      border-radius: 12px; padding:2px 10px; font-size:0.85em; font-weight:500;
+    }
+    .favorites-list, .orders-list, .purchased-list {
+      display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-top: 8px;
+    }
+    .favorite-card, .purchase-card, .order-card {
+      background: var(--glass);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 14px;
+      font-size:0.98em;
+      min-height:40px;
+      transition: box-shadow .28s var(--ease-bouncy), border-color .22s var(--ease-bouncy);
+      display:flex; flex-direction:column; gap:7px;
+      cursor:pointer;
+      animation: minimal-fade-in 0.6s var(--ease-bouncy);
+    }
+    .favorite-card:hover, .purchase-card:hover, .order-card:hover {
+      border-color: var(--accent-soft);
+      box-shadow: 0 4px 18px rgba(10,132,255,0.08);
+      background: var(--glass-strong);
+    }
+    .empty-state {
+      color:var(--muted); font-size:0.97em; text-align:center; padding:18px 0; opacity:.8;
+      animation: minimal-fade-in 1.1s var(--ease-bouncy);
+    }
+    /* Animación sutil de carga */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(10,132,255,0.10) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.4s infinite linear;
+      border-radius: 8px; min-height: 32px;
+    }
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
   </style>
 </head>
 <body>
@@ -37,62 +131,85 @@
   </header>
 
   <main>
-    <div class="grid-2">
+    <div class="account-layout">
       <!-- Columna perfil -->
-      <div class="card">
-        <img id="profileAvatar" class="profile-avatar" src="" alt="Avatar">
-        <h2 id="profileName">Invitado</h2>
-        <p id="profileEmail" class="muted"></p>
-        <p id="profileStatus" class="muted">No autenticado</p>
-        <button id="loginNowBtn" class="btn primary">Iniciar sesión</button>
-        <button id="signOutBtn" class="btn ghost" style="display:none">Cerrar sesión</button>
+      <div class="glass-card" style="padding-bottom:20px;">
+        <div class="profile-info">
+          <img id="profileAvatar" class="profile-avatar" src="" alt="Avatar">
+          <h2 id="profileName">Invitado</h2>
+          <div id="profileEmail" class="muted" style="margin-bottom:4px;"></div>
+          <div id="profileStatus" class="profile-status">No autenticado</div>
+        </div>
+        <div class="profile-actions">
+          <button id="loginNowBtn" class="btn primary">Iniciar sesión</button>
+          <button id="signOutBtn" class="btn ghost" style="display:none">Cerrar sesión</button>
+        </div>
       </div>
 
       <!-- Columna información de la cuenta -->
-      <div class="card">
+      <form class="glass-card account-form" autocomplete="off" onsubmit="return false;">
         <h2>Información de la cuenta</h2>
         <label for="displayNameInput">Nombre visible</label>
-        <input id="displayNameInput" type="text" placeholder="Tu nombre">
+        <input id="displayNameInput" type="text" placeholder="Tu nombre" autocomplete="name">
         <label for="phoneInput">Teléfono</label>
-        <input id="phoneInput" type="text" placeholder="+34 600 000 000">
+        <input id="phoneInput" type="text" placeholder="+34 600 000 000" autocomplete="tel">
         <label for="addressInput">Dirección de envío</label>
-        <textarea id="addressInput" rows="2"></textarea>
-        <div style="margin-top:12px;display:flex;gap:8px;">
+        <textarea id="addressInput" rows="2" autocomplete="street-address"></textarea>
+        <div class="save-actions">
           <button id="saveProfileBtn" class="btn primary">Guardar cambios</button>
         </div>
+      </form>
+    </div>
+
+    <div class="sections-list">
+      <!-- Sección información personal -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>Información personal</span>
+          <span class="section-badge" id="personalBadge" style="display:none;">Privado</span>
+        </div>
+        <div id="personalInfo" class="muted">Inicia sesión para ver y editar tu información personal.</div>
       </div>
-    </div>
 
-    <!-- Sección información personal -->
-    <div class="card section">
-      <h2>Información personal</h2>
-      <p id="personalInfo" class="muted">Inicia sesión para ver y editar tu información personal.</p>
-    </div>
+      <!-- Sección productos favoritos -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>Favoritos</span>
+          <span class="section-badge" id="favBadge" style="display:none;">Solo tú</span>
+        </div>
+        <div id="favoritesList" class="favorites-list">
+          <div class="empty-state">Inicia sesión para ver tus productos favoritos.</div>
+        </div>
+      </div>
 
-    <!-- Sección productos favoritos -->
-    <div class="card section">
-      <h2>Favoritos</h2>
-      <div id="favoritesList" class="muted">Inicia sesión para ver tus productos favoritos.</div>
-    </div>
+      <!-- Sección productos comprados -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>Productos comprados</span>
+          <span class="section-badge" id="purchasedBadge" style="display:none;">Historial</span>
+        </div>
+        <div id="purchasedList" class="purchased-list">
+          <div class="empty-state">Inicia sesión para ver tus productos comprados.</div>
+        </div>
+      </div>
 
-    <!-- Sección productos comprados -->
-    <div class="card section">
-      <h2>Productos comprados</h2>
-      <div id="purchasedList" class="muted">Inicia sesión para ver tus productos comprados.</div>
-    </div>
-
-    <!-- Sección pedidos y envíos -->
-    <div class="card section">
-      <h2>Pedidos y envíos</h2>
-      <div id="ordersList" class="muted">Inicia sesión para ver tus pedidos y envíos.</div>
+      <!-- Sección pedidos y envíos -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>Pedidos y envíos</span>
+          <span class="section-badge" id="ordersBadge" style="display:none;">Seguimiento</span>
+        </div>
+        <div id="ordersList" class="orders-list">
+          <div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>
+        </div>
+      </div>
     </div>
   </main>
 
   <script type="module" src="auth-firebase-minimal.js"></script>
-
   <script>
   (function(){
-    // --- Navegación ---
+    // --- Navegación y accesibilidad ---
     const brandEl = document.getElementById('brand');
     brandEl.addEventListener('click', ()=> location.href='index.html');
     brandEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); brandEl.click(); } });
@@ -105,15 +222,19 @@
     const loginBtn = document.getElementById('loginNowBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const saveBtn = document.getElementById('saveProfileBtn');
-
     const displayNameInput = document.getElementById('displayNameInput');
     const phoneInput = document.getElementById('phoneInput');
     const addressInput = document.getElementById('addressInput');
-
     const personalInfo = document.getElementById('personalInfo');
     const favoritesList = document.getElementById('favoritesList');
     const purchasedList = document.getElementById('purchasedList');
     const ordersList = document.getElementById('ordersList');
+
+    // Badges
+    const personalBadge = document.getElementById('personalBadge');
+    const favBadge = document.getElementById('favBadge');
+    const purchasedBadge = document.getElementById('purchasedBadge');
+    const ordersBadge = document.getElementById('ordersBadge');
 
     const LS_USER = 'lixby_user';
 
@@ -135,9 +256,18 @@
         };
       } catch(e){ return null; }
     }
-    function placeholderAvatarForName(name, size=96){
+    function placeholderAvatarForName(name, size=100){
       const initials = (String(name||'Lixby').trim().split(/\s+/).slice(0,2).map(s=>s[0]||'').join('').toUpperCase() || 'LX');
       return `https://via.placeholder.com/${size}?text=${encodeURIComponent(initials)}`;
+    }
+
+    function showSkeleton(listEl, count=3){
+      listEl.innerHTML = '';
+      for(let i=0;i<count;i++){
+        const div = document.createElement('div');
+        div.className = 'skeleton';
+        listEl.appendChild(div);
+      }
     }
 
     function renderAccountUI(u){
@@ -150,12 +280,15 @@
       profileEmailEl.textContent = email || (isAnon ? 'Invitado' : '');
       profileStatusEl.textContent = isUser ? (isAnon ? 'Invitado (autenticado)' : 'Autenticado') : 'No autenticado';
 
-      const photo = (u && u.photoURL) || placeholderAvatarForName(displayName, 120);
+      const photo = (u && u.photoURL) || placeholderAvatarForName(displayName, 100);
       avatarImgEl.src = photo; avatarImgEl.alt = displayName + ' avatar';
 
       loginBtn.style.display = isUser ? 'none' : '';
       signOutBtn.style.display = isUser ? '' : 'none';
       saveBtn.disabled = !isUser;
+
+      // Mostrar badges solo si autenticado
+      [personalBadge, favBadge, purchasedBadge, ordersBadge].forEach(b=>b && (b.style.display = isUser ? '' : 'none'));
 
       // Rellenar inputs básicos si hay datos cacheados
       if (isUser) {
@@ -164,15 +297,16 @@
         phoneInput.value = (snap && (snap.phone || '')) || '';
         addressInput.value = (snap && snap.address) || (snap && snap.shipping && snap.shipping.address) || '';
         personalInfo.textContent = 'Puedes editar tu información personal desde aquí.';
-        favoritesList.textContent = 'Cargando favoritos…';
-        purchasedList.textContent = 'Cargando compras…';
-        ordersList.textContent = 'Cargando pedidos…';
+        // Cargar favoritos/compras/pedidos
+        showSkeleton(favoritesList, 2); setTimeout(()=>favoritesList.innerHTML='<div class="empty-state">No hay favoritos aún.</div>',700);
+        showSkeleton(purchasedList, 2); setTimeout(()=>purchasedList.innerHTML='<div class="empty-state">No hay compras recientes.</div>',800);
+        showSkeleton(ordersList, 2); setTimeout(()=>ordersList.innerHTML='<div class="empty-state">No hay pedidos en curso.</div>',900);
       } else {
         displayNameInput.value = ''; phoneInput.value=''; addressInput.value='';
         personalInfo.textContent = 'Inicia sesión para ver y editar tu información personal.';
-        favoritesList.textContent = 'Inicia sesión para ver tus productos favoritos.';
-        purchasedList.textContent = 'Inicia sesión para ver tus productos comprados.';
-        ordersList.textContent = 'Inicia sesión para ver tus pedidos y envíos.';
+        favoritesList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos favoritos.</div>';
+        purchasedList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos comprados.</div>';
+        ordersList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>';
       }
     }
 
