@@ -564,3 +564,129 @@ img.lazy.loaded {
 :root.light .btn-pro { color: #00121a; background: linear-gradient(90deg, rgba(10,132,255,0.12), rgba(10,132,255,0.20)); border-color: rgba(0,0,0,0.06); box-shadow: 0 8px 20px rgba(10,132,255,0.04); }
 
 /* Fin de ADICIONES */
+
+/* ================================
+   MINIMALISTA + ANIMACIONES FLUIDAS (ADICIÓN, NO BORRAR NADA DE ARRIBA)
+   ================================ */
+
+/* 1. Animación de fondo sutil (gradiente líquido animado) */
+body::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(800px 600px at 80% 10%, rgba(10,132,255,0.10), transparent 60%),
+              radial-gradient(800px 600px at 10% 90%, rgba(255,105,180,0.07), transparent 70%);
+  mix-blend-mode: lighten;
+  animation: bg-move 18s ease-in-out infinite alternate;
+}
+@keyframes bg-move {
+  0% {
+    background-position: 80% 10%, 10% 90%;
+  }
+  100% {
+    background-position: 60% 23%, 22% 78%;
+  }
+}
+
+/* 2. Fade-in y slide para secciones, hero y cards */
+@keyframes minimal-fade-in {
+  from { opacity:0; transform: translateY(24px) scale(.98);}
+  to   { opacity:1; transform: none;}
+}
+.section, .hero-content, .card, .product-detail {
+  opacity: 0;
+  animation: minimal-fade-in 0.88s var(--ease-bouncy) 0.07s 1 both;
+}
+.section { animation-delay: 0.22s; }
+.hero-content { animation-delay: 0.1s; }
+.card { animation-delay: 0.19s; }
+.product-detail { animation-delay: 0.2s; }
+
+/* Al aparecer en viewport (si usas JS para reveal) */
+.reveal.animated {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: minimal-fade-in 0.7s var(--ease-bouncy) 0s 1 both;
+}
+
+/* 3. Microinteracción en links */
+#navLinks a, .lang-item, .btn, .icon-btn {
+  transition: color .32s var(--ease-bouncy), background .32s var(--ease-bouncy),
+    box-shadow .18s var(--ease-bouncy), transform .18s var(--ease-bouncy);
+}
+#navLinks a:hover, .lang-item:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 8px;
+}
+
+/* 4. Pulsación en botones */
+.btn:active, .icon-btn:active, .auth-btn:active {
+  animation: btn-tap .22s var(--ease-bouncy);
+}
+@keyframes btn-tap {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.95);}
+  100% { transform: scale(1);}
+}
+
+/* 5. Glass animado al hover */
+.glass, .mini-cart, .card, .product-detail {
+  transition: box-shadow .45s var(--ease-bouncy), border-color .23s var(--ease-bouncy), background .23s var(--ease-bouncy);
+}
+.card:hover, .mini-cart:hover, .glass:hover {
+  box-shadow: 0 12px 48px 0 rgba(10,132,255,0.13), 0 2px 6px 0 rgba(10,132,255,0.06);
+  border-color: var(--accent-soft);
+}
+
+/* 6. Glow animado en iconos accent */
+.icon-btn:focus-visible, .btn.primary:focus-visible, .btn-pro:focus-visible {
+  box-shadow: 0 0 0 4px var(--accent-soft), var(--focus-ring);
+  outline: none;
+}
+
+/* 7. Card: subrayado animado minimal en títulos */
+.card h3, .section h2, .product-info h1 {
+  position: relative;
+  overflow: visible;
+}
+.card h3::after, .section h2::after, .product-info h1::after {
+  content:"";
+  display:block;
+  width: 30px;
+  height: 2px;
+  background: var(--accent-soft);
+  border-radius: 2px;
+  margin-top: 7px;
+  opacity: 0.6;
+  transform: scaleX(0);
+  transition: transform .36s var(--ease-bouncy);
+}
+.card:hover h3::after, .section:hover h2::after, .product-info:hover h1::after {
+  transform: scaleX(1);
+}
+
+/* 8. Suave animación al mostrar modales/overlays */
+#authBackdrop, #authModal, .mini-cart, .lang-menu {
+  transition: opacity .38s var(--ease-bouncy), transform .38s var(--ease-bouncy);
+  opacity:0;
+  transform: scale(.98) translateY(18px);
+}
+#authOverlay[aria-hidden="false"] #authBackdrop,
+#authOverlay[aria-hidden="false"] #authModal,
+.mini-cart[aria-hidden="false"],
+.lang-menu[aria-hidden="false"]{
+  opacity:1;
+  transform: none;
+}
+
+/* 9. Sombra líquida extra en hover de tarjetas */
+.card:hover::before {
+  filter: blur(8px) brightness(1.15);
+  opacity:.96;
+  transition: filter .32s var(--ease-bouncy), opacity .32s var(--ease-bouncy);
+}
+
+/* FIN DE ADICIÓN MINIMALISTA */
