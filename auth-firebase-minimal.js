@@ -57,16 +57,14 @@ const LS_COOKIES = 'lixby_cookies_accepted';
 const LS_PW_CODES = 'lixby_pw_reset_codes';         // { email:{code,expires} }
 const LS_LOCAL_PW = 'lixby_local_passwords';        // fallback local pw store (email->password) for demo
 
-/* Utils */
+/* Utils agrupadas */
 const $id = id => document.getElementById(id);
 function escapeHtml(s){ if(!s && s!==0) return ''; return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function showConsolePretty(err){ console.warn(err && err.code ? `${err.code} ${err.message||''}` : err); }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function parseSafeName(u){ return (u && (u.displayName || (u.email? u.email.split('@')[0] : 'Usuario'))) || 'Usuario'; }
-
 function getStoredJSON(key){ try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch(e){ return {}; } }
 function setStoredJSON(key, obj){ try { localStorage.setItem(key, JSON.stringify(obj)); } catch(e){} }
-
 function saveLocalUser(user){
   try{
     if (!user) { localStorage.removeItem(LS_USER); return; }
@@ -76,7 +74,9 @@ function saveLocalUser(user){
 }
 function loadLocalUser(){ try { return JSON.parse(localStorage.getItem(LS_USER)); } catch(e) { return null; } }
 function clearLocalUser(){ try{ localStorage.removeItem(LS_USER); }catch(e){} }
-
+function deepCleanLocalStorage(){
+  [LS_USER, LS_AUTH_DISMISSED, LS_PW_CODES, LS_LOCAL_PW].forEach(k=>localStorage.removeItem(k));
+}
 function mapError(code, fallback='Error') {
   const M = {
     'auth/popup-blocked':'Popup bloqueado. El navegador ha bloqueado la ventana de autenticación.',
@@ -98,45 +98,27 @@ function mapError(code, fallback='Error') {
 }
 
 /* ------------------
-   Password reset helpers
-   - send by Firebase (link)
-   - fallback: generate code (local) for test/demo
-   - verify and confirm local code -> store new password in LS_LOCAL_PW map
-   - signInWithEmailLocal will check LS_LOCAL_PW first (demo)
+   Password reset helpers (igual que antes)
    ------------------ */
-
 function generate6Code(){ return String(Math.floor(Math.random()*900000)+100000); }
-
 async function resetPassword(email, opts={method:'link_and_code'}) {
-  // opts.method: 'link' | 'code' | 'link_and_code'
   if (!email) throw new Error('Email requerido.');
   const result = { sentEmail:false, code:null, method:opts.method || 'link_and_code' };
-  // 1) try to send Firebase reset link (production)
   try {
-    // Continue URL should point to your reset-password page where you'll call confirmPasswordReset.
     const actionCodeSettings = { url: location.origin + '/reset-password.html', handleCodeInApp: false };
     await sendPasswordResetEmail(auth, email, actionCodeSettings);
     result.sentEmail = true;
-  } catch(err) {
-    console.warn('sendPasswordResetEmail failed', err);
-    // do not throw: we'll still offer fallback code
-    result.sentEmail = false;
-  }
-
-  // 2) create a fallback code (always create for demo)
+  } catch(err) { result.sentEmail = false; }
   try {
     const code = generate6Code();
     const codes = getStoredJSON(LS_PW_CODES) || {};
-    codes[email.toLowerCase()] = { code, expires: Date.now() + (15*60*1000) }; // 15 min
+    codes[email.toLowerCase()] = { code, expires: Date.now() + (15*60*1000) };
     setStoredJSON(LS_PW_CODES, codes);
     result.code = code;
-    // For testing convenience also log it (and return it). In production you would NOT reveal it.
     console.info('LIXBY pw-reset fallback code for', email, code);
-  } catch(e){ console.warn('pw fallback save err', e); }
-
+  } catch(e){}
   return result;
 }
-
 function verifyResetCodeLocal(email, code) {
   if (!email || !code) return false;
   const codes = getStoredJSON(LS_PW_CODES) || {};
@@ -145,40 +127,31 @@ function verifyResetCodeLocal(email, code) {
   if (rec.expires < Date.now()) { delete codes[email.toLowerCase()]; setStoredJSON(LS_PW_CODES, codes); return false; }
   return String(rec.code) === String(code).trim();
 }
-
 async function confirmPasswordResetLocal(email, code, newPassword) {
   if (!verifyResetCodeLocal(email, code)) throw new Error('Código inválido o caducado.');
   if (!newPassword || String(newPassword).length < 6) throw new Error('La contraseña debe tener al menos 6 caracteres.');
-  // store locally (demo only). For production rely on Firebase confirmPasswordReset with oobCode.
   const pwmap = getStoredJSON(LS_LOCAL_PW) || {};
   pwmap[email.toLowerCase()] = { password: String(newPassword), updatedAt: new Date().toISOString() };
   setStoredJSON(LS_LOCAL_PW, pwmap);
-  // remove used code
   const codes = getStoredJSON(LS_PW_CODES) || {};
   delete codes[email.toLowerCase()];
   setStoredJSON(LS_PW_CODES, codes);
   return true;
 }
-
-/* Wrapper for Firebase confirm using oobCode (when user clicks link) */
 async function confirmPasswordResetFirebase(oobCode, newPassword) {
   if (!oobCode || !newPassword) throw new Error('Código y nueva contraseña requeridos.');
   try {
-    // validate code first
     await verifyPasswordResetCode(auth, oobCode);
     await confirmPasswordReset(auth, oobCode, newPassword);
     return true;
   } catch(err) {
-    console.error('confirmPasswordResetFirebase err', err);
     throw new Error(mapError(err && err.code, err && err.message || 'Error al confirmar contraseña.'));
   }
 }
 
 /* ------------------
-   SignIn / Create user with email/password (extended)
-   - signInWithEmailLocal checks local fallback pw map for demo first
+   SignIn / Create user with email/password (igual)
    ------------------ */
-
 async function createUserWithEmailLocal(email, password, extra = {}, opts = { sendVerification: true }) {
   try {
     if (!email || !password) throw new Error('Email y contraseña requeridos.');
@@ -187,96 +160,45 @@ async function createUserWithEmailLocal(email, password, extra = {}, opts = { se
     try {
       const displayName = extra.firstName ? `${extra.firstName} ${extra.lastName||''}`.trim() : (user.displayName || null);
       if (displayName) await updateProfile(user, { displayName });
-    } catch(updateErr){ console.warn('updateProfile err', updateErr); }
+    } catch(updateErr){}
     await upsertUserProfile(user, extra);
     if (opts && opts.sendVerification) {
-      try { await sendEmailVerification(user); } catch(e){ console.warn('sendEmailVerification failed', e); }
+      try { await sendEmailVerification(user); } catch(e){}
     }
-    // GUARDADO: persistimos snapshot local para mejorar UX
     saveLocalUser(user);
-
-    // **_CORRECCIÓN IMPORTANTE_**
-    // Antes se hacía signOut aquí por defecto. Lo eliminamos para que, tras crear la cuenta,
-    // el usuario permanezca autenticado y pueda ser redirigido a cuenta.html y ver su info.
-    // Si deseas forzar verificación por email antes de permitir acceso, modifica esta lógica.
-    // try { await fbSignOut(auth); } catch(e){}
-    // CORRECT: set dismissed flag in one line
-    localStorage.setItem(LS_AUTH_DISMISSED, 'true'); // fallback in case UI expects no modal
+    localStorage.setItem(LS_AUTH_DISMISSED, 'true');
     return { ok: true, uid: user.uid, email: user.email };
   } catch (err) {
-    console.error('createUserWithEmailLocal err', err);
     throw new Error(mapError(err && err.code, err && err.message || 'Error creando cuenta.'));
   }
 }
-
 async function signInWithEmailLocal(email, password) {
-  // FIRST: check local fallback passwords (demo)
   try {
     const pwmap = getStoredJSON(LS_LOCAL_PW) || {};
     const rec = pwmap[email.toLowerCase()];
     if (rec && rec.password === String(password)) {
-      // create a fake minimal user and save locally (demo)
       const fakeUser = { uid: 'local-' + email.toLowerCase(), displayName: (email.split('@')[0]||'Usuario'), email: email, photoURL: null, isAnonymous: false };
       saveLocalUser(fakeUser);
       localStorage.setItem(LS_AUTH_DISMISSED, 'true');
       return fakeUser;
     }
-  } catch(e){ /* ignore fallback check errors */ }
-
-  // otherwise use Firebase (production)
+  } catch(e){}
   try {
     const res = await signInWithEmailAndPassword(auth, email, password);
     saveLocalUser(res.user);
     localStorage.setItem(LS_AUTH_DISMISSED, 'true');
     return res.user;
   } catch (err) {
-    console.error('signInWithEmailLocal err', err);
     throw new Error(mapError(err && err.code, err && err.message || 'Error iniciando sesión.'));
   }
 }
 
 /* --------------------------
-   The rest of the file: modal, cookie, header, oauth etc.
-   (kept compact — same modal/header code you already had, with wiring)
+   Modal, cookie, header, oauth, etc. (mejoras de accesibilidad y wire único)
    -------------------------- */
-
-/* --------------------------
-   Cookie banner (si no aceptado)
-   -------------------------- */
-(function ensureCookieBanner(){
-  try {
-    if (localStorage.getItem(LS_COOKIES) === 'true') return;
-    if (document.getElementById('lixbyCookieBanner')) return;
-    const style = document.createElement('style');
-    style.id = 'lixby-cookie-style';
-    style.textContent = `
-      #lixbyCookieBanner { position: fixed; left: 12px; right: 12px; bottom: 12px; max-width:1100px; margin:0 auto; z-index:2147483646; display:flex; gap:12px; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:10px; box-shadow:0 12px 30px rgba(2,6,12,0.4); background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); font-size:0.95rem; color:var(--text); }
-      #lixbyCookieBanner .actions { display:flex; gap:8px; }
-      #lixbyCookieBanner button { padding:8px 10px; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.04); background:transparent; color:var(--text); }
-      #lixbyCookieBanner button.primary { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; border:none; }
-      @media(max-width:700px){ #lixbyCookieBanner{ flex-direction:column; align-items:flex-start; } }
-    `;
-    document.head.appendChild(style);
-    const banner = document.createElement('div');
-    banner.id = 'lixbyCookieBanner';
-    banner.innerHTML = `<div><strong>LIXBY</strong><div style="color:var(--muted);margin-top:4px">Usamos cookies para mejorar la experiencia. Puedes aceptar o configurar preferencias.</div></div>`;
-    const actions = document.createElement('div'); actions.className = 'actions';
-    const btnConfig = document.createElement('button'); btnConfig.textContent = 'Configurar';
-    const btnAccept = document.createElement('button'); btnAccept.textContent = 'Aceptar'; btnAccept.className = 'primary';
-    actions.appendChild(btnConfig); actions.appendChild(btnAccept);
-    banner.appendChild(actions);
-    banner.addEventListener('keydown', (e)=>{ if (e.key==='Escape') banner.remove(); });
-    document.body.appendChild(banner);
-    btnAccept.addEventListener('click', ()=> { try{ localStorage.setItem(LS_COOKIES,'true'); }catch(e){} banner.remove(); });
-    btnConfig.addEventListener('click', ()=> { alert('Configurar cookies — placeholder.'); try{ localStorage.setItem(LS_COOKIES,'true'); }catch(e){} banner.remove(); });
-  } catch(e){ console.warn('cookie banner err', e); }
-})();
-
-/* ------------------------------
-   Modal markup + styles (single)
-   ------------------------------ */
+let modalWired = false;
 function injectMinimalAuthStyles(){
-  if (document.getElementById('lixby-auth-min-css')) return;
+  if ($id('lixby-auth-min-css')) return;
   const s = document.createElement('style');
   s.id = 'lixby-auth-min-css';
   s.textContent = `
@@ -297,6 +219,7 @@ function injectMinimalAuthStyles(){
     .lixby-input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #e6e6e6; margin-top:8px; box-sizing:border-box; }
     .lixby-error { color:#b91c1c; font-size:0.9rem; margin-top:6px; }
     .lixly-ghost { background:transparent; border:1px solid rgba(0,0,0,0.06); border-radius:10px; padding:9px 12px; cursor:pointer; }
+    .lixby-btn.loading { opacity:.65; pointer-events:none; }
   `;
   document.head.appendChild(s);
 }
@@ -308,26 +231,25 @@ function createAuthModalIfMissing(){
   overlay.id = 'lixbyAuthOverlay';
   overlay.className = 'lixby-overlay';
   overlay.setAttribute('aria-hidden','true');
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label','Iniciar sesión');
   overlay.style.display = 'none';
   overlay.innerHTML = `
-    <div class="lixby-modal" role="dialog" aria-modal="true" aria-labelledby="lixTitle">
+    <div class="lixby-modal" role="document" aria-labelledby="lixTitle">
       <button class="lixby-close" id="lixClose" aria-label="Cerrar">✕</button>
       <h3 id="lixTitle" class="lixby-title">Acceso a Lixby</h3>
       <div class="lixby-sub">Inicia sesión con tu cuenta</div>
-
       <div style="display:flex;flex-direction:column;gap:10px">
         <button id="btnGoogle" class="lixby-btn" title="Iniciar sesión con Google" aria-label="Iniciar con Google">
           <img class="icon" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%23EA4335' d='M44 24.2c0-1.6-.2-3.1-.6-4.5H24v8.6h11.9c-.5 2.8-2.3 5.1-4.9 6.7v5.5h8c4.7-4.3 7.5-10.7 7.5-16.3z'/><path fill='%2344AA53' d='M24 44c6 0 11-2.2 14.7-5.9l-7.1-5.1c-2 1.3-4.5 2.1-7.6 2.1-5.8 0-10.8-3.8-12.6-9.1H4v5.7C7.6 39.9 15.3 44 24 44z'/><path fill='%234A90E2' d='M9.4 27.9A17.9 17.9 0 0 1 8 24c0-0.8.1-1.6.3-2.4L4 16.9C2.6 19.9 1.9 22.9 1.9 25.9c0 3 0.6 5.8 1.9 8.2l6-6.2z'/><path fill='%23FBBC05' d='M24 8c3.6 0 6.9 1.2 9.5 3.4l6.9-6.9C35 2 29.8 0 24 0 15.3 0 7.6 4.1 4 12.6l6 4.3C13.2 11.9 18.2 8 24 8z'/></svg>" alt="G">
           <span>Iniciar con Google</span>
         </button>
-
         <button id="btnGitHub" class="lixby-btn" title="Iniciar sesión con GitHub" aria-label="Iniciar con GitHub">
           <img class="icon" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23000' d='M12 2C6.48 2 2 6.58 2 12.18c0 4.5 2.87 8.32 6.84 9.66.5.1.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.62-3.37-1.36-3.37-1.36-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.64-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05A9.24 9.24 0 0 1 12 6.8c.85.004 1.71.115 2.5.34 1.9-1.32 2.74-1.05 2.74-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.64 1.03 2.76 0 3.94-2.34 4.81-4.57 5.07.36.3.68.9.68 1.82 0 1.31-.01 2.36-.01 2.68 0 .26.18.59.69.49A10.2 10.2 0 0 0 22 12.18C22 6.58 17.52 2 12 2z'/></svg>" alt="GH">
           <span>Iniciar con GitHub</span>
         </button>
-
         <div class="lixby-divider">o</div>
-
         <div style="display:flex;flex-direction:column;gap:8px">
           <input id="emailField" class="lixby-input" placeholder="Correo electrónico" type="email" autocomplete="username" />
           <input id="passwordField" class="lixby-input" placeholder="Contraseña" type="password" autocomplete="current-password" />
@@ -337,30 +259,71 @@ function createAuthModalIfMissing(){
           </div>
           <div id="lixAuthErr" class="lixby-error" aria-live="polite"></div>
         </div>
-
         <div class="lixby-divider">o</div>
-
         <div class="lixby-actions">
           <button id="goLogin" class="lixby-link-btn">Iniciar sesión</button>
           <button id="goRegister" class="lixly-link-btn">Registrarse</button>
         </div>
-
         <button id="btnAnonymous" class="lixby-btn" style="margin-top:6px">Entrar como invitado</button>
-
         <div id="lixMsg" class="lixby-small" aria-live="polite"></div>
         <div id="recaptcha-container" style="display:none"></div>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
+}
 
-  // wire close and quick navigation; set dismissed when explicitly closed or guest
+function showAuthOverlay(){
+  if (auth.currentUser) return;
+  if (localStorage.getItem(LS_AUTH_DISMISSED) === 'true') return;
+  createAuthModalIfMissing();
+  const o = $id('lixbyAuthOverlay');
+  if(!o) return;
+  o.setAttribute('aria-hidden','false');
+  o.style.display='flex';
+  // Guardar el elemento con foco antes de abrir el modal
+  window._lixby_last_focus = document.activeElement;
+  setTimeout(()=> { const first = o.querySelector('input,button'); if (first) first.focus(); }, 40);
+  document.body.style.overflow = 'hidden';
+}
+function hideAuthOverlay(){
+  const o = $id('lixbyAuthOverlay');
+  if(!o) return;
+  o.setAttribute('aria-hidden','true');
+  o.style.display='none';
+  document.body.style.overflow = '';
+  if (window._lixby_last_focus && window._lixby_last_focus.focus) {
+    setTimeout(()=>window._lixby_last_focus.focus(), 40);
+  }
+}
+function setModalMsg(txt, autoHideMs=3000){
+  const el = $id('lixMsg'); if(!el) return;
+  el.textContent = txt || '';
+  if (autoHideMs) { setTimeout(()=> { if(el) el.textContent=''; }, autoHideMs); }
+}
+
+/* --------------------------
+   Modal wireado una vez
+   -------------------------- */
+function wireModalButtons(){
+  if (modalWired) return; // solo una vez
+  modalWired = true;
+  createAuthModalIfMissing();
   $id('lixClose')?.addEventListener('click', ()=> { localStorage.setItem(LS_AUTH_DISMISSED, 'true'); hideAuthOverlay(); });
   $id('goLogin')?.addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'login.html'; });
   $id('goRegister')?.addEventListener('click', ()=> { hideAuthOverlay(); location.href = 'register.html'; });
-  $id('btnAnonymous')?.addEventListener('click', async (e)=> { e.preventDefault(); localStorage.setItem(LS_AUTH_DISMISSED, 'true'); await doAnonymousSignIn(); });
-
-  // wire local email sign-in flows
+  $id('btnAnonymous')?.addEventListener('click', async (e)=> {
+    e.preventDefault();
+    const btn = $id('btnAnonymous');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    try {
+      await doAnonymousSignIn();
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  });
   $id('emailSignInBtn')?.addEventListener('click', async (e)=> {
     try {
       const em = ($id('emailField')||{}).value.trim();
@@ -374,45 +337,23 @@ function createAuthModalIfMissing(){
       await sleep(700);
       hideAuthOverlay();
     } catch(err) {
-      console.error(err);
       $id('lixAuthErr') && ($id('lixAuthErr').textContent = err && err.message ? err.message : 'Error iniciando sesión.');
     }
   });
-
   $id('emailRecoverBtn')?.addEventListener('click', (e)=> {
     hideAuthOverlay();
     location.href = 'forgot-password.html';
   });
-}
-
-/* show/hide modal with safety checks */
-function showAuthOverlay(){
-  // never show if user signed in or dismissed previously
-  if (auth.currentUser) return;
-  if (localStorage.getItem(LS_AUTH_DISMISSED) === 'true') return;
-  createAuthModalIfMissing();
-  const o = $id('lixbyAuthOverlay');
-  if(!o) return;
-  o.setAttribute('aria-hidden','false');
-  o.style.display='flex';
-  // block scroll
-  try{ document.documentElement.style.overflow='hidden'; }catch(e){}
-  // focus first interactive
-  setTimeout(()=> { const btn = o.querySelector('button'); if (btn) btn.focus(); }, 80);
-}
-function hideAuthOverlay(){
-  const o = $id('lixbyAuthOverlay');
-  if(!o) return;
-  o.setAttribute('aria-hidden','true');
-  o.style.display='none';
-  try{ document.documentElement.style.overflow=''; }catch(e){}
-}
-
-/* small modal helper */
-function setModalMsg(txt, autoHideMs=3000){
-  const el = $id('lixMsg'); if(!el) return;
-  el.textContent = txt || '';
-  if (autoHideMs) { setTimeout(()=> { if(el) el.textContent=''; }, autoHideMs); }
+  $id('btnGoogle')?.addEventListener('click', async (e)=> {
+    e && e.preventDefault();
+    try { await doPopupSignInWithFallback(googleProvider); }
+    catch(err){ if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err); else setModalMsg(mapError(err && err.code, err && err.message)); }
+  });
+  $id('btnGitHub')?.addEventListener('click', async (e)=> {
+    e && e.preventDefault();
+    try { await doPopupSignInWithFallback(githubProvider); }
+    catch(err){ if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err); else setModalMsg(mapError(err && err.code, err && err.message)); }
+  });
 }
 
 /* --------------------------
@@ -427,7 +368,6 @@ async function doPopupSignInWithFallback(provider){
       const res = await signInWithPopup(auth, provider);
       if (res && res.user) {
         saveLocalUser(res.user);
-        // mark dismissed so modal won't reappear
         localStorage.setItem(LS_AUTH_DISMISSED, 'true');
         setModalMsg('Has iniciado sesión correctamente',1200);
         await sleep(600);
@@ -468,7 +408,7 @@ async function doAnonymousSignIn(){
 }
 
 /* --------------------------
-   reCAPTCHA / Phone MFA helpers
+   reCAPTCHA / Phone MFA helpers (igual que antes)
    -------------------------- */
 let recaptchaVerifierInstance = null;
 function ensureRecaptcha(){
@@ -477,9 +417,8 @@ function ensureRecaptcha(){
     recaptchaVerifierInstance = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'invisible' });
     recaptchaVerifierInstance.render().catch(()=>{/* ignore render errs */});
     return recaptchaVerifierInstance;
-  }catch(e){ console.warn('recaptcha init err', e); return null; }
+  }catch(e){ return null; }
 }
-
 async function enrollPhoneMultiFactor(displayNameForFactor = 'Teléfono'){
   try {
     const user = auth.currentUser;
@@ -498,12 +437,10 @@ async function enrollPhoneMultiFactor(displayNameForFactor = 'Teléfono'){
     await mfaUser.enroll(assertion, displayNameForFactor);
     setModalMsg('Segundo factor añadido ✔', 2500);
   } catch(err) {
-    showConsolePretty(err);
     setModalMsg(err && err.message ? err.message : 'Error al inscribir segundo factor', 4000);
     try{ if (recaptchaVerifierInstance && typeof recaptchaVerifierInstance.clear === 'function') recaptchaVerifierInstance.clear(); }catch(e){}
   }
 }
-
 async function handleMultiFactorRequired(error){
   try{
     if (!error || !error.code) { throw error || new Error('Unknown MFA error'); }
@@ -528,27 +465,9 @@ async function handleMultiFactorRequired(error){
     await sleep(700);
     hideAuthOverlay();
   } catch(err) {
-    showConsolePretty(err);
     setModalMsg(err && err.message ? err.message : 'Error en MFA', 4000);
     try{ if (recaptchaVerifierInstance && typeof recaptchaVerifierInstance.clear === 'function') recaptchaVerifierInstance.clear(); }catch(e){}
   }
-}
-
-/* --------------------------
-   Wire modal buttons
-   -------------------------- */
-function wireModalButtons(){
-  createAuthModalIfMissing();
-  $id('btnGoogle')?.addEventListener('click', async (e)=> {
-    e && e.preventDefault();
-    try { await doPopupSignInWithFallback(googleProvider); }
-    catch(err){ if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err); else setModalMsg(mapError(err && err.code, err && err.message)); }
-  });
-  $id('btnGitHub')?.addEventListener('click', async (e)=> {
-    e && e.preventDefault();
-    try { await doPopupSignInWithFallback(githubProvider); }
-    catch(err){ if (err && err.code === 'auth/multi-factor-auth-required') await handleMultiFactorRequired(err); else setModalMsg(mapError(err && err.code, err && err.message)); }
-  });
 }
 
 /* --------------------------
@@ -561,17 +480,15 @@ async function upsertUserProfile(user, extra={}) {
     const snap = await getDoc(ref);
     const base = { uid: user.uid, name: user.displayName || null, email: user.email || null, photoURL: user.photoURL || null, provider: (user.providerData && user.providerData[0] && user.providerData[0].providerId) || null, createdAt: snap.exists() ? snap.data().createdAt : new Date().toISOString() };
     await setDoc(ref, { ...base, ...extra }, { merge: true });
-  } catch(e){ console.warn('upsertUserProfile err', e); }
+  } catch(e){}
 }
 
 /* --------------------------
-   Header & account area
+   Header & account area (igual)
    -------------------------- */
 function findAccountContainer(){
-  // 1) existing #accountContainer
   const byId = $id('accountContainer');
   if (byId) return byId;
-  // 2) nav .nav-right (if exists) -> create a slot div at end
   const navRight = document.querySelector('.nav .nav-right, .nav-right');
   if (navRight) {
     let slot = navRight.querySelector('.lixby-account-slot');
@@ -585,7 +502,6 @@ function findAccountContainer(){
     }
     return slot;
   }
-  // 3) fallback: prepend a small header container at top
   let fallback = document.getElementById('lixbyHeaderContainer');
   if (!fallback) {
     fallback = document.createElement('div');
@@ -602,7 +518,7 @@ function findAccountContainer(){
 function renderAccountUI(user){
   const slot = findAccountContainer();
   if (!slot) return;
-  slot.innerHTML = ''; // replace
+  slot.innerHTML = '';
   if (!user) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -613,9 +529,7 @@ function renderAccountUI(user){
     return;
   }
   const name = escapeHtml(parseSafeName(user));
-  // If user doesn't have a photo, show same avatar used for guest style (LX)
   const photo = user.photoURL || `https://via.placeholder.com/64?text=${encodeURIComponent(name.charAt(0)||'LX')}`;
-  // Build account element that links to cuenta.html
   const a = document.createElement('a');
   a.href = 'cuenta.html';
   a.style.display = 'inline-flex';
@@ -628,22 +542,19 @@ function renderAccountUI(user){
 }
 
 /* --------------------------
-   Extra helper API: updateProfileExtra (used by account page)
+   Extra helper API: updateProfileExtra (igual)
    -------------------------- */
 async function updateProfileExtra(extra = {}) {
   try {
     const user = auth.currentUser;
     if (!user) throw new Error('No autenticado');
-    // Update Firebase profile displayName if provided
     try {
       const displayName = extra.firstName ? `${extra.firstName} ${extra.lastName||''}`.trim() : (extra.displayName || null);
       if (displayName) await updateProfile(user, { displayName });
-    } catch(e){ console.warn('updateProfile displayName err', e); }
-    // persist to Firestore
+    } catch(e){}
     await upsertUserProfile(user, extra);
     return true;
   } catch(e) {
-    console.warn('updateProfileExtra err', e);
     throw e;
   }
 }
@@ -652,7 +563,6 @@ async function updateProfileExtra(extra = {}) {
    Init: redirect result, listeners
    -------------------------- */
 async function init(){
-  // try redirect result (OAuth)
   try {
     const rr = await getRedirectResult(auth);
     if (rr && rr.user) {
@@ -665,107 +575,73 @@ async function init(){
   } catch(e) {
     if (e && e.code === 'auth/multi-factor-auth-required') {
       await handleMultiFactorRequired(e);
-    } else {
-      console.warn('getRedirectResult err', e);
     }
   }
-
-  // create modal & wire buttons
   createAuthModalIfMissing();
   wireModalButtons();
 
-  // Attach auth state observer (main source of truth)
+  // Evento global de usuario actualizado
+  function fireAuthEvent(user) {
+    window.dispatchEvent(new CustomEvent('lixby:auth', {detail: user}));
+  }
+
+  // Attach auth state observer
   onAuthStateChanged(auth, async (user) => {
     try {
       if (user) {
-        // persist & update UI once signed in
         saveLocalUser(user);
-        localStorage.setItem(LS_AUTH_DISMISSED, 'true'); // ensure modal won't reopen
+        localStorage.setItem(LS_AUTH_DISMISSED, 'true');
         renderAccountUI(user);
         await upsertUserProfile(user);
         hideAuthOverlay();
+        fireAuthEvent(user);
       } else {
-        // signed out: clear local snapshot and render anonymous account button
         clearLocalUser();
         renderAccountUI(null);
-        // do NOT auto-show the modal repeatedly
+        fireAuthEvent(null);
       }
-    } catch(err) { console.warn('onAuthStateChanged handler err', err); }
+    } catch(err) {}
   });
 
-  // hydrate header from local snapshot quickly
   try {
     const cached = loadLocalUser();
     if (cached && cached.name) renderAccountUI(cached);
     else renderAccountUI(null);
   } catch(e){ renderAccountUI(null); }
-
-  // minor accessibility: allow ESC to close modal
   document.addEventListener('keydown', (e)=> {
     if (e.key === 'Escape') {
       const ov = $id('lixbyAuthOverlay');
       if (ov && ov.style.display === 'flex') { localStorage.setItem(LS_AUTH_DISMISSED, 'true'); hideAuthOverlay(); }
     }
   });
-
-  // Expose API
-  window.lixbyAuth = {
-    show: showAuthOverlay,
-    hide: hideAuthOverlay,
-    enrollPhoneMFA: enrollPhoneMultiFactor,
-    ensureRecaptcha,
-    signInWithGoogle: () => doPopupSignInWithFallback(googleProvider),
-    signInWithGitHub: () => doPopupSignInWithFallback(githubProvider),
-    signInAnonymously: () => doAnonymousSignIn(),
-    signOut: async ()=> { try { await fbSignOut(auth); clearLocalUser(); localStorage.removeItem(LS_AUTH_DISMISSED); renderAccountUI(null); } catch(e) { console.warn(e); } },
-    _rawAuth: auth,
-    _rawDb: db
-  };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
-/// --- EXPOSED API (important) ---
 window.appAuth = window.appAuth || {};
-window.appAuth.resetPassword = resetPassword;                         // (email, opts) -> {sentEmail, code}
-window.appAuth.verifyResetCodeLocal = verifyResetCodeLocal;           // (email, code) -> bool
-window.appAuth.confirmPasswordResetLocal = confirmPasswordResetLocal; // (email,code,newPassword) -> true
-window.appAuth.confirmPasswordResetFirebase = confirmPasswordResetFirebase; // (oobCode,newPassword) -> true
+window.appAuth.resetPassword = resetPassword;
+window.appAuth.verifyResetCodeLocal = verifyResetCodeLocal;
+window.appAuth.confirmPasswordResetLocal = confirmPasswordResetLocal;
+window.appAuth.confirmPasswordResetFirebase = confirmPasswordResetFirebase;
 window.appAuth.createUserWithEmail = (email,pw,extra,opts) => createUserWithEmailLocal(email,pw,extra,opts);
 window.appAuth.signInWithEmail = (email,pw) => signInWithEmailLocal(email,pw);
 window.appAuth.updateProfileExtra = (extra) => updateProfileExtra(extra);
-
-// Also keep signInWithGoogle, signInWithGitHub, signInAnonymously, signOut exposed
 window.appAuth.signInWithGoogle = () => doPopupSignInWithFallback(googleProvider);
 window.appAuth.signInWithGitHub = () => doPopupSignInWithFallback(githubProvider);
 window.appAuth.signInAnonymously = () => doAnonymousSignIn();
-window.appAuth.signOut = async ()=> { try { await fbSignOut(auth); clearLocalUser(); localStorage.removeItem(LS_AUTH_DISMISSED); renderAccountUI(null); } catch(e){ console.warn(e); } };
-
-// Backwards compat aliases
+window.appAuth.signOut = async ()=> { try { await fbSignOut(auth); deepCleanLocalStorage(); renderAccountUI(null); } catch(e){ } };
 window.lixbyAuth = window.lixbyAuth || window.appAuth;
-
-// --- ADICIONES DE COMPATIBILIDAD GLOBAL ---
-// Exponer la función raíz que algunas páginas antiguas invocaban directamente
-// (ej. doPopupSignInWithFallback). Esta función simplemente invoca las APIs expuestas.
 window.doPopupSignInWithFallback = async function(provider) {
-  // Si se pasa un objeto provider de Firebase, detectamos por providerId; si no, intentamos heurística
   try {
     if (provider && typeof provider === 'object' && provider.providerId) {
       if (String(provider.providerId).toLowerCase().includes('google')) return await window.appAuth.signInWithGoogle();
       if (String(provider.providerId).toLowerCase().includes('github')) return await window.appAuth.signInWithGitHub();
     }
-    // fallback: tratar strings comunes
     if (provider === 'google' || provider === 'Google') return await window.appAuth.signInWithGoogle();
     if (provider === 'github' || provider === 'GitHub' || provider === 'git') return await window.appAuth.signInWithGitHub();
-    // último recurso: intentar Google
     return await window.appAuth.signInWithGoogle();
-  } catch(err) {
-    console.warn('doPopupSignInWithFallback wrapper err', err);
-    throw err;
-  }
+  } catch(err) { throw err; }
 };
-
-// También exponer nombres históricos por si otras páginas los llaman:
 window.signInWithGoogle = window.appAuth.signInWithGoogle;
 window.signInWithGitHub = window.appAuth.signInWithGitHub;
 window.signInAnonymously = window.appAuth.signInAnonymously;
