@@ -1,17 +1,17 @@
 // auth-ui.js  (cargar después de auth-firebase.js)
-// Versión corregida y robusta: preview mini-cart on hover, click abre panel,
+// Versión mejorada y robusta: preview mini-cart on hover, click abre panel,
 // fallback de cuenta usando localStorage (foto invitado), y suscripciones seguras.
+// Mejoras: accesibilidad, feedback visual, animación, soporte mobile, feedback al cerrar sesión.
+
 (function(){
   'use strict';
 
-  // evita cargarse dos veces
   if (window.__LIXBY_AUTH_UI_LOADED) {
     console.warn('auth-ui ya cargado');
     return;
   }
   window.__LIXBY_AUTH_UI_LOADED = true;
 
-  // helpers
   const $ = (sel) => document.querySelector(sel);
   const byId = (id) => document.getElementById(id);
 
@@ -19,17 +19,33 @@
     try { return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
   }
 
-  // constantes
   const GUEST_IMG = 'https://ohsobserver.com/wp-content/uploads/2022/12/Guest-user.png';
   const CART_KEY = 'lixby_cart_v1';
   const ACCOUNT_KEY = 'lixby_user';
 
-  // selectores (pueden no existir en todas las páginas)
-  let accountBtn = byId('accountBtn'); // may be replaced dynamically
+  let accountBtn = byId('accountBtn');
   const brand = document.querySelector('.brand');
   const navRight = document.querySelector('.nav-right');
 
-  // crea o actualiza el bloque accountHolder (accesible y keyboard-friendly)
+  // Añadido: animación minimal feedback (pulse)
+  function pulse(elem) {
+    if (!elem) return;
+    elem.classList.remove('pulse-anim');
+    void elem.offsetWidth; // trigger reflow
+    elem.classList.add('pulse-anim');
+    setTimeout(()=>elem.classList.remove('pulse-anim'), 400);
+  }
+  // Agrega la animación al head si no existe
+  if (!document.getElementById('lixby-pulse-style')) {
+    const s = document.createElement('style');
+    s.id = 'lixby-pulse-style';
+    s.textContent = `
+    @keyframes pulseAnim { 0%{box-shadow:0 0 0 0 rgba(47,107,255,0.25);} 70%{box-shadow:0 0 0 10px rgba(47,107,255,0);} 100%{box-shadow:0 0 0 0 rgba(47,107,255,0);} }
+    .pulse-anim { animation: pulseAnim 0.4s cubic-bezier(.4,0,.2,1); }
+    `;
+    document.head.appendChild(s);
+  }
+
   function ensureAccountHolder() {
     let holder = byId('accountHolder');
     if (holder) return holder;
@@ -43,7 +59,6 @@
     holder.style.alignItems = 'center';
     holder.style.gap = '8px';
 
-    // avatar button (toggle menu)
     const avatarBtn = document.createElement('button');
     avatarBtn.id = 'headerAvatarBtn';
     avatarBtn.className = 'icon-btn';
@@ -76,7 +91,6 @@
     avatarBtn.appendChild(avatarImg);
     avatarBtn.appendChild(nameSpan);
 
-    // menu: acciones (ver cuenta, cerrar sesión)
     const menu = document.createElement('div');
     menu.id = 'accountMenu';
     menu.className = 'account-menu glass';
@@ -103,11 +117,9 @@
     signOutBtn.setAttribute('role','menuitem');
     signOutBtn.type = 'button';
 
-    // append
     menu.appendChild(viewAccount);
     menu.appendChild(signOutBtn);
 
-    // wrapper combines avatarBtn + menu
     const wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
     wrapper.appendChild(avatarBtn);
@@ -115,9 +127,7 @@
 
     holder.appendChild(wrapper);
 
-    // insert into nav-right (si no existe, append al body como fallback)
     if (navRight) {
-      // insert before theme toggle if exists
       const themeToggle = byId('themeToggle');
       if (themeToggle) navRight.insertBefore(holder, themeToggle);
       else navRight.appendChild(holder);
@@ -125,19 +135,16 @@
       document.body.appendChild(holder);
     }
 
-    // interactions
     avatarBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleAccountMenu();
     });
-    // close on outside click
     document.addEventListener('click', (ev) => {
       const menuEl = byId('accountMenu');
       const btnEl = byId('headerAvatarBtn');
       if (!menuEl || !btnEl) return;
       if (!menuEl.contains(ev.target) && !btnEl.contains(ev.target)) hideAccountMenu();
     });
-    // keyboard accessibility
     avatarBtn.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleAccountMenu(); }
       if (ev.key === 'ArrowDown') { ev.preventDefault(); focusFirstMenuItem(); }
@@ -153,24 +160,18 @@
       e.preventDefault();
       hideAccountMenu();
       try {
-        // prefer appAuth signOut if provided
         if (window.appAuth && typeof window.appAuth.signOut === 'function') {
           await window.appAuth.signOut();
-          // appAuth.onAuthState should update header via subscribeAuth
         } else if (window.appAuth && window.appAuth._rawAuth && typeof window.appAuth._rawAuth.signOut === 'function') {
           await window.appAuth._rawAuth.signOut();
         } else {
-          // fallback: clear localStorage snapshot and dispatch change event
           try { localStorage.removeItem(ACCOUNT_KEY); } catch(e){}
-          // notify other parts
           try { window.dispatchEvent(new Event('authChanged')); } catch(e){}
-          // refresh UI
           renderHeaderUser(null);
-          // optionally navigate to home
           try { window.location.href = 'index.html'; } catch(e){}
         }
+        pulse(avatarBtn);
       } catch (err) {
-        console.warn('Sign-out failed', err);
         try { alert('Error cerrando sesión. Revisa la consola.'); } catch(e){}
       }
     });
@@ -201,26 +202,19 @@
     if (first && typeof first.focus === 'function') first.focus();
   }
 
-  // Render header UI (avatar + menu). userObj puede ser null
   function renderHeaderUser(userObj) {
     try {
-      // if null -> restore accountBtn
       if (!userObj) {
-        // remove holder if present
         const holder = byId('accountHolder');
         if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
-        // restore original accountBtn if exists or recreate fallback
         if (!accountBtn) {
-          // try to find a button in nav-right with label Cuenta
           accountBtn = byId('accountBtn') || (navRight && navRight.querySelector('button[aria-label="Mi cuenta"], .btn.ghost'));
         }
         if (accountBtn) {
           accountBtn.style.display = '';
           try { accountBtn.textContent = 'Cuenta'; accountBtn.setAttribute('aria-haspopup','true'); } catch(e){}
-          // ensure accountBtn opens cuenta.html as fallback
           accountBtn.onclick = function(e){ e.preventDefault(); window.location.href = 'cuenta.html'; };
         } else if (navRight) {
-          // create fallback account button
           const fallback = document.createElement('button');
           fallback.id = 'accountBtn';
           fallback.className = 'btn ghost';
@@ -233,18 +227,12 @@
         if (brand) brand.textContent = 'LIXBY';
         return;
       }
-
-      // ensure accountBtn hidden (we replace it with holder)
       if (accountBtn) accountBtn.style.display = 'none';
-
       const holder = ensureAccountHolder();
       const avatarImg = byId('headerAvatar');
       const nameSpan = byId('headerName');
-
       const displayName = userObj.name || (userObj.email ? userObj.email.split('@')[0] : 'Usuario');
-      // if userObj explicitly anonymous OR lacks photoURL use guest image
       const photo = (userObj.isAnonymous || !userObj.photoURL) ? (userObj.photoURL || GUEST_IMG) : userObj.photoURL;
-
       if (avatarImg) {
         avatarImg.src = photo;
         avatarImg.alt = `${displayName} — avatar`;
@@ -253,21 +241,18 @@
         nameSpan.textContent = displayName;
       }
       if (brand) {
-        // brand shows first name if available
         brand.textContent = (userObj.name ? (userObj.name.split(' ')[0]) : 'LIXBY');
       }
+      pulse(avatarImg);
     } catch (e) {
       console.warn('renderHeaderUser error', e);
     }
   }
 
-  // Account panel for cuenta.html (uses appAuth.updateProfileExtra as in your auth-firebase)
+  // Account panel (cuenta.html)
   function renderAccountPanel(user) {
-    // Only render if account panel container present or on cuenta.html
     const isCuentaPage = location.pathname.endsWith('cuenta.html') || !!byId('accountPanel');
     if (!isCuentaPage) return;
-
-    // prefer container with #accountPanel else insert into main
     let container = byId('accountPanel');
     if (!container) {
       const main = document.querySelector('main') || document.body;
@@ -275,12 +260,9 @@
       container.id = 'accountPanel';
       main.prepend(container);
     }
-
-    // minimal safe values
     const fn = (user && (user.firstName || user.name && user.name.split(' ')[0])) ? (user.firstName || user.name.split(' ')[0]) : '';
     const ln = (user && user.lastName) ? user.lastName : '';
     const dob = (user && user.dob) ? user.dob : '';
-
     container.innerHTML = `
       <div class="account-profile glass" style="max-width:980px;margin:28px auto;padding:18px;border-radius:12px;display:flex;gap:16px;align-items:flex-start;">
         <div style="flex:0 0 84px;">
@@ -303,14 +285,10 @@
         </div>
       </div>
     `;
-
-    // attach handlers
     const btnSave = byId('btnSaveProfile');
     const btnCancel = byId('btnCancelProfile');
     const profileMsg = byId('profileMsg');
-
     if (btnCancel) btnCancel.addEventListener('click', () => { location.reload(); });
-
     if (btnSave) {
       btnSave.addEventListener('click', async () => {
         const firstName = (byId('pf_firstName')||{}).value || '';
@@ -321,17 +299,14 @@
           if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') throw new Error('updateProfileExtra no disponible');
           await window.appAuth.updateProfileExtra({ firstName, lastName, dob: dobVal });
           profileMsg.textContent = 'Guardado ✔';
-          // update header name locally
           const local = safeJSONParse(localStorage.getItem(ACCOUNT_KEY)) || {};
           local.firstName = firstName || local.firstName;
           local.lastName = lastName || local.lastName;
           local.dob = dobVal || local.dob;
-          try { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(local)); } catch(e){/*ignore*/}
-
-          // try to update header immediately
+          try { localStorage.setItem(ACCOUNT_KEY, JSON.stringify(local)); } catch(e){}
           renderHeaderUser({ uid: (local.uid||''), name: (firstName ? (firstName + (lastName ? ' ' + lastName : '')) : local.name || local.firstName), email: local.email, photoURL: local.photoURL });
+          pulse(profileMsg);
         } catch (err) {
-          console.error('Guardar perfil', err);
           profileMsg.textContent = 'Error al guardar. Revisa consola.';
         }
       });
@@ -343,18 +318,14 @@
     return String(str).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]); });
   }
 
-  // Read minimal local snapshot
   function getLocalUserSnapshot() {
     return safeJSONParse(localStorage.getItem(ACCOUNT_KEY));
   }
 
-  // Subscribe to auth state; prefer appAuth.onAuthState but fallback to localStorage + events
   function subscribeAuth() {
-    // primary: appAuth API
     if (window.appAuth && typeof window.appAuth.onAuthState === 'function') {
       try {
         window.appAuth.onAuthState((u) => {
-          // u may be null or user object as provided by appAuth
           const local = getLocalUserSnapshot();
           const toShow = u || local || null;
           renderHeaderUser(toShow);
@@ -365,13 +336,9 @@
         console.warn('appAuth.onAuthState failed, using fallback', e);
       }
     }
-
-    // fallback: use localStorage snapshot and listen for authChanged/storage events
     const local = getLocalUserSnapshot();
     renderHeaderUser(local);
     renderAccountPanel(local || {});
-
-    // listen for storage changes from other tabs
     window.addEventListener('storage', (ev) => {
       if (ev.key === ACCOUNT_KEY) {
         const newUser = safeJSONParse(ev.newValue);
@@ -379,8 +346,6 @@
         renderAccountPanel(newUser || {});
       }
     });
-
-    // custom event to notify changes within same tab
     window.addEventListener('authChanged', () => {
       const u = getLocalUserSnapshot();
       renderHeaderUser(u);
@@ -388,48 +353,35 @@
     });
   }
 
-  // inicializar en DOMContentLoaded
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', subscribeAuth);
   } else {
     subscribeAuth();
   }
 
-  /* ============================================================
-     Mini-cart hover preview + click-open panel (global fallback)
-     - Safe: no errors if elements missing
-     - Renders using localStorage 'lixby_cart_v1' when no global handlers
-     ============================================================ */
-
+  // ==== MINI-CART ====
   function readCartFromStorage() {
     try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch(e){ return []; }
   }
-
   function formatPriceLocale(n) {
     try {
       const v = Math.round((Number(n)||0)*100)/100;
-      // use Intl if available for consistency
       if (window.Intl && typeof Intl.NumberFormat === 'function') {
         return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(v);
       }
       return v.toFixed(2).replace('.',',') + '€';
     } catch(e){ return String(n); }
   }
-
   function renderMiniCartPreviewInto(miniCartEl) {
     if (!miniCartEl) return;
-    // if page already provides updateMiniCartUI, call it and exit
     if (typeof window.updateMiniCartUI === 'function') {
       try { window.updateMiniCartUI(); return; } catch(e){ /* continue */ }
     }
-
     const itemsContainer = miniCartEl.querySelector('#miniCartItems') || miniCartEl.querySelector('.mini-cart-items') || miniCartEl;
     const totalEl = miniCartEl.querySelector('#miniCartTotal') || miniCartEl.querySelector('.mini-cart-total');
-
     if (!itemsContainer) return;
     const cart = readCartFromStorage();
     itemsContainer.innerHTML = '';
-
     if (!cart || cart.length === 0) {
       const empty = document.createElement('div');
       empty.style.padding = '8px';
@@ -439,7 +391,6 @@
       if (totalEl) totalEl.textContent = formatPriceLocale(0);
       return;
     }
-
     const frag = document.createDocumentFragment();
     let total = 0;
     cart.forEach((it, idx) => {
@@ -450,7 +401,6 @@
       row.style.alignItems = 'center';
       row.style.padding = '8px';
       row.style.borderRadius = '8px';
-
       const img = document.createElement('img');
       img.src = it.image || 'https://via.placeholder.com/80x80?text=Img';
       img.alt = it.name || 'Producto';
@@ -460,7 +410,6 @@
       img.style.borderRadius = '6px';
       img.loading = 'lazy';
       img.decoding = 'async';
-
       const meta = document.createElement('div');
       meta.className = 'meta';
       meta.style.flex = '1';
@@ -473,7 +422,6 @@
       sub.textContent = `${formatPriceLocale(priceNum)} × ${it.qty || 1}`;
       meta.appendChild(name);
       meta.appendChild(sub);
-
       const rem = document.createElement('button');
       rem.className = 'remove';
       rem.textContent = '✕';
@@ -487,46 +435,40 @@
         const c = readCartFromStorage();
         c.splice(idx,1);
         try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e){}
-        // re-render
         renderMiniCartPreviewInto(miniCartEl);
-        // notify other listeners
         try { window.dispatchEvent(new Event('cartUpdated')); } catch(e){}
       });
-
       row.appendChild(img);
       row.appendChild(meta);
       row.appendChild(rem);
       frag.appendChild(row);
-
       total += priceNum * Number(it.qty||1);
     });
-
     itemsContainer.appendChild(frag);
     if (totalEl) totalEl.textContent = formatPriceLocale(total);
   }
 
-  // inicializa listeners de hover/click para mini-cart y panel
   function initCartHoverAndAccountListeners() {
     const cartBtnEl = byId('cartBtn') || document.querySelector('.cart-wrapper .icon-btn');
     const cartWrapper = document.querySelector('.cart-wrapper') || (cartBtnEl && cartBtnEl.parentElement);
     const miniCartEl = byId('miniCart') || document.querySelector('.mini-cart');
     const cartPanel = byId('cartPanel') || document.querySelector('.cart-panel');
     const cartBackdrop = byId('cartBackdrop') || document.querySelector('.cart-backdrop');
-
     let hideTimer = null;
 
     function showMini() {
       if (!miniCartEl) return;
       renderMiniCartPreviewInto(miniCartEl);
-      try { miniCartEl.setAttribute('aria-hidden','false'); } catch(e){}
+      miniCartEl.setAttribute('aria-hidden','false');
       miniCartEl.style.display = 'flex';
       if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      pulse(miniCartEl);
     }
     function hideMiniSoon(delay = 250) {
       if (!miniCartEl) return;
       if (hideTimer) clearTimeout(hideTimer);
       hideTimer = setTimeout(() => {
-        try { miniCartEl.setAttribute('aria-hidden','true'); } catch(e){}
+        miniCartEl.setAttribute('aria-hidden','true');
         miniCartEl.style.display = '';
       }, delay);
     }
@@ -551,16 +493,14 @@
     if (cartBtnEl) {
       cartBtnEl.addEventListener('click', (ev) => {
         ev.preventDefault();
-        // If page has cart panel element -> open it
         if (cartPanel) {
-          // open panel
           cartPanel.classList.add('open');
           if (cartBackdrop) cartBackdrop.classList.add('open');
-          try { cartPanel.setAttribute('aria-hidden','false'); if (cartBackdrop) cartBackdrop.setAttribute('aria-hidden','false'); } catch(e){}
-          // hide mini preview
+          cartPanel.setAttribute('aria-hidden','false');
+          if (cartBackdrop) cartBackdrop.setAttribute('aria-hidden','false');
           if (miniCartEl) { miniCartEl.setAttribute('aria-hidden','true'); miniCartEl.style.display = ''; }
+          pulse(cartPanel);
         } else {
-          // navigate to carrito.html as fallback
           const p = (location.pathname || '').split('/').pop();
           if (p && p.indexOf('carrito') !== -1) {
             const bag = document.getElementById('bag') || document.querySelector('.bag-list');
@@ -576,7 +516,8 @@
       cartBackdrop.addEventListener('click', () => {
         cartPanel.classList.remove('open');
         cartBackdrop.classList.remove('open');
-        try { cartPanel.setAttribute('aria-hidden','true'); cartBackdrop.setAttribute('aria-hidden','true'); } catch(e){}
+        cartPanel.setAttribute('aria-hidden','true');
+        cartBackdrop.setAttribute('aria-hidden','true');
       });
     }
 
@@ -585,11 +526,11 @@
       cClose.addEventListener('click', () => {
         cartPanel.classList.remove('open');
         if (cartBackdrop) cartBackdrop.classList.remove('open');
-        try { cartPanel.setAttribute('aria-hidden','true'); if (cartBackdrop) cartBackdrop.setAttribute('aria-hidden','true'); } catch(e){}
+        cartPanel.setAttribute('aria-hidden','true');
+        if (cartBackdrop) cartBackdrop.setAttribute('aria-hidden','true');
       });
     }
 
-    // keep preview up-to-date across tabs
     window.addEventListener('storage', (ev) => {
       if (ev.key === CART_KEY) {
         if (miniCartEl && miniCartEl.getAttribute('aria-hidden') === 'false') renderMiniCartPreviewInto(miniCartEl);
@@ -601,13 +542,11 @@
         if (typeof window.updateMiniCartUI === 'function') {
           try { window.updateMiniCartUI(); } catch(e){}
         }
-        // auth change: update header
         const u = safeJSONParse(ev.newValue);
         renderHeaderUser(u);
       }
     });
 
-    // custom event
     window.addEventListener('cartUpdated', () => {
       if (miniCartEl && miniCartEl.getAttribute('aria-hidden') === 'false') renderMiniCartPreviewInto(miniCartEl);
       if (typeof window.updateMiniCartUI === 'function') {
@@ -615,33 +554,25 @@
       }
     });
 
-    // fallback for account button click: if not handled by auth module, go to cuenta.html
-    // (re-query because accountBtn may be replaced)
     function wireFallbackAccountBtn() {
       accountBtn = byId('accountBtn') || accountBtn;
       if (!accountBtn) return;
-      // remove any previous fallback to avoid duplicating handlers
       accountBtn.addEventListener('click', (e) => {
-        // if appAuth exists and likely handles sign-in, do nothing and let it handle.
         const local = getLocalUserSnapshot();
         if (!local && !window.appAuth) {
-          // open auth overlay if present
           const authOverlay = document.getElementById('authOverlay');
           if (authOverlay) {
-            try { authOverlay.style.display = 'block'; authOverlay.setAttribute('aria-hidden','false'); } catch(e){}
+            authOverlay.style.display = 'block'; authOverlay.setAttribute('aria-hidden','false');
             return;
           }
-          // otherwise navigate to cuenta.html (login page)
           window.location.href = 'cuenta.html';
         } else {
-          // if local user exists, try to render header to ensure consistent UI
           if (local) renderHeaderUser(local);
         }
       }, { passive: true });
     }
     wireFallbackAccountBtn();
 
-    // Esc key closes both
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (cartPanel && cartPanel.classList.contains('open')) {
@@ -649,21 +580,19 @@
           if (cartBackdrop) cartBackdrop.classList.remove('open');
         }
         if (miniCartEl) {
-          try { miniCartEl.setAttribute('aria-hidden','true'); } catch(e){}
+          miniCartEl.setAttribute('aria-hidden','true');
           miniCartEl.style.display = '';
         }
       }
     });
   }
 
-  // correr init cuando el DOM esté listo
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCartHoverAndAccountListeners);
   } else {
     initCartHoverAndAccountListeners();
   }
 
-  // expone algunas utilidades para otras partes de la app
   window.__LIXBY_AUTH_UI = {
     renderHeaderUser,
     renderAccountPanel,
