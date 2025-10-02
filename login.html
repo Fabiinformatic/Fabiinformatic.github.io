@@ -6,29 +6,31 @@
   <title>Iniciar sesión — LIXBY</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Minimal + accesible */
     :root { --accent:#2f6bff; --bg:#fff; --text:#07101a; --muted:#6b7a86; --stroke:rgba(2,6,12,0.06); }
     body { color:var(--text); background:var(--bg); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding:24px; }
-    .form-card { max-width:520px; margin:72px auto; text-align:left; border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(2,6,12,0.06); background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96)); }
-    h1 { margin:0 0 6px; font-size:1.25rem; }
-    .small { color:var(--muted); font-size:0.95rem; }
-    .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
-    .auth-btn { display:inline-flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--stroke); background:transparent; cursor:pointer; font-weight:700; color:var(--text); }
-    .auth-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
-    .auth-btn img.icon { width:18px;height:18px; display:block; }
-    .sep { display:flex; align-items:center; gap:12px; margin:16px 0; color:var(--muted); }
+    .form-card { max-width:520px; margin:72px auto; text-align:left; border-radius:14px; padding:26px 20px 20px 20px; box-shadow:0 10px 30px rgba(2,6,12,0.08); background:linear-gradient(180deg, rgba(255,255,255,0.99), rgba(255,255,255,0.96)); }
+    h1 { margin:0 0 10px; font-size:1.32rem; font-weight:800; letter-spacing:-0.01em;}
+    .small { color:var(--muted); font-size:0.96rem; }
+    .auth-row { display:flex; flex-direction:column; gap:12px; margin-top:14px; }
+    .auth-btn { display:inline-flex; align-items:center; gap:10px; padding:11px 14px; border-radius:11px; border:1px solid var(--stroke); background:linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,255,255,0.98)); cursor:pointer; font-weight:700; color:var(--text); font-size:1.03em; transition: box-shadow .19s var(--ease-bouncy), border-color .17s var(--ease-bouncy);}
+    .auth-btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .auth-btn img.icon { width:20px;height:20px; display:block; }
+    .auth-btn:hover { box-shadow: 0 8px 22px rgba(47,107,255,0.08); border-color:var(--accent-soft);}
+    .sep { display:flex; align-items:center; gap:12px; margin:18px 0 18px 0; color:var(--muted); }
     .sep hr { flex:1; height:1px; border:0; background:var(--stroke); }
-    label { display:block; margin-top:8px; font-weight:700; }
-    input[type="text"], input[type="password"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--stroke); box-sizing:border-box; font-size:1rem; margin-top:6px; }
-    .error { color:#dc2626; font-size:0.95rem; margin-top:6px; min-height:1.1em; }
-    .row-right { display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:12px; }
-    .btn { padding:9px 12px; border-radius:8px; border:1px solid var(--stroke); background:transparent; cursor:pointer; font-weight:700; }
-    .btn.primary { background:linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; border:none; }
+    label { display:block; margin-top:11px; font-weight:700; }
+    input[type="text"], input[type="password"], input[type="email"] { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--stroke); box-sizing:border-box; font-size:1rem; margin-top:7px; background:rgba(255,255,255,0.98);}
+    .error { color:#dc2626; font-size:0.97rem; margin-top:6px; min-height:1.1em; }
+    .row-right { display:flex; justify-content:space-between; align-items:center; margin-top:14px; gap:12px; }
+    .btn { padding:10px 14px; border-radius:9px; border:1px solid var(--stroke); background:transparent; cursor:pointer; font-weight:700; font-size:1.03em;}
+    .btn.primary { background:linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; border:none; box-shadow: 0 4px 18px rgba(47,107,255,0.08);}
     .btn.ghost { background:transparent; }
+    .btn:active { transform: scale(0.98);}
     .muted-link { color:var(--muted); text-decoration:underline; text-underline-offset:3px; }
     .center { text-align:center; }
     .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; white-space:nowrap; }
-    @media (max-width:560px){ .form-card { margin:36px 12px; padding:16px; } }
+    #loginMsg { color:var(--muted); min-height:1.1em; text-align:center; }
+    @media (max-width:560px){ .form-card { margin:36px 6px; padding:12px; } }
   </style>
 </head>
 <body>
@@ -36,7 +38,6 @@
     <div class="nav-inner" style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
       <div class="brand" id="brand" role="link" tabindex="0" aria-label="Ir al inicio">LIXBY</div>
       <div class="nav-right">
-        <!-- Modificado según tu petición: al pinchar en "Cuenta" vamos a cuenta.html -->
         <button id="openAuthBtn" class="btn ghost" aria-haspopup="dialog">Cuenta</button>
       </div>
     </div>
@@ -60,18 +61,16 @@
 
       <div class="sep" aria-hidden="true"><hr/><div>o</div><hr/></div>
 
-      <form id="loginForm" novalidate>
+      <form id="loginForm" novalidate autocomplete="off">
         <label for="loginId">Correo electrónico</label>
-        <input id="loginId" name="loginId" type="text" inputmode="email" autocomplete="username email" aria-describedby="hint-loginId" placeholder="nombre@ejemplo.com">
+        <input id="loginId" name="loginId" type="email" inputmode="email" autocomplete="username email" aria-describedby="hint-loginId" placeholder="nombre@ejemplo.com" required>
         <div id="err-loginId" class="error" aria-live="polite"></div>
 
         <label for="loginPass">Contraseña</label>
-        <input id="loginPass" name="loginPass" type="password" autocomplete="current-password">
+        <input id="loginPass" name="loginPass" type="password" autocomplete="current-password" required>
         <div id="err-loginPass" class="error" aria-live="polite"></div>
 
         <div class="row-right">
-          <!-- Ajustado: apuntamos al reset que el módulo espera (/reset-password.html).
-               Si tu fichero se llama `forgot-password.html` cámbialo aquí. -->
           <a href="reset-password.html" class="small muted-link">¿Has olvidado la contraseña?</a>
           <div style="display:flex;gap:8px;align-items:center">
             <a href="register.html" class="btn ghost" aria-label="Registrarse">Registrarse</a>
@@ -79,11 +78,11 @@
           </div>
         </div>
 
-        <div style="margin-top:12px; display:flex; gap:8px;">
+        <div style="margin-top:13px; display:flex; gap:9px;">
           <button id="btnGuest" type="button" class="btn ghost" aria-label="Entrar como invitado">Entrar como invitado</button>
         </div>
 
-        <div id="loginMsg" class="small" style="margin-top:12px" role="status" aria-live="polite"></div>
+        <div id="loginMsg" class="small" style="margin-top:13px" role="status" aria-live="polite"></div>
       </form>
     </div>
   </main>
@@ -95,7 +94,7 @@
     function setStatus(msg, isError = false) {
       const el = $('loginMsg');
       el.textContent = msg || '';
-      el.style.color = isError ? '#b91c1c' : 'var(--muted)';
+      el.style.color = isError ? '#dc2626' : 'var(--muted)';
     }
     function disableBtns(state){
       ['googleBtn','githubBtn','btnLogin','btnGuest','openAuthBtn'].forEach(id=>{
@@ -107,10 +106,17 @@
     $('brand').addEventListener('click', ()=> location.href='index.html');
     $('brand').addEventListener('keypress', e=> { if (e.key==='Enter') location.href='index.html'; });
 
-    // Según tu petición: al pinchar "Cuenta" vamos a la página cuenta.html
+    // Mejor UX: si ya está autenticado, ir directo a cuenta.html
+    document.addEventListener('DOMContentLoaded', ()=>{
+      if (window.appAuth && window.appAuth._rawAuth && window.appAuth._rawAuth.currentUser) {
+        window.location.href = "cuenta.html";
+      }
+    });
+
+    // Al pinchar "Cuenta" vamos a la página cuenta.html
     $('openAuthBtn').addEventListener('click', ()=> location.href = 'cuenta.html');
 
-    // social buttons: try appAuth first, fallback to window.lixbyAuth
+    // social buttons
     $('googleBtn').addEventListener('click', async ()=> {
       try {
         disableBtns(true); setStatus('Abriendo Google…');
@@ -118,7 +124,7 @@
         else if (window.lixbyAuth && typeof window.lixbyAuth.signInWithGoogle === 'function') await window.lixbyAuth.signInWithGoogle();
         setStatus('Acceso mediante Google completado.'); setTimeout(()=> location.href='cuenta.html', 700);
       } catch(e) {
-        console.error(e); setStatus((e && e.message) || 'Error con Google', true);
+        setStatus((e && e.message) || 'Error con Google', true);
       } finally { disableBtns(false); }
     });
 
@@ -129,11 +135,11 @@
         else if (window.lixbyAuth && typeof window.lixbyAuth.signInWithGitHub === 'function') await window.lixbyAuth.signInWithGitHub();
         setStatus('Acceso mediante GitHub completado.'); setTimeout(()=> location.href='cuenta.html', 700);
       } catch(e) {
-        console.error(e); setStatus((e && e.message) || 'Error con GitHub', true);
+        setStatus((e && e.message) || 'Error con GitHub', true);
       } finally { disableBtns(false); }
     });
 
-    // Guest
+    // Invitado
     $('btnGuest').addEventListener('click', async ()=> {
       try {
         disableBtns(true); setStatus('Entrando como invitado…');
@@ -148,7 +154,7 @@
           throw new Error('Función de invitado no disponible');
         }
       } catch(e) {
-        console.error(e); setStatus((e && e.message) || 'No se pudo entrar como invitado', true);
+        setStatus((e && e.message) || 'No se pudo entrar como invitado', true);
       } finally { disableBtns(false); }
     });
 
@@ -167,17 +173,15 @@
         if (!window.appAuth || typeof window.appAuth.signInWithEmail !== 'function') throw new Error('Módulo de autenticación no cargado');
         await window.appAuth.signInWithEmail(id, pass);
         setStatus('Sesión iniciada. Redirigiendo…');
-        setTimeout(()=> location.href = 'cuenta.html', 600);
+        setTimeout(()=> location.href = 'cuenta.html', 700);
       } catch (err) {
-        console.error(err);
-        const msg = (err && err.message) ? err.message : 'Error iniciando sesión.';
-        setStatus(msg, true);
+        setStatus((err && err.message) ? err.message : 'Error iniciando sesión.', true);
       } finally {
         disableBtns(false);
       }
     });
 
-    // small UX: press Enter on inputs submits
+    // UX: Enter en inputs envía form
     ['loginId','loginPass'].forEach(id=>{
       const el = document.getElementById(id);
       if (!el) return;
