@@ -16,9 +16,14 @@
   <!-- Pequeños overrides y utilidades inline (NO BORRAR: conservadas y combinadas) -->
   <style>
     /* adjustments: make header/controls a bit more rounded & minimal */
-    :root { --radius-md: 12px; --radius-lg: 16px; --accent: #0a84ff; --muted: #8a8f98; --text: #0b0f19; }
+    :root { --radius-md: 12px; --radius-lg: 16px; --accent: #0a84ff; --muted: #8a8f98; --text: #0b0f19; --card-bg: #ffffff; --card-bg-2: #fafafa; --border: rgba(10,10,10,0.06); --page-bg: #ffffff; }
+    /* Dark theme variables (auto) */
+    html:not(.light) { --text: #ffffff; --muted: #b5bdc9; --accent: #0a84ff; --card-bg: #0f1422; --card-bg-2: #0b0f19; --border: rgba(255,255,255,0.08); --page-bg: #0b0f19; }
+    body { background: var(--page-bg); color: var(--text); }
+
     .nav-inner { min-height: 64px; gap:12px; display:flex; align-items:center; justify-content:space-between; padding:10px 20px; }
-    .btn { border-radius: var(--radius-md); }
+    .btn { border-radius: var(--radius-md); color: var(--text); }
+    html:not(.light) .btn { color:#fff; border-color: rgba(255,255,255,0.12); }
     .brand img { border-radius: 10px; }
 
     /* PRO button style (kept here so HTML is copy/paste-ready) */
@@ -89,6 +94,12 @@
       color:#00121a;
       box-shadow: 0 8px 18px rgba(10,132,255,0.06);
     }
+    html:not(.light) .btn-discover {
+      background: linear-gradient(180deg, var(--accent), color-mix(in oklab, var(--accent) 35%, #000 65%));
+      color:#fff;
+      box-shadow: 0 8px 18px rgba(10,132,255,0.18);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
     @media (max-width:900px) {
       .btn-discover { padding:10px; font-size:0.95rem; }
     }
@@ -104,7 +115,9 @@
       background:transparent;
       cursor:pointer;
       font-weight:700;
+      color: var(--text);
     }
+    html:not(.light) .btn-download { border-color: rgba(255,255,255,0.14); color:#fff; }
 
     /* ======================
        ADICIONES: HERO VIDEO (estilo tipo Apple)
@@ -169,8 +182,8 @@
       height: 420px;
       min-width: 280px;
       border-radius: 20px;
-      background: linear-gradient(180deg, #fff, #fafafa);
-      border: 1px solid rgba(10,10,10,0.04);
+      background: linear-gradient(180deg, var(--card-bg), var(--card-bg-2));
+      border: 1px solid var(--border);
       box-shadow: 0 12px 30px rgba(2,6,12,0.06);
       display:flex;
       flex-direction:column;
@@ -182,7 +195,9 @@
       cursor: pointer;
       scroll-snap-align: start;
     }
-    .promo-card:focus { outline: none; box-shadow: 0 0 0 6px rgba(10,132,255,0.08); }
+    html:not(.light) .promo-card { box-shadow: 0 12px 30px rgba(0,0,0,0.28); }
+
+    .promo-card:focus { outline: none; box-shadow: 0 0 0 6px rgba(10,132,255,0.18); }
     .promo-card:hover { transform: translateY(-8px); box-shadow: 0 24px 60px rgba(2,6,12,0.12); }
 
     .promo-media {
@@ -221,17 +236,23 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
+      color: var(--text);
     }
+    html:not(.light) .promo-btn { color:#fff; }
+
     .promo-btn.pro-cta {
       background: linear-gradient(90deg,#ffd07a,#ff9b6b);
       color: #00121a;
       box-shadow: 0 8px 22px rgba(255,154,78,0.12);
     }
+    html:not(.light) .promo-btn.pro-cta { color:#1a0a00; }
+
     .promo-btn.discover-cta {
       background: transparent;
       border: 1px solid rgba(10,10,10,0.06);
       color: var(--text);
     }
+    html:not(.light) .promo-btn.discover-cta { border-color: rgba(255,255,255,0.12); color:#fff; }
 
     .promo-mini {
       position:absolute;
@@ -248,6 +269,7 @@
       color:var(--text);
       backdrop-filter: blur(4px);
     }
+    html:not(.light) .promo-mini { background: rgba(255,255,255,0.08); color:#fff; }
 
     @media (max-width:900px){
       .promo-card { flex: 0 0 84%; height: 380px; min-width: 260px; }
@@ -266,14 +288,47 @@
       padding: 32px 40px;
       max-width: 1200px;
       margin: 0 auto;
+      color: var(--text);
     }
 
+    /* Mobile header menu */
+    #mobileMenuToggle { display:none; background:transparent; border:none; padding:6px; border-radius:10px; }
+    #mobileMenuToggle img { display:block; }
+    #mobileMenu {
+      display:none;
+      position:absolute;
+      right:12px;
+      top:64px;
+      z-index:9999;
+      min-width: 68vw;
+      max-width: 88vw;
+      padding:12px;
+      border-radius:14px;
+    }
+    #mobileMenu a, #mobileMenu button {
+      display:flex;
+      width:100%;
+      text-align:left;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, var(--card-bg), var(--card-bg-2));
+      color: var(--text);
+      margin-bottom:8px;
+      cursor:pointer;
+    }
+
+    @media (max-width:720px){
+      #navLinks { display:none !important; }
+      .nav-right > *:not(#mobileMenuToggle) { display:none !important; }
+      #mobileMenuToggle { display:inline-flex; align-items:center; justify-content:center; }
+    }
   </style>
 </head>
 <body>
 
 <!-- NAV -->
-<header class="nav glass" role="banner">
+<header class="nav glass" role="banner" style="position:relative;">
   <div class="nav-inner">
     <!-- LEFT: logo -->
     <div class="nav-left" style="display:flex;align-items:center;gap:12px;">
@@ -298,7 +353,22 @@
     </nav>
 
     <!-- RIGHT: controles en fila -->
-    <div class="nav-right" aria-hidden="false" style="display:flex;align-items:center;gap:12px;">
+    <div class="nav-right" aria-hidden="false" style="display:flex;align-items:center;gap:12px;position:relative;">
+      <!-- Mobile toggle -->
+      <button id="mobileMenuToggle" class="icon-btn" aria-label="Abrir menú" type="button">
+        <img src="https://www.shutterstock.com/image-vector/menu-icon-trendy-flat-style-600nw-432264136.jpg" alt="Menú" width="28" height="28" style="border-radius:6px;object-fit:cover;">
+      </button>
+      <div id="mobileMenu" class="glass" role="menu" aria-hidden="true" aria-label="Menú móvil">
+        <a href="#inicio" role="menuitem">Inicio</a>
+        <a href="#productos" role="menuitem">Productos</a>
+        <a href="#contacto" role="menuitem">Contáctanos</a>
+        <a href="#conocenos" role="menuitem">Conócenos</a>
+        <a href="lixbycare.html" role="menuitem">LixbyCare+</a>
+        <a href="carrito.html" role="menuitem">Carrito</a>
+        <button id="mobileAccount" type="button" role="menuitem">Cuenta</button>
+        <button id="mobileTheme" type="button" role="menuitem">Cambiar tema</button>
+      </div>
+
       <div class="cart-wrapper" style="position:relative;">
         <button id="cartBtn" class="icon-btn" aria-label="Ver carrito" aria-controls="miniCart" aria-expanded="false" type="button">🛒 <span id="cartCount" class="badge">0</span></button>
 
@@ -422,21 +492,20 @@
         <div class="promo-mini" aria-hidden="true">✚</div>
       </article>
 
-      <!-- CARD 3: NUESTRA GARANTÍA (reemplaza la casilla de color) -->
+      <!-- CARD 3: LIXBYCARE+ (antes Nuestra garantía) -->
       <article class="promo-card" role="listitem" tabindex="0" aria-labelledby="garantia-card-title" data-card="garantia">
         <div class="promo-media" aria-hidden="true">
-          <!-- icono o imagen que ilustre garantía -->
-          <img src="https://images.unsplash.com/photo-1591012972516-21f9b2f1a2e6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=2b7c5e6b8a6b2c6d" alt="Garantía">
+          <img src="https://cdn-icons-png.flaticon.com/512/985/985723.png" alt="LixbyCare+">
         </div>
 
         <div class="promo-meta">
           <div class="promo-kicker">Seguridad</div>
-          <h3 id="garantia-card-title" class="promo-title-lg">NUESTRA GARANTÍA</h3>
+          <h3 id="garantia-card-title" class="promo-title-lg">LixbyCare+</h3>
           <p style="margin:0;color:var(--muted)">2 años de garantía oficial y 30 días para devoluciones sin preguntas.</p>
 
           <div class="promo-cta-row">
-            <button class="promo-btn discover-cta" id="garantiaBtn" type="button" aria-label="Ver garantía">Ver garantía</button>
-            <button class="promo-btn" id="garantiaFaqBtn" type="button" aria-label="Preguntas garantía">Preguntas</button>
+            <a class="btn-discover" id="garantiaBtn" href="lixbycare.html" aria-label="Descubrir LixbyCare+">DESCUBRIR</a>
+            <a class="promo-btn discover-cta" id="garantiaFaqBtn" href="faq.html#garantia" aria-label="Preguntas sobre LixbyCare+">Preguntas</a>
           </div>
         </div>
 
@@ -454,7 +523,7 @@
           <h3 id="eco-card-title" class="promo-title-lg">ECO & SOSTENIBLE</h3>
           <p style="margin:0;color:var(--muted)">Materiales reciclados y programa de reciclaje al comprar.</p>
 
-          <div class="promo-cta-row">
+        <div class="promo-cta-row">
             <button class="promo-btn discover-cta" id="ecoBtn" type="button" aria-label="Más sobre sostenibilidad">Más</button>
           </div>
         </div>
@@ -743,7 +812,7 @@
     else miniCart.style.display = '';
   }
 
-  // Hover show mini-cart & click navigates to carrito.html (fixed per request)
+  // Hover show mini-cart & click navegates to carrito.html (fixed per request)
   (function wireCartHoverAndClick(){
     const wrapper = document.querySelector('.cart-wrapper');
     let hideTimeout = null;
@@ -900,7 +969,7 @@
     } catch(e){ return null; }
   }
 
-  // safe text setter: updates only text nodes directly under el (preserves icons/child elements)
+  // safe text setter
   function setElementTextSafe(el, text){
     if (!el) return;
     try {
@@ -916,7 +985,7 @@
     } catch(e){ try { el.textContent = text; } catch(err){} }
   }
 
-  // translateVisibleTextNodes y applyTranslations (idénticas a las que tenías; preservadas)
+  // translateVisibleTextNodes y applyTranslations
   function translateVisibleTextNodes(lang){
     try {
       const base = translations['es'] || {};
@@ -1056,11 +1125,37 @@
     }
   } catch(err){ console.warn('lang wiring failed', err); }
 
-  // THEME
+  // THEME: auto-detección y sincronización con sistema
   const THEME_KEY = 'lixby_theme';
   const themeToggle = document.getElementById('themeToggle');
-  if (localStorage.getItem(THEME_KEY) === 'light') document.documentElement.classList.add('light');
-  if (themeToggle) themeToggle.addEventListener('click', ()=>{ const isLight = document.documentElement.classList.toggle('light'); try{ localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark'); }catch(e){} });
+  const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)');
+  function applyThemeClass(val){
+    // light = add .light; dark = remove .light
+    if (val === 'light') document.documentElement.classList.add('light');
+    else document.documentElement.classList.remove('light');
+  }
+  (function initTheme(){
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') {
+      applyThemeClass(stored);
+    } else {
+      // auto según sistema
+      const systemLight = mq ? mq.matches : false;
+      applyThemeClass(systemLight ? 'light' : 'dark');
+    }
+    if (mq && mq.addEventListener) {
+      mq.addEventListener('change', (e) => {
+        const setting = localStorage.getItem(THEME_KEY);
+        if (setting !== 'light' && setting !== 'dark') {
+          applyThemeClass(e.matches ? 'light' : 'dark');
+        }
+      });
+    }
+  })();
+  if (themeToggle) themeToggle.addEventListener('click', ()=>{
+    const isLight = document.documentElement.classList.toggle('light');
+    try{ localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark'); }catch(e){}
+  });
 
   // CONTACT: EmailJS lazy-load (preservado; no modificado)
   async function ensureEmailJs(){
@@ -1139,7 +1234,6 @@
         if (!pid) return;
         const actions = card.querySelector('.actions');
         if (!actions) return;
-        // clear existing children (runtime change) — estamos añadiendo, no borrando fichero
         actions.innerHTML = '';
         const discover = document.createElement('button');
         discover.className = 'btn-discover';
@@ -1170,15 +1264,17 @@
     function showAccountPreviewIfAvailable(){
       try {
         const storedRaw = localStorage.getItem('lixby_user');
-        if (!storedRaw) { accountPreview.style.display = 'none'; return false; }
+        if (!storedRaw) { accountPreview.style.display = 'none'; accountBtn.style.display = ''; return false; }
         const stored = JSON.parse(storedRaw);
-        if (!stored || !stored.uid) { accountPreview.style.display = 'none'; return false; }
+        if (!stored || !stored.uid) { accountPreview.style.display = 'none'; accountBtn.style.display=''; return false; }
         // show avatar + name
         accountAvatar.src = stored.avatar || stored.photoURL || 'https://i.imgur.com/dOCYmkx.jpeg';
         accountName.textContent = stored.displayName || stored.name || 'Usuario';
         accountPreview.style.display = 'flex';
+        // ocultar botón "Cuenta" para evitar duplicado
+        accountBtn.style.display = 'none';
         return true;
-      } catch(e){ accountPreview.style.display = 'none'; return false; }
+      } catch(e){ accountPreview.style.display = 'none'; accountBtn.style.display=''; return false; }
     }
 
     // click preview => cuenta.html
@@ -1196,7 +1292,6 @@
           const firebaseUser = (window.appAuth && window.appAuth._rawAuth && window.appAuth._rawAuth.currentUser) ? window.appAuth._rawAuth.currentUser : null;
           if (stored && stored.uid) { window.location.href = 'cuenta.html'; return; }
           if (firebaseUser) { window.location.href = 'cuenta.html'; return; }
-          // fallback: show overlay or login
           if (window.lixbyAuth && typeof window.lixbyAuth.show === 'function') { window.lixbyAuth.show(); return; }
           const ov = document.getElementById('lixbyAuthOverlay');
           if (ov) { ov.style.display='flex'; ov.setAttribute('aria-hidden','false'); return; }
@@ -1244,7 +1339,7 @@
   setLang = function(l){ origSetLang(l); replaceProductActions(); updateDownloadLink(l); };
 
   // ---------------------------
-  // Promo cards interactions (PÁSATE AL PRO, GARANTÍA, etc)
+  // Promo cards interactions
   // ---------------------------
   (function promoWiring(){
     document.getElementById('goProBtn')?.addEventListener('click', ()=> window.location.href='pro.html');
@@ -1254,22 +1349,55 @@
       if (proCard) { proCard.animate([{ transform:'translateY(-6px)'},{ transform:'translateY(0)'}], { duration: 450 }); }
     });
     document.getElementById('openCatalogBtn')?.addEventListener('click', ()=> window.location.href='#productos');
-    document.getElementById('garantiaBtn')?.addEventListener('click', ()=> window.location.href='garantia.html');
+    // Garantía -> LixbyCare+ page
+    document.getElementById('garantiaBtn')?.addEventListener('click', (e)=> { e.preventDefault(); window.location.href='lixbycare.html'; });
     document.getElementById('garantiaFaqBtn')?.addEventListener('click', ()=> window.location.href='faq.html#garantia');
     document.getElementById('ecoBtn')?.addEventListener('click', ()=> window.location.href='sostenibilidad.html');
-    // keyboard accessibility for promo cards: Enter triggers first CTA inside
+    // keyboard accessibility
     document.querySelectorAll('.promo-card').forEach(card => {
       card.addEventListener('keydown', (e) => {
         if(e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          const btn = card.querySelector('.promo-btn, a[role="button"], a');
+          const btn = card.querySelector('.promo-btn, a[role="button"], a, .btn-discover');
           if(btn) btn.click();
         }
       });
     });
   })();
 
-  // expose for debugging if needed
+  // ---------------------------
+  // Mobile menu wiring
+  // ---------------------------
+  (function mobileMenu(){
+    const toggle = document.getElementById('mobileMenuToggle');
+    const menu = document.getElementById('mobileMenu');
+    const accountBtn = document.getElementById('accountBtn');
+    const accountPreview = document.getElementById('accountPreview');
+    const themeBtn = document.getElementById('mobileTheme');
+    const accountEntry = document.getElementById('mobileAccount');
+    if (!toggle || !menu) return;
+
+    function open(){ menu.style.display='block'; menu.setAttribute('aria-hidden','false'); }
+    function close(){ menu.style.display='none'; menu.setAttribute('aria-hidden','true'); }
+    toggle.addEventListener('click', ()=> {
+      const openState = menu.style.display === 'block';
+      if (openState) close(); else open();
+    });
+    document.addEventListener('click', (e)=> {
+      if (!menu.contains(e.target) && !toggle.contains(e.target)) close();
+    });
+
+    if (accountEntry) {
+      accountEntry.addEventListener('click', ()=> {
+        if (accountPreview && accountPreview.style.display === 'flex') window.location.href='cuenta.html';
+        else if (accountBtn) accountBtn.click();
+        close();
+      });
+    }
+    if (themeBtn) themeBtn.addEventListener('click', ()=> { document.getElementById('themeToggle')?.click(); });
+  })();
+
+  // expose for debugging
   window.lixby = window.lixby || {};
   window.lixby.setLang = setLang;
   window.lixby.getTranslation = getTranslation;
@@ -1283,7 +1411,7 @@
   'use strict';
   const CURRENCY = new Intl.NumberFormat('es-ES',{ style:'currency', currency:'EUR' });
 
-  // 1) Sanitize mini-cart nodes produced by the inline script (prevenir innerHTML XSS)
+  // 1) Sanitize mini-cart nodes
   const miniCartItems = document.getElementById('miniCartItems');
   if (miniCartItems) {
     const sanitizeNode = (node) => {
@@ -1310,7 +1438,7 @@
     observer.observe(miniCartItems, { childList: true, subtree: true });
   }
 
-  // 2) Mejorar foco y escape (cerrar mini-cart con Esc)
+  // 2) Mejorar foco y escape
   const cartBtn = document.getElementById('cartBtn');
   const miniCart = document.getElementById('miniCart');
   document.addEventListener('keydown', (e) => {
@@ -1333,7 +1461,7 @@
   });
   if (miniCart) showObserver.observe(miniCart, { attributes: true, attributeFilter: ['aria-hidden'] });
 
-  // 3) Forzar formato monetario en el total del miniCart (si el script original escribe números crudos)
+  // 3) Forzar formato monetario en el total del miniCart
   const miniCartTotal = document.getElementById('miniCartTotal');
   if (miniCartTotal) {
     const reformat = () => {
