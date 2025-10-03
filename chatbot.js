@@ -13,13 +13,18 @@
   const STORAGE_KEY = 'lixby_chat_session_v1';
 
   // --- Elementos ---
-  const widget = document.getElementById('lixbyChatbot');
-  const btnOpen = document.getElementById('lixbyChatbotOpen');
+  const widget   = document.getElementById('lixbyChatbot');
+  const btnOpen  = document.getElementById('lixbyChatbotOpen');
   const btnClose = document.getElementById('lixbyChatbotClose');
-  const body = document.getElementById('lixbyChatbotBody');
-  const form = document.getElementById('lixbyChatbotForm');
-  const input = document.getElementById('lixbyChatbotInput');
-  const btnSend = document.getElementById('lixbyChatbotSend');
+  const body     = document.getElementById('lixbyChatbotBody');
+  const form     = document.getElementById('lixbyChatbotForm');
+  const input    = document.getElementById('lixbyChatbotInput');
+  const btnSend  = document.getElementById('lixbyChatbotSend');
+
+  if (!widget || !body || !form || !input) {
+    console.warn("⚠️ Chatbot: faltan elementos HTML requeridos (widget, body, form o input)");
+    return;
+  }
 
   // --- Estado ---
   let chatHistory = loadSession() || [];
@@ -59,7 +64,9 @@
   // Contexto básico de soporte — ayuda al backend a dar mejores respuestas
   function buildContext(){
     const product = (document.getElementById('t-product') || {}).value || '';
-    const kbOpenItems = Array.from(document.querySelectorAll('.kb-item[open] summary')).map(s=>s.textContent.trim()).slice(0,4);
+    const kbOpenItems = Array.from(document.querySelectorAll('.kb-item[open] summary'))
+                             .map(s=>s.textContent.trim())
+                             .slice(0,4);
     return {
       page: location.pathname,
       title: document.title,
@@ -83,14 +90,16 @@
   // --- Lógica de apertura/cierre ---
   function openWidget(){
     widget.style.display = 'flex';
-    btnOpen.style.display = 'none';
+    if(btnOpen) btnOpen.style.display = 'none';
     ensureWelcome();
-    input.focus();
+    if(input) input.focus();
   }
   function closeWidget(){
     widget.style.display = 'none';
-    btnOpen.style.display = 'block';
-    btnOpen.focus();
+    if(btnOpen) {
+      btnOpen.style.display = 'block';
+      btnOpen.focus();
+    }
   }
   if (btnOpen) btnOpen.onclick = openWidget;
   if (btnClose) btnClose.onclick = closeWidget;
@@ -125,15 +134,18 @@
       setLoading(false);
       addMsg('bot', sanitizeHtml(answer));
     } catch(err) {
+      console.error("Chatbot error:", err);
       setLoading(false);
-      addMsg('bot', 'Ocurrió un error al contactar con la IA. Por favor, inténtalo más tarde.');
+      addMsg('bot', '⚠️ Ocurrió un error al contactar con la IA. Por favor, inténtalo más tarde.');
     }
   }
 
-  form.onsubmit = function(e){
-    e.preventDefault();
-    sendMessage(input.value);
-  };
+  if (form) {
+    form.onsubmit = function(e){
+      e.preventDefault();
+      sendMessage(input.value);
+    };
+  }
 
   // Accesibilidad: abrir con Ctrl+Alt+C
   document.addEventListener('keydown', function(e){
