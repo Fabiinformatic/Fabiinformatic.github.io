@@ -1,14 +1,42 @@
 // server.js
 require('dotenv').config();
+
 const express = require('express');
 const app = express();
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 4242;
 
+const cors = require('cors');
+const helmet = require('helmet');
+
+// OpenAI (IA)
+let openai = null;
+(function initOpenAI() {
+  try {
+    const OpenAI = require('openai');
+    if (process.env.OPENAI_API_KEY) {
+      openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      console.log('OpenAI client inicializado');
+    } else {
+      console.warn('OPENAI_API_KEY no configurado — /api/chat responderá 503');
+    }
+  } catch (e) {
+    console.warn('Paquete openai no disponible. Instala con: npm i openai');
+  }
+})();
+
 const APPLECARE = 169.00;
 
-// Nota: registramos el endpoint /webhook con body raw antes de usar express.json()
+// Seguridad y CORS básicos (para rutas no raw)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*'
+}));
+
+// Stripe webhook: body raw ANTES de json
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -43,16 +71,28 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   res.json({ received: true });
 });
 
-// Ahora el parser JSON normal para el resto de rutas
-app.use(express.json());
-app.use(express.static('public')); // sirve tus html (coloca carrito.html, confirmar-pedido.html, payment.html, success.html en /public)
+// JSON parser para el resto
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
-/* Devuelve publishable key al cliente (para inicializar Stripe) */
+// Static
+app.use(express.static('public')); // coloca tus HTML (carrito.html, success.html, soporte.html, etc.) en /public
+
+/* Healthcheck */
+app.get('/health', (_req, res) => {
+  res.json({
+    ok: true,
+    stripe: !!process.env.STRIPE_SECRET_KEY,
+    openai: !!process.env.OPENAI_API_KEY
+  });
+});
+
+/* Devuelve publishable key al cliente (para Stripe) */
 app.get('/config', (req, res) => {
   res.json({ publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '' });
 });
 
-/* Endpoint para crear la sesión de Stripe Checkout (tu versión previa) */
+/* Endpoint para crear la sesión de Stripe Checkout */
 app.post('/create-checkout-session', async (req, res) => {
   try {
     const { items, isGift, giftMessage, shipping } = req.body;
@@ -107,7 +147,6 @@ app.post('/create-payment-intent', async (req, res) => {
     const { items, shipping, isGift, giftMessage } = req.body;
     if (!items || items.length === 0) return res.status(400).json({ error: 'Carrito vacío' });
 
-    // calcular total en céntimos (suma precios + applecare si aplica)
     let subtotal = 0;
     items.forEach(it => {
       const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseFloat(String(it.price||0).replace(/[^\d.-]/g,'')) || 0;
@@ -116,9 +155,8 @@ app.post('/create-payment-intent', async (req, res) => {
       subtotal += (price + addon) * qty;
     });
 
-    const amount = Math.round((subtotal) * 100); // en céntimos
+    const amount = Math.round((subtotal) * 100); // céntimos
 
-    // crear PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: 'eur',
@@ -142,7 +180,7 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 });
 
-/* NUEVO: crear un Payment Link dinámico (Plan B: Stripe-hosted link) */
+/* NUEVO: crear un Payment Link dinámico */
 app.post('/create-payment-link', async (req, res) => {
   try {
     const { items, shipping, isGift, giftMessage } = req.body;
@@ -166,7 +204,6 @@ app.post('/create-payment-link', async (req, res) => {
       };
     });
 
-    // metadata para tu reconciliación interna
     const metadata = {
       isGift: isGift ? '1' : '0',
       giftMessage: giftMessage || '',
@@ -180,23 +217,78 @@ app.post('/create-payment-link', async (req, res) => {
 
     const domain = process.env.DOMAIN || `http://localhost:${port}`;
 
-    // Crear Payment Link vía API de Stripe
     const pl = await stripe.paymentLinks.create({
       line_items,
       metadata,
-      // al completar, redirigimos al success.html de tu web (opcional)
       after_completion: {
         type: 'redirect',
         redirect: { url: `${domain}/success.html` }
       }
     });
 
-    // pl.url contiene la URL "https://buy.stripe.com/..."
     return res.json({ url: pl.url, id: pl.id });
   } catch (err) {
     console.error('create-payment-link', err);
     return res.status(500).json({ error: err.message });
   }
+});
+
+/* NUEVO: endpoint IA para chatbot */
+app.post('/api/chat', async (req, res) => {
+  try {
+    if (!openai) return res.status(503).json({ error: 'IA no disponible (OPENAI_API_KEY no configurado)' });
+
+    const { messages, metadata } = req.body || {};
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'messages es requerido' });
+    }
+
+    // Sanitiza mensajes mínimos
+    const safeMessages = messages
+      .filter(m => m && typeof m.content === 'string' && (m.role === 'user' || m.role === 'assistant' || m.role === 'system'))
+      .slice(-24);
+
+    // Inyecta system prompt de soporte
+    const systemPrompt = {
+      role: 'system',
+      content:
+        'Eres Lixby IA, asistente de soporte técnico de LIXBY. Responde en español claro, conciso y accionable. ' +
+        'Prioriza pasos prácticos, verifica supuestos y sugiere adjuntar registros o capturas si ayuda. ' +
+        'Conoce productos Lixby (One Air, One, One Pro) y el programa LixbyCare+. No inventes datos de garantía; ' +
+        'si faltan detalles, pregunta antes. Si la duda no es técnica, redirige a FAQ o contacto.'
+    };
+
+    const contextNote = {
+      role: 'system',
+      content: `Contexto de la página: ${JSON.stringify({
+        page: metadata?.page || req.headers.referer || '',
+        title: metadata?.title || '',
+        product: metadata?.product || '',
+        kb_focus: metadata?.kb_focus || [],
+        timestamp: metadata?.timestamp || new Date().toISOString()
+      })}`
+    };
+
+    const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+    const completion = await openai.chat.completions.create({
+      model,
+      temperature: 0.2,
+      messages: [systemPrompt, contextNote, ...safeMessages].slice(0, 48),
+    });
+
+    const answer = completion?.choices?.[0]?.message?.content || 'Lo siento, no tengo respuesta en este momento.';
+    return res.json({ answer });
+  } catch (err) {
+    console.error('/api/chat error:', err);
+    return res.status(500).json({ error: 'Error procesando la solicitud de IA' });
+  }
+});
+
+/* Error handler genérico */
+app.use((err, _req, res, _next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Error interno' });
 });
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
