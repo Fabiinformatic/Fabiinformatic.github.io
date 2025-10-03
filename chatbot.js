@@ -1,10 +1,11 @@
-// Lixby Chatbot Widget v2 — OpenAI compatible (requiere endpoint en tu server)
-/* Mejores:
+// Lixby Chatbot Widget v3 — OpenAI compatible (requiere endpoint en tu server)
+/* Mejoras:
+   - Manejo de errores 405/500 (server)
    - Historial en sessionStorage
    - Mensaje de bienvenida contextual
    - Sugerencias rápidas desde la página (si existen)
    - Metadatos de contexto (URL, título, hora, selección de producto si está)
-   - Manejo de errores y accesibilidad
+   - Accesibilidad y fallback si no hay backend
 */
 (function(){
   // --- Configuración ---
@@ -19,7 +20,6 @@
   const body     = document.getElementById('lixbyChatbotBody');
   const form     = document.getElementById('lixbyChatbotForm');
   const input    = document.getElementById('lixbyChatbotInput');
-  const btnSend  = document.getElementById('lixbyChatbotSend');
 
   if (!widget || !body || !form || !input) {
     console.warn("⚠️ Chatbot: faltan elementos HTML requeridos (widget, body, form o input)");
@@ -61,7 +61,7 @@
   function saveSession(){ try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e){} }
   function loadSession(){ try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
 
-  // Contexto básico de soporte — ayuda al backend a dar mejores respuestas
+  // Contexto básico de soporte
   function buildContext(){
     const product = (document.getElementById('t-product') || {}).value || '';
     const kbOpenItems = Array.from(document.querySelectorAll('.kb-item[open] summary'))
@@ -82,7 +82,6 @@
     if (chatHistory.length === 0) {
       addMsg('bot', '¡Hola! Soy Lixby IA 🤖.<br>Puedo ayudarte con dudas de soporte, garantía y uso de tu dispositivo. Cuéntame, ¿qué ocurre?');
     } else {
-      // re-render historial
       chatHistory.forEach(m => addMsg(m.role === 'user' ? 'user' : 'bot', sanitizeHtml(m.content)));
     }
   }
@@ -126,7 +125,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error('Error del servidor IA');
+
+      if(res.status === 405){
+        throw new Error("Método no permitido (405). ¿Seguro que configuraste POST en tu backend?");
+      }
+      if(!res.ok) throw new Error(`Error ${res.status} al contactar con la IA`);
+
       const data = await res.json();
       const answer = data.answer || data.choices?.[0]?.message?.content || 'Lo siento, no tengo respuesta en este momento.';
       chatHistory.push({role: 'assistant', content: answer});
@@ -136,7 +140,7 @@
     } catch(err) {
       console.error("Chatbot error:", err);
       setLoading(false);
-      addMsg('bot', '⚠️ Ocurrió un error al contactar con la IA. Por favor, inténtalo más tarde.');
+      addMsg('bot', `⚠️ Error: ${sanitizeHtml(err.message)}. Revisa tu servidor.`);
     }
   }
 
@@ -147,17 +151,13 @@
     };
   }
 
-  // Accesibilidad: abrir con Ctrl+Alt+C
+  // Accesibilidad
   document.addEventListener('keydown', function(e){
     if(e.ctrlKey && e.altKey && e.key.toLowerCase()==='c'){ openWidget(); }
-  });
-  // Cierra el chat con ESC
-  document.addEventListener('keydown', function(e){
     if(e.key==='Escape' && widget.style.display==='flex'){ closeWidget(); }
   });
 
   // Inicializa
   if(btnOpen) btnOpen.style.display = 'block';
-  // No abrimos automáticamente; el usuario decide
 
 })();
