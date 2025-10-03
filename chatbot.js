@@ -1,18 +1,24 @@
-<!-- Lixby Chatbot Widget v4 — con botón de dudas principales -->
-<script>
+// Chatbot Widget — OpenAI compatible (requiere endpoint en tu server)
+/* Incluye:
+   - Historial en sessionStorage
+   - Mensaje de bienvenida contextual
+   - Metadatos de contexto (URL, título, hora, selección de producto si está)
+   - Manejo de errores y accesibilidad
+*/
 (function(){
   // --- Configuración ---
   const ENDPOINT = '/api/chat'; // tu endpoint backend que conecta con OpenAI
   const BOT_NAME = 'Lixby IA';
-  const STORAGE_KEY = 'lixby_chat_session_v1';
+  const STORAGE_KEY = 'chat_session_v1';
 
   // --- Elementos ---
-  const widget   = document.getElementById('lixbyChatbot');
-  const btnOpen  = document.getElementById('lixbyChatbotOpen');
-  const btnClose = document.getElementById('lixbyChatbotClose');
-  const body     = document.getElementById('lixbyChatbotBody');
-  const form     = document.getElementById('lixbyChatbotForm');
-  const input    = document.getElementById('lixbyChatbotInput');
+  const widget   = document.getElementById('chatbot');
+  const btnOpen  = document.getElementById('chatbotOpen');
+  const btnClose = document.getElementById('chatbotClose');
+  const body     = document.getElementById('chatbotBody');
+  const form     = document.getElementById('chatbotForm');
+  const input    = document.getElementById('chatbotInput');
+  const btnSend  = document.getElementById('chatbotSend');
 
   if (!widget || !body || !form || !input) {
     console.warn("⚠️ Chatbot: faltan elementos HTML requeridos (widget, body, form o input)");
@@ -31,18 +37,18 @@
   function scrollToBottom(){ body.scrollTop = body.scrollHeight; }
   function addMsg(who, html){
     const el = document.createElement('div');
-    el.className = 'lixby-chatbot-msg' + (who === 'user' ? ' user' : '');
+    el.className = 'chatbot-msg' + (who === 'user' ? ' user' : '');
     el.innerHTML = `<div class="bubble" tabindex="0">${html || '&nbsp;'}</div>`;
     body.appendChild(el);
     scrollToBottom();
   }
   function setLoading(loading=true){
-    let loader = document.getElementById('lixbyChatbotLoader');
+    let loader = document.getElementById('chatbotLoader');
     if(loading){
       if(!loader){
         loader = document.createElement('div');
-        loader.id = 'lixbyChatbotLoader';
-        loader.className = 'lixby-chatbot-msg';
+        loader.id = 'chatbotLoader';
+        loader.className = 'chatbot-msg';
         loader.innerHTML = `<div class="bubble" aria-live="polite"><span class="loader-dot">Pensando…</span></div>`;
         body.appendChild(loader);
         scrollToBottom();
@@ -54,7 +60,7 @@
   function saveSession(){ try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e){} }
   function loadSession(){ try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
 
-  // Contexto básico de soporte
+  // --- Contexto básico ---
   function buildContext(){
     const product = (document.getElementById('t-product') || {}).value || '';
     const kbOpenItems = Array.from(document.querySelectorAll('.kb-item[open] summary'))
@@ -69,42 +75,17 @@
     };
   }
 
-  // --- Dudas principales (FAQ rápidas) ---
-  const dudasPrincipales = [
-    "¿Cómo activar la garantía?",
-    "¿Cuánto tarda un pedido?",
-    "¿Cómo funciona LixbyCare+?",
-    "Problemas con el pago",
-    "Necesito soporte técnico"
-  ];
-
-  function renderDudasPrincipales(){
-    const cont = document.createElement('div');
-    cont.className = 'faq-buttons';
-    dudasPrincipales.forEach(duda=>{
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'faq-btn';
-      b.textContent = duda;
-      b.onclick = ()=> sendMessage(duda);
-      cont.appendChild(b);
-    });
-    body.appendChild(cont);
-    scrollToBottom();
-  }
-
-  // Mensaje de bienvenida + restauración de historial
+  // --- Mensaje de bienvenida / Historial ---
   function ensureWelcome(){
     body.innerHTML = '';
     if (chatHistory.length === 0) {
-      addMsg('bot', '¡Hola! Soy Lixby IA 🤖.<br>Puedo ayudarte con soporte, garantía y uso de tu dispositivo.<br><br>👉 Pulsa en "Dudas principales" para ver temas frecuentes.');
-      renderDudasPrincipales();
+      addMsg('bot', `¡Hola! Soy ${BOT_NAME} 🤖.<br>Puedo ayudarte con dudas de soporte, garantía y uso de tu dispositivo. Cuéntame, ¿qué ocurre?`);
     } else {
       chatHistory.forEach(m => addMsg(m.role === 'user' ? 'user' : 'bot', sanitizeHtml(m.content)));
     }
   }
 
-  // --- Lógica de apertura/cierre ---
+  // --- Abrir / Cerrar ---
   function openWidget(){
     widget.style.display = 'flex';
     if(btnOpen) btnOpen.style.display = 'none';
@@ -115,13 +96,13 @@
     widget.style.display = 'none';
     if(btnOpen) {
       btnOpen.style.display = 'block';
-      btnOpen.focus();
+      try { btnOpen.focus(); } catch(e){}
     }
   }
   if (btnOpen) btnOpen.onclick = openWidget;
   if (btnClose) btnClose.onclick = closeWidget;
 
-  // --- Enviar pregunta ---
+  // --- Enviar mensaje ---
   async function sendMessage(q){
     const content = String(q || '').trim();
     if(!content) return;
@@ -143,12 +124,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
-      if(res.status === 405){
-        throw new Error("Método no permitido (405). ¿Seguro que configuraste POST en tu backend?");
-      }
-      if(!res.ok) throw new Error(`Error ${res.status} al contactar con la IA`);
-
+      if(!res.ok) throw new Error('Error del servidor IA');
       const data = await res.json();
       const answer = data.answer || data.choices?.[0]?.message?.content || 'Lo siento, no tengo respuesta en este momento.';
       chatHistory.push({role: 'assistant', content: answer});
@@ -158,18 +134,25 @@
     } catch(err) {
       console.error("Chatbot error:", err);
       setLoading(false);
-      addMsg('bot', `⚠️ Error: ${sanitizeHtml(err.message)}. Revisa tu servidor.`);
+      addMsg('bot', '⚠️ Ocurrió un error al contactar con la IA. Por favor, inténtalo más tarde.');
     }
   }
 
+  // --- Eventos ---
   if (form) {
     form.onsubmit = function(e){
       e.preventDefault();
       sendMessage(input.value);
     };
   }
+  if (btnSend) {
+    btnSend.onclick = function(e){
+      e.preventDefault();
+      sendMessage(input.value);
+    };
+  }
 
-  // Accesibilidad
+  // Accesibilidad: Ctrl+Alt+C abre, ESC cierra
   document.addEventListener('keydown', function(e){
     if(e.ctrlKey && e.altKey && e.key.toLowerCase()==='c'){ openWidget(); }
     if(e.key==='Escape' && widget.style.display==='flex'){ closeWidget(); }
@@ -177,26 +160,4 @@
 
   // Inicializa
   if(btnOpen) btnOpen.style.display = 'block';
-
 })();
-</script>
-
-<style>
-/* Botones de dudas principales */
-.faq-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0;
-}
-.faq-btn {
-  background: #f1f1f1;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.faq-btn:hover { background: #e3e3e3; }
-</style>
