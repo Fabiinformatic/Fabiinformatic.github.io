@@ -1,12 +1,5 @@
-// Lixby Chatbot Widget v3 — OpenAI compatible (requiere endpoint en tu server)
-/* Mejoras:
-   - Manejo de errores 405/500 (server)
-   - Historial en sessionStorage
-   - Mensaje de bienvenida contextual
-   - Sugerencias rápidas desde la página (si existen)
-   - Metadatos de contexto (URL, título, hora, selección de producto si está)
-   - Accesibilidad y fallback si no hay backend
-*/
+<!-- Lixby Chatbot Widget v4 — con botón de dudas principales -->
+<script>
 (function(){
   // --- Configuración ---
   const ENDPOINT = '/api/chat'; // tu endpoint backend que conecta con OpenAI
@@ -76,11 +69,36 @@
     };
   }
 
+  // --- Dudas principales (FAQ rápidas) ---
+  const dudasPrincipales = [
+    "¿Cómo activar la garantía?",
+    "¿Cuánto tarda un pedido?",
+    "¿Cómo funciona LixbyCare+?",
+    "Problemas con el pago",
+    "Necesito soporte técnico"
+  ];
+
+  function renderDudasPrincipales(){
+    const cont = document.createElement('div');
+    cont.className = 'faq-buttons';
+    dudasPrincipales.forEach(duda=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'faq-btn';
+      b.textContent = duda;
+      b.onclick = ()=> sendMessage(duda);
+      cont.appendChild(b);
+    });
+    body.appendChild(cont);
+    scrollToBottom();
+  }
+
   // Mensaje de bienvenida + restauración de historial
   function ensureWelcome(){
     body.innerHTML = '';
     if (chatHistory.length === 0) {
-      addMsg('bot', '¡Hola! Soy Lixby IA 🤖.<br>Puedo ayudarte con dudas de soporte, garantía y uso de tu dispositivo. Cuéntame, ¿qué ocurre?');
+      addMsg('bot', '¡Hola! Soy Lixby IA 🤖.<br>Puedo ayudarte con soporte, garantía y uso de tu dispositivo.<br><br>👉 Pulsa en "Dudas principales" para ver temas frecuentes.');
+      renderDudasPrincipales();
     } else {
       chatHistory.forEach(m => addMsg(m.role === 'user' ? 'user' : 'bot', sanitizeHtml(m.content)));
     }
@@ -161,3 +179,24 @@
   if(btnOpen) btnOpen.style.display = 'block';
 
 })();
+</script>
+
+<style>
+/* Botones de dudas principales */
+.faq-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.faq-btn {
+  background: #f1f1f1;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.faq-btn:hover { background: #e3e3e3; }
+</style>
