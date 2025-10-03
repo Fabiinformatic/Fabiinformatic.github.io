@@ -50,6 +50,43 @@
 
     .btn-outline { background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--text); padding:8px 10px; border-radius:8px; cursor:pointer; }
     .muted { color:var(--muted); font-size:0.95rem; }
+
+    /* Chatbot widget (minimalista, usa variables existentes) */
+    :root { --chat-bg: color-mix(in oklab, var(--page-bg, #0b0f19) 86%, #000 14%); --chat-surface: color-mix(in oklab, var(--chat-bg) 88%, #fff 12%); }
+    html.light { --chat-bg: #f7f8fb; --chat-surface:#ffffff; }
+    #lixbyChatbotOpen {
+      position: fixed; right: 18px; bottom: 18px; z-index: 9998;
+      border: none; border-radius: 999px; padding: 12px 14px; cursor: pointer;
+      background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color: #00121a; font-weight: 800;
+      box-shadow: 0 10px 26px rgba(10,132,255,0.18); display: none;
+    }
+    html:not(.light) #lixbyChatbotOpen { color:#fff; border:1px solid rgba(255,255,255,0.08); }
+    #lixbyChatbot {
+      position: fixed; right: 18px; bottom: 82px; width: min(380px, 94vw); max-height: 72vh; display: none; flex-direction: column; z-index: 9999;
+      border-radius: 16px; border:1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, var(--chat-surface), color-mix(in oklab, var(--chat-surface) 86%, #000 14%)); overflow: hidden;
+      box-shadow: 0 16px 48px rgba(2,6,12,0.38);
+    }
+    .lixby-chatbot-header { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.06); color:var(--text); }
+    .lixby-chatbot-header .title { display:flex; align-items:center; gap:8px; font-weight:800; }
+    #lixbyChatbotBody { padding:12px; overflow:auto; display:flex; flex-direction:column; gap:10px; color:var(--text); background: transparent; }
+    .lixby-chatbot-msg { display:flex; }
+    .lixby-chatbot-msg .bubble {
+      max-width: 88%; padding:10px 12px; border-radius: 12px; background: rgba(255,255,255,0.08); color: var(--text); outline: none;
+    }
+    .lixby-chatbot-msg.user { justify-content: flex-end; }
+    .lixby-chatbot-msg.user .bubble { background: linear-gradient(180deg,var(--accent), color-mix(in oklab, var(--accent) 50%, #fff 50%)); color: #00121a; }
+    html:not(.light) .lixby-chatbot-msg.user .bubble { color:#fff; }
+    #lixbyChatbotForm { display:flex; gap:8px; padding:10px; border-top:1px solid rgba(255,255,255,0.06); }
+    #lixbyChatbotInput { flex:1; border-radius:10px; border:1px solid rgba(255,255,255,0.08); padding:10px; background:transparent; color:var(--text); }
+    #lixbyChatbotSend { border:none; border-radius:10px; padding:10px 12px; cursor:pointer; font-weight:800;
+      background: linear-gradient(90deg,var(--accent), color-mix(in oklab, var(--accent) 60%, #fff 40%)); color:#00121a; }
+    html:not(.light) #lixbyChatbotSend { color:#fff; border:1px solid rgba(255,255,255,0.08); }
+    .quick-prompts { display:flex; flex-wrap:wrap; gap:6px; padding: 10px 12px; }
+    .quick-prompts button { border:1px solid rgba(255,255,255,0.1); background:transparent; color:var(--text); border-radius:999px; padding:6px 10px; cursor:pointer; }
+    @media (max-width:720px){
+      #lixbyChatbot { right: 10px; left: 10px; width: auto; bottom: 84px; }
+    }
   </style>
 </head>
 <body>
@@ -115,6 +152,13 @@
               <p style="color:var(--muted)">Deshabilita Bluetooth de otros dispositivos y prueba con accesorio cableado. Adjunta grabación de prueba si es posible.</p>
             </div>
           </details>
+        </div>
+
+        <div class="quick-prompts" aria-label="Sugerencias para IA">
+          <button type="button" data-q="Mi dispositivo no enciende, ¿qué hago?">Mi dispositivo no enciende</button>
+          <button type="button" data-q="Tengo problemas de red, ayúdame a diagnosticar.">Problemas de red</button>
+          <button type="button" data-q="El micrófono hace ruido, dame pasos de prueba.">Micrófono con ruido</button>
+          <button type="button" data-q="¿Cómo adjunto un registro al ticket?">Adjuntar registro</button>
         </div>
 
         <hr style="margin:18px 0;border:none;height:1px;background:rgba(255,255,255,0.03)" />
@@ -190,6 +234,20 @@
       <div style="display:flex;gap:12px;align-items:center"><a href="faq.html">FAQ</a><a href="contacto.html">Contacto</a></div>
     </div>
   </footer>
+
+  <!-- Botón flotante y widget IA (añadidos) -->
+  <button id="lixbyChatbotOpen" aria-label="Abrir chat con Lixby IA">Chat con Lixby IA</button>
+  <div id="lixbyChatbot" role="dialog" aria-label="Lixby IA" aria-modal="false">
+    <div class="lixby-chatbot-header">
+      <div class="title">🤖 Lixby IA — Soporte</div>
+      <button id="lixbyChatbotClose" class="btn-outline" type="button">Cerrar</button>
+    </div>
+    <div id="lixbyChatbotBody" aria-live="polite"></div>
+    <form id="lixbyChatbotForm" autocomplete="off">
+      <input id="lixbyChatbotInput" type="text" placeholder="Escribe tu pregunta..." aria-label="Escribe tu pregunta a Lixby IA" />
+      <button id="lixbyChatbotSend" type="submit">Enviar</button>
+    </form>
+  </div>
 
   <!-- EmailJS SDK (lazy load inside script) -->
   <script>
@@ -575,7 +633,26 @@ Adjuntos: ${t.attachments ? t.attachments.length : 0} (si guardado localmente)
       try { localStorage.setItem('lixby_theme', isLight ? 'light' : 'dark'); }catch(e){}
     });
 
+    // Sugerencias rápidas -> Chat IA
+    document.querySelectorAll('.quick-prompts button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        try {
+          document.getElementById('lixbyChatbotOpen').click();
+          const v = b.getAttribute('data-q') || b.textContent;
+          const input = document.getElementById('lixbyChatbotInput');
+          input.value = v;
+          setTimeout(()=> document.getElementById('lixbyChatbotForm').dispatchEvent(new Event('submit')), 50);
+        } catch(e){}
+      });
+    });
+
+    // Mostrar botón IA al cargar
+    try { document.getElementById('lixbyChatbotOpen').style.display = 'block'; } catch(e){}
+
   })();
   </script>
+
+  <!-- Chatbot widget JS -->
+  <script src="chatbot.js" defer></script>
 </body>
 </html>
