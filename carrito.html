@@ -81,7 +81,7 @@
       </aside>
     </div>
   </div>
-
+   const API_BASE = 'http://localhost:4242';
   <script>
     (function(){
       'use strict';
@@ -216,17 +216,17 @@
           });
 
           // Crear sesión de checkout
-          const response = await fetch('/create-checkout-session', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              items: lineItems,
-              success_url: window.location.origin + '/success.html?session_id={CHECKOUT_SESSION_ID}',
-              cancel_url: window.location.origin + '/carrito.html'
-            })
-          });
+          cconst response = await fetch(API_BASE + '/create-checkout-session', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    items: lineItems,
+    success_url: window.location.origin + '/success.html?session_id={CHECKOUT_SESSION_ID}',
+    cancel_url: window.location.origin + '/carrito.html'
+  })
+});
 
           if (!response.ok) {
             throw new Error('Error al crear la sesión de pago');
