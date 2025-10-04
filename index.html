@@ -121,11 +121,12 @@
 
     /* ======================
        ADICIONES: HERO VIDEO (estilo tipo Apple)
-       ====================== */
+       ======================
+    */
     .hero {
-      position: relative;
+      position: relative; /* para el video absoluto */
       overflow: hidden;
-      min-height: 100vh; /* full screen */
+      min-height: 72vh; /* ocupa buena parte de la pantalla */
       display:flex;
       align-items:center;
       justify-content:center;
@@ -136,12 +137,13 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      z-index: -2;
-      pointer-events: none;
+      object-fit: cover; /* recorta sin deformar */
+      z-index: -2; /* detrás del contenido */
+      pointer-events: none; /* no interfiere con clicks */
       filter: brightness(0.6) saturate(0.98);
       will-change: transform;
     }
+    /* overlay sutil para texto legible */
     .hero::before {
       content: "";
       position: absolute;
@@ -151,9 +153,6 @@
       pointer-events: none;
     }
     .hero-content { position: relative; z-index: 1; text-align:center; max-width:1100px; color:#fff; }
-    .hero-content h1 { font-size: clamp(2.4rem, 6vw, 4.6rem); margin-bottom: 10px; }
-    .hero-cta { display:flex; gap:12px; justify-content:center; margin-top:14px; }
-    .hero-cta .btn { padding:12px 16px; border-radius:12px; font-weight:800; }
 
     /* ======================
        NUEVA SECCIÓN: promo-row (Apple-like square cards)
@@ -292,9 +291,9 @@
       color: var(--text);
     }
 
-    /* Mobile header menu: aseguramos que el botón abra el menú */
-    #mobileMenuToggle { display:none; background:transparent; border:none; padding:6px; border-radius:10px; cursor:pointer; }
-    #mobileMenuToggle img { display:block; pointer-events:none; }
+    /* Mobile header menu */
+    #mobileMenuToggle { display:none; background:transparent; border:none; padding:6px; border-radius:10px; }
+    #mobileMenuToggle img { display:block; }
     #mobileMenu {
       display:none;
       position:absolute;
@@ -305,8 +304,6 @@
       max-width: 88vw;
       padding:12px;
       border-radius:14px;
-      background: linear-gradient(180deg, var(--card-bg), var(--card-bg-2));
-      border:1px solid var(--border);
     }
     #mobileMenu a, #mobileMenu button {
       display:flex;
@@ -320,66 +317,12 @@
       margin-bottom:8px;
       cursor:pointer;
     }
+
     @media (max-width:720px){
       #navLinks { display:none !important; }
       .nav-right > *:not(#mobileMenuToggle) { display:none !important; }
       #mobileMenuToggle { display:inline-flex; align-items:center; justify-content:center; }
     }
-
-    /* ======================
-       NUEVAS SECCIONES: estructura solicitada
-       ====================== */
-    .featured {
-      max-width:1200px; margin: 40px auto; padding: 0 20px; display:grid; grid-template-columns: 1.1fr 1fr; gap:24px; align-items:center;
-    }
-    .featured .img-wrap { border-radius:20px; overflow:hidden; border:1px solid var(--border); background: linear-gradient(180deg, var(--card-bg), var(--card-bg-2)); }
-    .featured .img-wrap img { width:100%; height:auto; display:block; }
-    .featured h2 { font-size: clamp(1.8rem, 4.4vw, 3rem); margin:0 0 8px; }
-    .featured p { color:var(--muted); margin:0 0 14px; }
-    .featured .cta { display:flex; gap:10px; }
-
-    @media (max-width:900px){ .featured { grid-template-columns: 1fr; } }
-
-    .features {
-      max-width:1200px; margin: 20px auto 40px; padding: 0 20px;
-    }
-    .features h3 { font-size:1.4rem; margin-bottom: 14px; }
-    .features-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; }
-    .feature-item { border:1px solid var(--border); border-radius:14px; padding:16px; background: linear-gradient(180deg, var(--card-bg), var(--card-bg-2)); text-align:center; }
-    .feature-item .icon { font-size: 26px; margin-bottom:8px; }
-    .feature-item .txt { font-weight:800; }
-    @media (max-width:900px){ .features-grid { grid-template-columns: repeat(2,1fr); } }
-    @media (max-width:520px){ .features-grid { grid-template-columns: 1fr; } }
-
-    .visual {
-      position: relative; overflow:hidden; margin: 40px 0;
-    }
-    .visual .strip {
-      display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; max-width:1200px; margin:0 auto; padding: 0 20px;
-    }
-    .visual .strip img { width:100%; height:320px; object-fit:cover; border-radius:16px; border:1px solid var(--border); }
-    @media (max-width:900px){ .visual .strip { grid-template-columns: 1fr; } .visual .strip img { height:240px; } }
-
-    .compare {
-      max-width:1200px; margin: 20px auto 40px; padding: 0 20px;
-    }
-    .compare h3 { font-size:1.4rem; margin-bottom: 14px; }
-    .compare-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:12px; }
-    .compare-item { border:1px solid var(--border); border-radius:14px; padding:16px; background: linear-gradient(180deg, var(--card-bg), var(--card-bg-2)); }
-    .compare-item strong { display:block; margin-bottom:6px; }
-    @media (max-width:900px){ .compare-grid { grid-template-columns: 1fr; } }
-
-    .testimonials {
-      max-width:900px; margin: 20px auto 40px; padding: 0 20px; text-align:center;
-    }
-    .quote { font-size: clamp(1.1rem, 2.6vw, 1.6rem); color:var(--muted); margin: 8px 0; }
-
-    .final-cta {
-      max-width:1200px; margin: 30px auto 60px; padding: 40px 20px; text-align:center; border-radius:20px; border:1px solid var(--border);
-      background: linear-gradient(180deg, var(--card-bg), var(--card-bg-2));
-    }
-    .final-cta h2 { font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 10px; }
-    .final-cta .btn { padding:12px 16px; border-radius:12px; font-weight:800; }
   </style>
 </head>
 <body>
@@ -405,24 +348,21 @@
     <nav id="navLinks" role="navigation" aria-label="Principal">
       <a href="#inicio" data-i18n="nav.inicio">Inicio</a>
       <a href="#productos" data-i18n="nav.productos">Productos</a>
-      <a href="soporte.html">Soporte</a>
+      <a href="#contacto" data-i18n="nav.contacto">Contáctanos</a>
       <a href="#conocenos" data-i18n="nav.conocenos">Conócenos</a>
-      <a href="productos.html">Tienda</a>
-      <a href="#cta-final" class="btn" style="border:1px solid var(--border); padding:8px 12px;">Comprar</a>
     </nav>
 
     <!-- RIGHT: controles en fila -->
     <div class="nav-right" aria-hidden="false" style="display:flex;align-items:center;gap:12px;position:relative;">
       <!-- Mobile toggle -->
-      <button id="mobileMenuToggle" class="icon-btn" aria-label="Abrir menú" aria-haspopup="true" aria-expanded="false" type="button">
+      <button id="mobileMenuToggle" class="icon-btn" aria-label="Abrir menú" type="button">
         <img src="https://www.shutterstock.com/image-vector/menu-icon-trendy-flat-style-600nw-432264136.jpg" alt="Menú" width="28" height="28" style="border-radius:6px;object-fit:cover;">
       </button>
       <div id="mobileMenu" class="glass" role="menu" aria-hidden="true" aria-label="Menú móvil">
         <a href="#inicio" role="menuitem">Inicio</a>
-        <a href="productos.html" role="menuitem">Tienda</a>
-        <a href="soporte.html" role="menuitem">Soporte</a>
-        <a href="#conocenos" role="menuitem">Conócenos</a>
         <a href="#productos" role="menuitem">Productos</a>
+        <a href="#contacto" role="menuitem">Contáctanos</a>
+        <a href="#conocenos" role="menuitem">Conócenos</a>
         <a href="lixbycare.html" role="menuitem">LixbyCare+</a>
         <a href="carrito.html" role="menuitem">Carrito</a>
         <button id="mobileAccount" type="button" role="menuitem">Cuenta</button>
@@ -468,6 +408,7 @@
       </div>
 
       <div id="accountContainer" style="display:flex;align-items:center;gap:8px;">
+        <!-- Preview: si existe usuario en localStorage, aquí se muestra foto + nombre (no borra el botón original) -->
         <div id="accountPreview" style="display:none;align-items:center;gap:8px;cursor:pointer;" role="button" tabindex="0" aria-label="Ir a mi cuenta">
           <img id="accountAvatar" src="" alt="Avatar" width="36" height="36" style="border-radius:10px;object-fit:cover;">
           <strong id="accountName" style="font-size:0.95rem"></strong>
@@ -475,6 +416,7 @@
 
         <button id="accountBtn" class="btn ghost" aria-label="Mi cuenta" type="button">Cuenta</button>
 
+        <!-- NUEVO: botón PASATE AL PRO (al lado de la cuenta) -->
         <button id="proBtn" class="btn btn-pro" type="button" aria-label="Pásate al Pro" data-i18n="pro.cta">PÁSATE AL PRO</button>
       </div>
 
@@ -486,101 +428,22 @@
 <main id="maincontent">
   <!-- HERO -->
   <section id="inicio" class="hero reveal" aria-labelledby="hero-title">
+
+    <!-- VIDEO DE FONDO (decorativo) -->
     <video class="hero-bg" autoplay muted loop playsinline preload="auto" aria-hidden="true">
       <source src="Bienvenido.mp4" type="video/mp4">
+      <!-- fallback: still se mantiene el poster si el navegador no soporta video -->
     </video>
 
     <div class="hero-content">
       <h1 id="hero-title" data-i18n="hero.title">La tecnología que te entiende</h1>
       <p id="hero-subtitle" data-i18n="hero.subtitle">Innovación minimalista para tu día a día</p>
-      <div class="hero-cta">
-        <a href="#destacado" class="btn" style="border:1px solid rgba(255,255,255,0.28);color:#fff">Descúbrelo</a>
-        <a href="#cta-final" class="btn" style="background:#fff;color:#00121a;font-weight:800;border:1px solid rgba(255,255,255,0.2)">Comprar</a>
-      </div>
+      <!-- El botón EXPLORAR apunta a explorar.html (corregido según pediste) -->
+      <a href="explorar.html" class="btn primary" data-i18n="btn.explorar">Explorar</a>
     </div>
   </section>
 
-  <!-- NUEVA SECCIÓN: Producto destacado -->
-  <section id="destacado" class="featured reveal" aria-labelledby="feat-title">
-    <div class="img-wrap">
-      <img src="https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?q=80&w=1200&auto=format&fit=crop" alt="Producto destacado LIXBY">
-    </div>
-    <div>
-      <h2 id="feat-title">Potencia. Diseño. Libertad.</h2>
-      <p>Lo mejor de LIXBY concentrado en una pieza icónica. Rendimiento sin esfuerzo y estética minimalista.</p>
-      <div class="cta">
-        <a href="#productos" class="btn" style="border:1px solid var(--border);">Ver productos</a>
-        <a href="producto.html?id=lixby-one-pro" class="btn" style="background:var(--accent);color:#00121a;">Comprar</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- NUEVA SECCIÓN: Features -->
-  <section class="features reveal" aria-labelledby="features-title">
-    <h3 id="features-title">Características principales</h3>
-    <div class="features-grid">
-      <div class="feature-item">
-        <div class="icon">🪶</div>
-        <div class="txt">Diseño ligero</div>
-      </div>
-      <div class="feature-item">
-        <div class="icon">🔋</div>
-        <div class="txt">Batería increíble</div>
-      </div>
-      <div class="feature-item">
-        <div class="icon">🌈</div>
-        <div class="txt">Pantalla única</div>
-      </div>
-      <div class="feature-item">
-        <div class="icon">🔒</div>
-        <div class="txt">LixbyCare+</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- NUEVA SECCIÓN: Visual/Galería -->
-  <section class="visual reveal" aria-label="Galería">
-    <div class="strip">
-      <img src="https://images.unsplash.com/photo-1520975922215-cf2f4c12bd89?q=80&w=1200&auto=format&fit=crop" alt="Detalle 1">
-      <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop" alt="Detalle 2">
-      <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop" alt="Detalle 3">
-    </div>
-  </section>
-
-  <!-- NUEVA SECCIÓN: Comparativa/beneficios -->
-  <section class="compare reveal" aria-labelledby="compare-title">
-    <h3 id="compare-title">El futuro como tú lo quieres</h3>
-    <div class="compare-grid">
-      <div class="compare-item">
-        <strong>Lixby One Air</strong>
-        <div>Ligero y accesible. Ideal para moverte.</div>
-      </div>
-      <div class="compare-item">
-        <strong>Lixby One</strong>
-        <div>Equilibrio perfecto entre potencia y precio.</div>
-      </div>
-      <div class="compare-item">
-        <strong>Lixby One Pro</strong>
-        <div>Máximo rendimiento y audio de alta fidelidad.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- NUEVA SECCIÓN: Testimonios -->
-  <section class="testimonials reveal" aria-labelledby="testimonials-title">
-    <h3 id="testimonials-title" style="margin-bottom:6px;">Lo que dicen</h3>
-    <p class="quote">“El minimalismo de LIXBY hace que todo parezca más fácil.” — Prensa</p>
-    <p class="quote">“No vuelvo atrás. Es fluido, silencioso y precioso.” — Usuario</p>
-  </section>
-
-  <!-- NUEVA SECCIÓN: Llamada final (CTA) -->
-  <section id="cta-final" class="final-cta reveal" aria-labelledby="final-title">
-    <h2 id="final-title">Empieza hoy</h2>
-    <p style="color:var(--muted);margin:0 0 12px;">Da el salto a una experiencia limpia y potente.</p>
-    <a href="productos.html" class="btn" style="background:var(--accent);color:#00121a;">Comprar</a>
-  </section>
-
-  <!-- NUEVA SECCIÓN: Apple-like square promo cards (se mantiene) -->
+  <!-- NUEVA SECCIÓN: Apple-like square promo cards (añadida sin borrar nada) -->
   <section class="promo-row" aria-labelledby="promo-title" role="region">
     <div class="promo-title">
       <h2 id="promo-title">Descubre</h2>
@@ -588,68 +451,86 @@
     </div>
 
     <div class="promo-cards" role="list">
+
+      <!-- CARD 1: PÁSATE AL PRO -->
       <article class="promo-card" role="listitem" tabindex="0" aria-labelledby="pro-card-title" data-card="pro">
         <div class="promo-media" aria-hidden="true">
           <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=8b2a1b2a3f3a9b3e" alt="Pro">
         </div>
+
         <div class="promo-meta">
           <div class="promo-kicker">Exclusivo</div>
           <h3 id="pro-card-title" class="promo-title-lg">PÁSATE AL PRO</h3>
           <p style="margin:0;color:var(--muted)">Funciones avanzadas, soporte prioritario y materiales premium.</p>
+
           <div class="promo-cta-row">
             <button class="promo-btn pro-cta" id="goProBtn" type="button" aria-label="Pásate al Pro">PÁSATE AL PRO →</button>
             <button class="promo-btn discover-cta" id="learnProBtn" type="button" aria-label="Más info Pro">Más info</button>
           </div>
         </div>
+
         <div class="promo-mini" aria-hidden="true">PRO</div>
       </article>
 
+      <!-- CARD 2: DESCUBRE NUESTROS PRODUCTOS -->
       <article class="promo-card" role="listitem" tabindex="0" aria-labelledby="discover-card-title" data-card="discover">
         <div class="promo-media" aria-hidden="true">
           <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=7f6f6ad9d4f8c4c8" alt="Productos">
         </div>
+
         <div class="promo-meta">
           <div class="promo-kicker">Colección</div>
           <h3 id="discover-card-title" class="promo-title-lg">DESCUBRE NUESTROS PRODUCTOS</h3>
           <p style="margin:0;color:var(--muted)">Explora el catálogo y encuentra el LIXBY que mejor encaja contigo.</p>
+
           <div class="promo-cta-row">
             <a href="#productos" class="promo-btn discover-cta" role="button" aria-label="Descubre nuestros productos">DESCUBRIR</a>
             <button class="promo-btn" id="openCatalogBtn" aria-label="Ver catálogo">Ver catálogo</button>
           </div>
         </div>
+
         <div class="promo-mini" aria-hidden="true">✚</div>
       </article>
 
+      <!-- CARD 3: LIXBYCARE+ (antes Nuestra garantía) -->
       <article class="promo-card" role="listitem" tabindex="0" aria-labelledby="garantia-card-title" data-card="garantia">
         <div class="promo-media" aria-hidden="true">
           <img src="https://cdn-icons-png.flaticon.com/512/985/985723.png" alt="LixbyCare+">
         </div>
+
         <div class="promo-meta">
           <div class="promo-kicker">Seguridad</div>
           <h3 id="garantia-card-title" class="promo-title-lg">LixbyCare+</h3>
           <p style="margin:0;color:var(--muted)">2 años de garantía oficial y 30 días para devoluciones sin preguntas.</p>
+
           <div class="promo-cta-row">
             <a class="btn-discover" id="garantiaBtn" href="lixbycare.html" aria-label="Descubrir LixbyCare+">DESCUBRIR</a>
             <a class="promo-btn discover-cta" id="garantiaFaqBtn" href="faq.html#garantia" aria-label="Preguntas sobre LixbyCare+">Preguntas</a>
           </div>
         </div>
+
         <div class="promo-mini" aria-hidden="true">✔</div>
       </article>
 
+      <!-- CARD 4: ECO / sostenibilidad (ejemplo añadido) -->
       <article class="promo-card" role="listitem" tabindex="0" aria-labelledby="eco-card-title" data-card="eco">
         <div class="promo-media" aria-hidden="true">
           <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=9a2b3c4d5e6f7a8b" alt="Sostenible">
         </div>
+
         <div class="promo-meta">
           <div class="promo-kicker">Medio ambiente</div>
           <h3 id="eco-card-title" class="promo-title-lg">ECO & SOSTENIBLE</h3>
           <p style="margin:0;color:var(--muted)">Materiales reciclados y programa de reciclaje al comprar.</p>
-          <div class="promo-cta-row">
+
+        <div class="promo-cta-row">
             <button class="promo-btn discover-cta" id="ecoBtn" type="button" aria-label="Más sobre sostenibilidad">Más</button>
           </div>
         </div>
+
         <div class="promo-mini" aria-hidden="true">♻</div>
       </article>
+
     </div>
   </section>
 
@@ -657,6 +538,7 @@
   <section id="productos" class="section reveal" aria-labelledby="prod-title">
     <h2 id="prod-title" data-i18n="section.products">Productos</h2>
     <div class="grid">
+      <!-- Lixby One Air -->
       <article class="card glass" data-product="lixby-one-air" role="button" tabindex="0" aria-label="Lixby One Air">
         <div class="thumb">
           <img src="https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg" alt="Lixby One Air" loading="lazy" decoding="async" width="600" height="600">
@@ -664,9 +546,12 @@
         <h3 class="prod-title" data-i18n="product.lixby-one-air.title">Lixby One Air</h3>
         <p class="prod-desc" data-i18n="product.lixby-one-air.desc">Ultraligero y económico.</p>
         <span class="price" data-i18n="product.lixby-one-air.price">249€</span>
-        <div class="actions"></div>
+        <div class="actions">
+          <!-- Aquí se inyecta dinámicamente SOLO UN BOTÓN "Explorar" por JS -->
+        </div>
       </article>
 
+      <!-- Lixby One -->
       <article class="card glass" data-product="lixby-one" role="button" tabindex="0" aria-label="Lixby One">
         <div class="thumb">
           <img src="https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg" alt="Lixby One" loading="lazy" decoding="async" width="600" height="600">
@@ -677,6 +562,7 @@
         <div class="actions"></div>
       </article>
 
+      <!-- Lixby One Pro -->
       <article class="card glass" data-product="lixby-one-pro" role="button" tabindex="0" aria-label="Lixby One Pro">
         <div class="thumb">
           <img src="https://m.media-amazon.com/images/I/61rriyfRKwL.jpg" alt="Lixby One Pro" loading="lazy" decoding="async" width="600" height="600">
@@ -728,6 +614,7 @@
       <div class="footer-brand">LIXBY</div>
       <p data-i18n="footer.description">Diseño minimalista, tecnología que acompaña tu día a día. Síguenos para novedades y lanzamientos.</p>
       <div class="social-links" aria-label="Redes sociales">
+        <!-- icons... preserved -->
         <a href="#" title="Twitter" aria-label="Twitter" rel="noopener">...</a>
         <a href="#" title="Instagram" aria-label="Instagram" rel="noopener">...</a>
         <a href="#" title="YouTube" aria-label="YouTube" rel="noopener">...</a>
@@ -762,6 +649,7 @@
         <button id="newsletterBtn" type="submit" aria-label="Suscribirse" data-i18n="btn.subscribe">Suscribir</button>
       </form>
       <div style="margin-top:8px;">
+        <!-- DOWNLOAD BUTTON ADDED: se traducirá y actualizará la ruta con el idioma -->
         <a id="downloadBtn" class="btn-download" href="download/guide-es.pdf" download data-i18n="btn.download">Descargar</a>
       </div>
       <div id="newsletterMsg" role="status" aria-live="polite" style="margin-top:8px;color:var(--muted);font-size:0.95rem"></div>
@@ -818,6 +706,9 @@
      =========================== -->
 <script>
 (function(){
+  // -------------------------
+  // Helpers y estado (se mantienen)
+  // -------------------------
   const KEY = 'lixby_cart_v1';
   const CURRENCY = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
   function parsePrice(s){ if (s === undefined || s === null) return 0; return Number(String(s).replace(/[^\d.,-]/g,'').replace(',', '.')) || 0; }
@@ -828,12 +719,14 @@
 
   try { document.getElementById('year').textContent = new Date().getFullYear(); } catch(e){}
 
+  // Productos (preservado)
   const PRODUCTS_BRIEF = {
     'lixby-one-air': { id:'lixby-one-air', name: 'Lixby One Air', price: '249€', priceNum: 249, image: 'https://m.media-amazon.com/images/I/61j5RD1d9KL._UF1000,1000_QL80_.jpg' },
     'lixby-one': { id:'lixby-one', name: 'Lixby One', price: '349€', priceNum: 349, image: 'https://m.media-amazon.com/images/I/712Pyq1hPfL._UF1000,1000_QL80_.jpg' },
     'lixby-one-pro': { id:'lixby-one-pro', name: 'Lixby One Pro', price: '899€', priceNum: 899, image: 'https://m.media-amazon.com/images/I/61rriyfRKwL.jpg' }
   };
 
+  // CART state & UI refs
   let cart = loadCart();
   const cartBtn = document.getElementById('cartBtn');
   const miniCart = document.getElementById('miniCart');
@@ -913,11 +806,13 @@
     if (cartPanelTotal) cartPanelTotal.textContent = formatPriceNum(total);
   }
 
+  // ensure miniCart style reflects aria-hidden initially
   if (miniCart) {
     if (miniCart.getAttribute('aria-hidden') === 'false') miniCart.style.display = 'flex';
     else miniCart.style.display = '';
   }
 
+  // Hover show mini-cart & click navegates to carrito.html (fixed per request)
   (function wireCartHoverAndClick(){
     const wrapper = document.querySelector('.cart-wrapper');
     let hideTimeout = null;
@@ -959,8 +854,10 @@
       });
     }
 
+    // CLICK: ahora redirige a carrito.html (según tu petición)
     if (cartBtn) {
       cartBtn.addEventListener('click', (e) => {
+        // si quieres mantener comportamiento panel con tecla modificadora, se puede:
         if (e.metaKey || e.ctrlKey) {
           openCartPanel();
           return;
@@ -969,10 +866,12 @@
       });
     }
 
+    // viewCartBtn sigue abriendo el panel (útil)
     const viewBtn = document.getElementById('viewCartBtn');
     if (viewBtn) viewBtn.addEventListener('click', (e) => openCartPanel());
   })();
 
+  // Panel functions
   function openCartPanel(){
     if (!cartPanel || !cartBackdrop) return;
     cartPanel.classList.add('open');
@@ -1013,6 +912,9 @@
   updateMiniCartUI();
   updateCartPanel();
 
+  // ---------------------------
+  // I18N / translations (mejorado, no petará)
+  // ---------------------------
   const langBtn = document.getElementById('langBtn'), langMenu = document.getElementById('langMenu'), langLabel = document.getElementById('langLabel'), langFlag = document.getElementById('langFlag');
   const translations = {
     es: {
@@ -1053,8 +955,10 @@
       "pro.cta":"GO PRO",
       "about.text":"At LIXBY we believe in the perfect balance between design and functionality. We create products that not only work, but inspire."
     }
+    /* ... otros idiomas preservados ... */
   };
 
+  // Start language
   let currentLang = localStorage.getItem('lixby_lang') || (navigator.language ? navigator.language.slice(0,2) : 'es');
   if (!translations[currentLang]) currentLang = 'es';
 
@@ -1065,6 +969,7 @@
     } catch(e){ return null; }
   }
 
+  // safe text setter
   function setElementTextSafe(el, text){
     if (!el) return;
     try {
@@ -1080,6 +985,7 @@
     } catch(e){ try { el.textContent = text; } catch(err){} }
   }
 
+  // translateVisibleTextNodes y applyTranslations
   function translateVisibleTextNodes(lang){
     try {
       const base = translations['es'] || {};
@@ -1185,6 +1091,7 @@
     try { applyTranslations(l); } catch(err){ console.warn('setLang apply failed', err); }
   }
 
+  // init language wiring
   try {
     setLang(localStorage.getItem('lixby_lang') || currentLang);
     if (langBtn && langMenu){
@@ -1218,11 +1125,12 @@
     }
   } catch(err){ console.warn('lang wiring failed', err); }
 
-  /* THEME: auto-detección */
+  // THEME: auto-detección y sincronización con sistema
   const THEME_KEY = 'lixby_theme';
   const themeToggle = document.getElementById('themeToggle');
   const mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)');
   function applyThemeClass(val){
+    // light = add .light; dark = remove .light
     if (val === 'light') document.documentElement.classList.add('light');
     else document.documentElement.classList.remove('light');
   }
@@ -1231,6 +1139,7 @@
     if (stored === 'light' || stored === 'dark') {
       applyThemeClass(stored);
     } else {
+      // auto según sistema
       const systemLight = mq ? mq.matches : false;
       applyThemeClass(systemLight ? 'light' : 'dark');
     }
@@ -1248,7 +1157,76 @@
     try{ localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark'); }catch(e){}
   });
 
-  /* PRODUCT CTA único */
+  // CONTACT: EmailJS lazy-load (preservado; no modificado)
+  async function ensureEmailJs(){
+    if (window.emailjs && typeof window.emailjs.sendForm === 'function') return;
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js';
+      s.crossOrigin = 'anonymous';
+      s.onload = res;
+      s.onerror = () => rej(new Error('EmailJS load failed'));
+      document.head.appendChild(s);
+    });
+    try { if (window.emailjs && typeof emailjs.init === 'function') emailjs.init('xsKpaFjbRsS95AK3i'); } catch(e){ console.warn('EmailJS init failed', e); }
+  }
+
+  (function initContact(){
+    const form = document.getElementById('contactForm');
+    const sendBtn = document.getElementById('contactSend');
+    const successEl = document.getElementById('contactSuccess');
+    const ticketHidden = document.getElementById('ticketId');
+    if (!form) return;
+
+    function generateTicketId(){
+      const t = 'LIXBY-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8).toUpperCase();
+      return t;
+    }
+
+    async function sendEmail(e){
+      e.preventDefault();
+      const name = document.getElementById('contactName').value.trim();
+      const email = document.getElementById('contactEmail').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+      if (!name || !email || !message) { alert(getTranslation('contact.fill') || 'Por favor completa todos los campos.'); return; }
+      const ticket = generateTicketId();
+      if (ticketHidden) ticketHidden.value = ticket;
+      sendBtn.disabled = true;
+      const prev = sendBtn.textContent; sendBtn.textContent = getTranslation('btn.enviar') || 'Enviando...';
+      try {
+        await ensureEmailJs();
+        if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
+          throw new Error('EmailJS SDK no disponible');
+        }
+        await emailjs.sendForm('service_tagcpgm', 'template_l1e0go2', '#contactForm');
+        successEl.style.display = 'block';
+        form.reset();
+        try {
+          const key = 'lixby_tickets_v1';
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          arr.push({ ticket_id: ticket, name: name, email: email, message: message, created_at: new Date().toISOString(), status: 'sent' });
+          localStorage.setItem(key, JSON.stringify(arr));
+        } catch (errLocal) { /* no crítico */ }
+        setTimeout(()=> successEl.style.display = 'none', 6000);
+      } catch (err) {
+        console.error('Error enviando con EmailJS:', err);
+        try {
+          const key = 'lixby_tickets_v1';
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          arr.push({ ticket_id: ticket, name: name, email: email, message: message, created_at: new Date().toISOString(), status: 'failed', error: String(err) });
+          localStorage.setItem(key, JSON.stringify(arr));
+        } catch (errLocal) { console.warn('Fallback save failed', errLocal); }
+        alert('No se pudo enviar el mensaje vía EmailJS. Hemos guardado una copia local del ticket y puedes reintentar más tarde.');
+      } finally {
+        sendBtn.disabled = false; sendBtn.textContent = prev;
+      }
+    }
+    form.addEventListener('submit', sendEmail);
+  })();
+
+  // ---------------------
+  // PRODUCT CARD: replace local buttons with a single "Explorar" CTA (multi-idioma)
+  // ---------------------
   function replaceProductActions(){
     try {
       document.querySelectorAll('.card[data-product]').forEach(card => {
@@ -1270,9 +1248,13 @@
       });
     } catch(e){ console.warn('replaceProductActions failed', e); }
   }
+
+  // replace actions now and after each language change
   replaceProductActions();
 
-  /* Cuenta / PRO */
+  // ---------------------------
+  // ACCOUNT & PRO button wiring + preview (foto y nombre si existe)
+  // ---------------------------
   try {
     const accountBtn = document.getElementById('accountBtn');
     const accountPreview = document.getElementById('accountPreview');
@@ -1285,14 +1267,17 @@
         if (!storedRaw) { accountPreview.style.display = 'none'; accountBtn.style.display = ''; return false; }
         const stored = JSON.parse(storedRaw);
         if (!stored || !stored.uid) { accountPreview.style.display = 'none'; accountBtn.style.display=''; return false; }
+        // show avatar + name
         accountAvatar.src = stored.avatar || stored.photoURL || 'https://i.imgur.com/dOCYmkx.jpeg';
         accountName.textContent = stored.displayName || stored.name || 'Usuario';
         accountPreview.style.display = 'flex';
+        // ocultar botón "Cuenta" para evitar duplicado
         accountBtn.style.display = 'none';
         return true;
       } catch(e){ accountPreview.style.display = 'none'; accountBtn.style.display=''; return false; }
     }
 
+    // click preview => cuenta.html
     if (accountPreview) {
       accountPreview.addEventListener('click', ()=> { window.location.href = 'cuenta.html'; });
       accountPreview.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.href='cuenta.html'; }});
@@ -1314,16 +1299,28 @@
         } catch(err) { console.warn('accountBtn handler err', err); window.location.href = 'login.html'; }
       });
     }
-    showAccountPreviewIfAvailable();
 
-    const proBtn = document.getElementById('proBtn');
-    if (proBtn) {
-      proBtn.addEventListener('click', ()=> { window.location.href = 'pro.html'; });
-      proBtn.textContent = getTranslation('pro.cta') || proBtn.textContent;
-    }
+    // check on load
+    showAccountPreviewIfAvailable();
+    // expose helper for dev/testing
+    window.lixby = window.lixby || {};
+    window.lixby.showAccountPreviewIfAvailable = showAccountPreviewIfAvailable;
+
   } catch(e){ console.warn('accountBtn attach err', e); }
 
-  /* Download link + traducciones dinámicas */
+  try {
+    const proBtn = document.getElementById('proBtn');
+    if (proBtn) {
+      proBtn.addEventListener('click', ()=> {
+        window.location.href = 'pro.html';
+      });
+      proBtn.textContent = getTranslation('pro.cta') || proBtn.textContent;
+    }
+  } catch(e){ console.warn('proBtn attach err', e); }
+
+  // ---------------------------
+  // DOWNLOAD button wiring
+  // ---------------------------
   function updateDownloadLink(lang){
     try {
       const dl = document.getElementById('downloadBtn');
@@ -1337,10 +1334,13 @@
     } catch(e){ console.warn('updateDownloadLink err', e); }
   }
 
+  // ensure product actions get translated when language changes
   const origSetLang = setLang;
   setLang = function(l){ origSetLang(l); replaceProductActions(); updateDownloadLink(l); };
 
-  /* Promo cards interactions */
+  // ---------------------------
+  // Promo cards interactions
+  // ---------------------------
   (function promoWiring(){
     document.getElementById('goProBtn')?.addEventListener('click', ()=> window.location.href='pro.html');
     document.getElementById('learnProBtn')?.addEventListener('click', ()=> {
@@ -1349,9 +1349,11 @@
       if (proCard) { proCard.animate([{ transform:'translateY(-6px)'},{ transform:'translateY(0)'}], { duration: 450 }); }
     });
     document.getElementById('openCatalogBtn')?.addEventListener('click', ()=> window.location.href='#productos');
+    // Garantía -> LixbyCare+ page
     document.getElementById('garantiaBtn')?.addEventListener('click', (e)=> { e.preventDefault(); window.location.href='lixbycare.html'; });
     document.getElementById('garantiaFaqBtn')?.addEventListener('click', ()=> window.location.href='faq.html#garantia');
     document.getElementById('ecoBtn')?.addEventListener('click', ()=> window.location.href='sostenibilidad.html');
+    // keyboard accessibility
     document.querySelectorAll('.promo-card').forEach(card => {
       card.addEventListener('keydown', (e) => {
         if(e.key === 'Enter' || e.key === ' ') {
@@ -1363,7 +1365,9 @@
     });
   })();
 
-  /* Mobile menu: arreglo definitivo del dropdown */
+  // ---------------------------
+  // Mobile menu wiring
+  // ---------------------------
   (function mobileMenu(){
     const toggle = document.getElementById('mobileMenuToggle');
     const menu = document.getElementById('mobileMenu');
@@ -1373,203 +1377,104 @@
     const accountEntry = document.getElementById('mobileAccount');
     if (!toggle || !menu) return;
 
-    function openMenu(){ menu.style.display='block'; menu.setAttribute('aria-hidden','false'); toggle.setAttribute('aria-expanded','true'); }
-    function closeMenu(){ menu.style.display='none'; menu.setAttribute('aria-hidden','true'); toggle.setAttribute('aria-expanded','false'); }
-
-    toggle.addEventListener('click', (e)=> {
-      e.stopPropagation();
-      const isOpen = menu.style.display === 'block';
-      if (isOpen) closeMenu(); else openMenu();
+    function open(){ menu.style.display='block'; menu.setAttribute('aria-hidden','false'); }
+    function close(){ menu.style.display='none'; menu.setAttribute('aria-hidden','true'); }
+    toggle.addEventListener('click', ()=> {
+      const openState = menu.style.display === 'block';
+      if (openState) close(); else open();
     });
     document.addEventListener('click', (e)=> {
-      if (!menu.contains(e.target) && !toggle.contains(e.target)) closeMenu();
-    });
-    document.addEventListener('keydown', (e)=> {
-      if (e.key === 'Escape') closeMenu();
+      if (!menu.contains(e.target) && !toggle.contains(e.target)) close();
     });
 
-    if (accountEntry)
+    if (accountEntry) {
       accountEntry.addEventListener('click', ()=> {
-if (accountPreview && accountPreview.style.display === 'flex') window.location.href='cuenta.html';
-else if (accountBtn) accountBtn.click();
-closeMenu();
-});
-}
-if (themeBtn) themeBtn.addEventListener('click', ()=> { document.getElementById('themeToggle')?.click(); closeMenu(); });
-})();
-/* Contact form (EmailJS) /
-async function ensureEmailJs(){
-if (window.emailjs && typeof window.emailjs.sendForm === 'function') return;
-await new Promise((res, rej) => {
-const s = document.createElement('script');
-s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js';
-s.crossOrigin = 'anonymous';
-s.onload = res;
-s.onerror = () => rej(new Error('EmailJS load failed'));
-document.head.appendChild(s);
-});
-try { if (window.emailjs && typeof emailjs.init === 'function') emailjs.init('xsKpaFjbRsS95AK3i'); } catch(e){ console.warn('EmailJS init failed', e); }
-}
-(function initContact(){
-const form = document.getElementById('contactForm');
-const sendBtn = document.getElementById('contactSend');
-const successEl = document.getElementById('contactSuccess');
-const ticketHidden = document.getElementById('ticketId');
-if (!form) return;
-function generateTicketId(){
-const t = 'LIXBY-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8).toUpperCase();
-return t;
-}
-async function sendEmail(e){
-e.preventDefault();
-const name = document.getElementById('contactName').value.trim();
-const email = document.getElementById('contactEmail').value.trim();
-const message = document.getElementById('contactMessage').value.trim();
-if (!name || !email || !message) { alert(getTranslation('contact.fill') || 'Por favor completa todos los campos.'); return; }
-const ticket = generateTicketId();
-if (ticketHidden) ticketHidden.value = ticket;
-sendBtn.disabled = true;
-const prev = sendBtn.textContent; sendBtn.textContent = getTranslation('btn.enviar') || 'Enviando...';
-try {
-await ensureEmailJs();
-if (!window.emailjs || typeof window.emailjs.sendForm !== 'function') {
-throw new Error('EmailJS SDK no disponible');
-}
-await emailjs.sendForm('service_tagcpgm', 'template_l1e0go2', '#contactForm');
-successEl.style.display = 'block';
-form.reset();
-try {
-const key = 'lixby_tickets_v1';
-const arr = JSON.parse(localStorage.getItem(key) || '[]');
-arr.push({ ticket_id: ticket, name: name, email: email, message: message, created_at: new Date().toISOString(), status: 'sent' });
-localStorage.setItem(key, JSON.stringify(arr));
-} catch (errLocal) { /* no crítico / }
-setTimeout(()=> successEl.style.display = 'none', 6000);
-} catch (err) {
-console.error('Error enviando con EmailJS:', err);
-try {
-const key = 'lixby_tickets_v1';
-const arr = JSON.parse(localStorage.getItem(key) || '[]');
-arr.push({ ticket_id: ticket, name: name, email: email, message: message, created_at: new Date().toISOString(), status: 'failed', error: String(err) });
-localStorage.setItem(key, JSON.stringify(arr));
-} catch (errLocal) { console.warn('Fallback save failed', errLocal); }
-alert('No se pudo enviar el mensaje vía EmailJS. Hemos guardado una copia local del ticket y puedes reintentar más tarde.');
-} finally {
-sendBtn.disabled = false; sendBtn.textContent = prev;
-}
-}
-form.addEventListener('submit', sendEmail);
-})();
-/* Smooth scroll para enlaces internos /
-document.querySelectorAll('a[href^="#"]').forEach(link => {
-link.addEventListener('click', (e) => {
-const targetId = link.getAttribute('href').substring(1);
-const target = document.getElementById(targetId);
-if (target) {
-e.preventDefault();
-target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-});
-});
-/* Back to top /
-const backToTop = document.getElementById('backToTop');
-if (backToTop) {
-backToTop.addEventListener('click', () => {
-window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-}
-/* Newsletter form /
-const newsletterForm = document.getElementById('newsletterForm');
-const newsletterBtn = document.getElementById('newsletterBtn');
-const newsletterMsg = document.getElementById('newsletterMsg');
-if (newsletterForm && newsletterBtn) {
-newsletterForm.addEventListener('submit', (e) => {
-e.preventDefault();
-const email = document.getElementById('newsletterEmail').value.trim();
-if (!email) return;
-newsletterBtn.disabled = true;
-newsletterBtn.textContent = 'Suscribiendo...';
-setTimeout(() => {
-newsletterMsg.textContent = '¡Gracias por suscribirte!';
-newsletterMsg.style.color = 'var(--accent)';
-newsletterForm.reset();
-newsletterBtn.disabled = false;
-newsletterBtn.textContent = getTranslation('btn.subscribe') || 'Suscribir';
-setTimeout(() => {
-newsletterMsg.textContent = '';
-}, 3000);
-}, 1000);
-});
-}
-/* Expose for debugging /
-window.lixby = window.lixby || {};
-window.lixby.setLang = setLang;
-window.lixby.getTranslation = getTranslation;
-window.lixby.showAccountPreviewIfAvailable = showAccountPreviewIfAvailable;
+        if (accountPreview && accountPreview.style.display === 'flex') window.location.href='cuenta.html';
+        else if (accountBtn) accountBtn.click();
+        close();
+      });
+    }
+    if (themeBtn) themeBtn.addEventListener('click', ()=> { document.getElementById('themeToggle')?.click(); });
+  })();
+
+  // expose for debugging
+  window.lixby = window.lixby || {};
+  window.lixby.setLang = setLang;
+  window.lixby.getTranslation = getTranslation;
+
 })();
 </script>
-<!-- Mejoras: sanitización y accesibilidad del mini-cart -->
+
+<!-- Mejoras: sanitización y accesibilidad del mini-cart (añadido, no borra nada) -->
 <script>
 (function(){
-'use strict';
-const CURRENCY = new Intl.NumberFormat('es-ES',{ style:'currency', currency:'EUR' });
-const miniCartItems = document.getElementById('miniCartItems');
-if (miniCartItems) {
-const sanitizeNode = (node) => {
-const meta = node.querySelector('.meta');
-if (!meta) return;
-const nameText = meta.textContent || '';
-const parts = nameText.split('\n').map(s => s.trim()).filter(Boolean);
-const title = document.createElement('div'); title.style.fontWeight = '700'; title.textContent = parts[0] || '';
-const sub = document.createElement('div'); sub.style.color = 'var(--muted)'; sub.textContent = parts.slice(1).join(' ') || '';
-meta.innerHTML = '';
-meta.appendChild(title);
-meta.appendChild(sub);
-};
-const observer = new MutationObserver((muts) => {
-muts.forEach(m => {
-m.addedNodes.forEach(n => {
-if (n.nodeType !== 1) return;
-if (n.classList && n.classList.contains('mini-cart-item')) sanitizeNode(n);
-n.querySelectorAll && n.querySelectorAll('.mini-cart-item').forEach(el => sanitizeNode(el));
-});
-});
-});
-observer.observe(miniCartItems, { childList: true, subtree: true });
-}
-const cartBtn = document.getElementById('cartBtn');
-const miniCart = document.getElementById('miniCart');
-document.addEventListener('keydown', (e) => {
-if (e.key === 'Escape') {
-if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
-miniCart.setAttribute('aria-hidden','true');
-miniCart.style.display = '';
-cartBtn && cartBtn.setAttribute('aria-expanded','false');
-cartBtn && cartBtn.focus();
-}
-}
-});
-const showObserver = new MutationObserver(() => {
-try {
-if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
-const focusable = miniCart.querySelector('button, [tabindex], a, input');
-if (focusable) focusable.focus();
-}
-} catch(e) {}
-});
-if (miniCart) showObserver.observe(miniCart, { attributes: true, attributeFilter: ['aria-hidden'] });
-const miniCartTotal = document.getElementById('miniCartTotal');
-if (miniCartTotal) {
-const reformat = () => {
-const raw = miniCartTotal.textContent || '';
-const num = parseFloat(String(raw).replace(/[^\d.-]/g,'')) || 0;
-miniCartTotal.textContent = CURRENCY.format(num);
-};
-reformat();
-const totObs = new MutationObserver(reformat);
-totObs.observe(miniCartTotal, { childList: true, characterData: true, subtree: true });
-}
+  'use strict';
+  const CURRENCY = new Intl.NumberFormat('es-ES',{ style:'currency', currency:'EUR' });
+
+  // 1) Sanitize mini-cart nodes
+  const miniCartItems = document.getElementById('miniCartItems');
+  if (miniCartItems) {
+    const sanitizeNode = (node) => {
+      const meta = node.querySelector('.meta');
+      if (!meta) return;
+      const nameText = meta.textContent || '';
+      const parts = nameText.split('\n').map(s => s.trim()).filter(Boolean);
+      const title = document.createElement('div'); title.style.fontWeight = '700'; title.textContent = parts[0] || '';
+      const sub = document.createElement('div'); sub.style.color = 'var(--muted)'; sub.textContent = parts.slice(1).join(' ') || '';
+      meta.innerHTML = '';
+      meta.appendChild(title);
+      meta.appendChild(sub);
+    };
+
+    const observer = new MutationObserver((muts) => {
+      muts.forEach(m => {
+        m.addedNodes.forEach(n => {
+          if (n.nodeType !== 1) return;
+          if (n.classList && n.classList.contains('mini-cart-item')) sanitizeNode(n);
+          n.querySelectorAll && n.querySelectorAll('.mini-cart-item').forEach(el => sanitizeNode(el));
+        });
+      });
+    });
+    observer.observe(miniCartItems, { childList: true, subtree: true });
+  }
+
+  // 2) Mejorar foco y escape
+  const cartBtn = document.getElementById('cartBtn');
+  const miniCart = document.getElementById('miniCart');
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
+        miniCart.setAttribute('aria-hidden','true');
+        miniCart.style.display = '';
+        cartBtn && cartBtn.setAttribute('aria-expanded','false');
+        cartBtn && cartBtn.focus();
+      }
+    }
+  });
+  const showObserver = new MutationObserver(() => {
+    try {
+      if (miniCart && miniCart.getAttribute('aria-hidden') === 'false') {
+        const focusable = miniCart.querySelector('button, [tabindex], a, input');
+        if (focusable) focusable.focus();
+      }
+    } catch(e) {}
+  });
+  if (miniCart) showObserver.observe(miniCart, { attributes: true, attributeFilter: ['aria-hidden'] });
+
+  // 3) Forzar formato monetario en el total del miniCart
+  const miniCartTotal = document.getElementById('miniCartTotal');
+  if (miniCartTotal) {
+    const reformat = () => {
+      const raw = miniCartTotal.textContent || '';
+      const num = parseFloat(String(raw).replace(/[^\d.-]/g,'')) || 0;
+      miniCartTotal.textContent = CURRENCY.format(num);
+    };
+    reformat();
+    const totObs = new MutationObserver(reformat);
+    totObs.observe(miniCartTotal, { childList: true, characterData: true, subtree: true });
+  }
 })();
 </script>
+
 </body>
 </html>
