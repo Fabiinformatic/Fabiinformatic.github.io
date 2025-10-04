@@ -92,28 +92,43 @@ app.get('/config', (req, res) => {
   res.json({ publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '' });
 });
 
-/* Endpoint para crear la sesión de Stripe Checkout */
+/* Endpoint para crear la sesión de Stripe Checkout - CORREGIDO */
 app.post('/create-checkout-session', async (req, res) => {
   try {
-    const { items, isGift, giftMessage, shipping } = req.body;
+    const { items, isGift, giftMessage, shipping, success_url, cancel_url } = req.body;
     if (!items || items.length === 0) return res.status(400).json({ error: 'Carrito vacío' });
 
+    console.log('Creating checkout session with items:', items.length);
+
     const line_items = items.map(it => {
-      const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseFloat(String(it.price||0).replace(/[^\d.-]/g,'')) || 0;
-      const qty = Number(it.qty || 1);
-      const addon = it.appleCare ? APPLECARE : 0;
-      return {
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: it.name || 'Producto Lixby',
-            description: it.description || '',
-            images: it.image ? [it.image] : []
+      // Manejar tanto el formato del carrito como el formato directo de Stripe
+      let price, qty, name, description, images;
+      
+      if (it.price_data) {
+        // Formato directo de Stripe (desde carrito.html)
+        return it;
+      } else {
+        // Formato del carrito (desde otros lugares)
+        price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseFloat(String(it.price||0).replace(/[^\d.-]/g,'')) || 0;
+        qty = Number(it.qty || 1);
+        name = it.name || 'Producto Lixby';
+        description = it.description || '';
+        images = it.image ? [it.image] : [];
+        const addon = it.appleCare ? APPLECARE : 0;
+        
+        return {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: name,
+              description: description,
+              images: images
+            },
+            unit_amount: Math.round((price + addon) * 100)
           },
-          unit_amount: Math.round((price + addon) * 100)
-        },
-        quantity: qty
-      };
+          quantity: qty
+        };
+      }
     });
 
     const session = await stripe.checkout.sessions.create({
@@ -130,13 +145,14 @@ app.post('/create-checkout-session', async (req, res) => {
         shipping_zip: shipping?.zip || '',
         shipping_country: shipping?.country || ''
       },
-      success_url: `${process.env.DOMAIN || 'http://localhost:4242'}/success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.DOMAIN || 'http://localhost:4242'}/carrito.html`
+      success_url: success_url || `${process.env.DOMAIN || 'http://localhost:4242'}/success.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancel_url || `${process.env.DOMAIN || 'http://localhost:4242'}/carrito.html`
     });
 
+    console.log('Checkout session created:', session.id);
     return res.json({ url: session.url });
   } catch (err) {
-    console.error(err);
+    console.error('Error creating checkout session:', err);
     return res.status(500).json({ error: err.message });
   }
 });
