@@ -19,7 +19,6 @@
     h1{margin:14px 0 18px;font-size:2rem}
     .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
     .btn-primary{background:var(--accent);color:#00121a}
-    .btn-secondary{background:transparent;border:1px solid var(--accent);color:var(--accent)}
     .bag-list{margin-top:20px}
     .item{display:flex;gap:16px;padding:18px;border-radius:12px;margin-bottom:14px;background:var(--panel);border:1px solid rgba(255,255,255,0.2);align-items:flex-start}
     .thumb img{width:120px;height:120px;object-fit:cover;border-radius:10px}
@@ -37,11 +36,9 @@
     .summary-row.total{font-weight:700;color:var(--text);font-size:1.05rem}
     .layout{display:flex;gap:20px;align-items:flex-start}
     .empty{padding:40px;text-align:center;color:var(--muted);background:var(--panel);border-radius:12px;border:1px solid rgba(255,255,255,0.2)}
-    .checkout-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .checkout-options .btn{flex:1;min-width:140px}
-    .warning{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:8px;padding:12px;margin:12px 0;color:#ffc107;font-size:0.9rem}
-    .warning strong{display:block;margin-bottom:4px}
-    @media (max-width:960px){ .layout{flex-direction:column} .summary{width:100%;margin-left:0} .thumb img{width:100%;height:auto} .checkout-options{flex-direction:column} }
+    .checkout-options{margin-top:12px}
+    .checkout-options .btn{width:100%}
+    @media (max-width:960px){ .layout{flex-direction:column} .summary{width:100%;margin-left:0} .thumb img{width:100%;height:auto} }
   </style>
 </head>
 <body>
@@ -77,120 +74,13 @@
         <div class="summary-row total"><div>Tu total:</div><div id="tot">0,00 € (Depende del país)</div></div>
         <div style="font-size:0.94rem;color:var(--muted);margin-top:8px">Incluye IVA si aplica</div>
         
-        <!-- Opciones de checkout mejoradas -->
+        <!-- Botón de checkout único -->
         <div class="checkout-options" id="checkoutOptions" style="display:none">
-          <button class="btn btn-primary" id="checkoutStripe">Pagar con Stripe</button>
-          <button class="btn btn-secondary" id="checkoutDirect">Pago directo</button>
-        </div>
-        
-        <!-- Aviso para múltiples productos -->
-        <div id="multiProductWarning" class="warning" style="display:none">
-          <strong>⚠️ Múltiples productos</strong>
-          <div>Para pagar varios productos diferentes, usa "Pagar con Stripe". El pago directo solo funciona con un producto a la vez.</div>
+          <button class="btn btn-primary" id="checkoutBtn">Continuar con el pago</button>
         </div>
       </aside>
     </div>
   </div>
-
-  <!-- inline payment map + helpers (mejorado) -->
-  <script>
-    (function(global){
-      const PAYMENT_MAP = [
-        { product: 'one air', color: 'black', storage: '128', url: 'https://buy.stripe.com/fZu3cufIXcsZ069c0Uffy00' },
-        { product: 'one air', color: 'black', storage: '256', url: 'https://buy.stripe.com/00w4gy0O364BdWZ4ysffy01' },
-        { product: 'one air', color: 'black', storage: '512', url: 'https://buy.stripe.com/4gM3cu7cr0Kh5qt9SMffy02' },
-
-        { product: 'one air', color: 'white', storage: '128', url: 'https://buy.stripe.com/8x2cN454jakRf130icffy03' },
-        { product: 'one air', color: 'white', storage: '256', url: 'https://buy.stripe.com/8x25kC54jdx3dWZaWQffy04' },
-        { product: 'one air', color: 'white', storage: '512', url: 'https://buy.stripe.com/6oU14m68n50xdWZghaffy05' },
-
-        { product: 'one', color: 'blue', storage: '128', url: 'https://buy.stripe.com/dRmeVc8gvcsZ9GJ8OIffy06' },
-        { product: 'one', color: 'blue', storage: '256', url: 'https://buy.stripe.com/14A6oG54jdx3g57fd6ffy07' },
-        { product: 'one', color: 'blue', storage: '512', url: 'https://buy.stripe.com/4gM8wOgN1eB7bOR7KEffy08' },
-        { product: 'one', color: 'blue', storage: '1024', url: 'https://buy.stripe.com/8x27sK54j1Ol6uxfd6ffy09' }
-      ];
-
-      function norm(s){
-        if (!s) return '';
-        return String(s).toLowerCase()
-          .replace(/\u00f1/g,'n')
-          .replace(/[áàäâ]/g,'a').replace(/[éèëê]/g,'e').replace(/[íìïî]/g,'i').replace(/[óòöô]/g,'o').replace(/[úùüû]/g,'u')
-          .replace(/[^a-z0-9 ]/g,' ')
-          .replace(/\s+/g,' ')
-          .trim();
-      }
-
-      function normalizeStorage(s){
-        if (!s) return '';
-        s = String(s).toLowerCase().replace(/\s+/g,'');
-        if (s.match(/1tb|1024/)) return '1024';
-        const m = s.match(/(\d{2,4})/);
-        return m ? m[1] : s.replace(/[^0-9]/g,'');
-      }
-
-      function buildCandidate(item){
-        const parts = [];
-        if (item.sku) parts.push(item.sku);
-        if (item.name) parts.push(item.name);
-        if (item.color) parts.push(item.color);
-        if (item.storage) parts.push(String(item.storage));
-        if (item.description) parts.push(item.description);
-        return norm(parts.join(' '));
-      }
-
-      function matchItem(item){
-        const c = buildCandidate(item);
-        if (!c) return null;
-        for (const r of PAYMENT_MAP){
-          const p = norm(r.product);
-          const col = norm(r.color);
-          const st = normalizeStorage(r.storage);
-          const pm = c.indexOf(p) !== -1;
-          const cm = col ? (c.indexOf(col) !== -1) : true;
-          const sm = st ? (c.indexOf(st) !== -1 || c.indexOf(st + 'gb') !== -1) : true;
-          if (pm && cm && sm) return r.url;
-        }
-        return null;
-      }
-
-      // Función mejorada para detectar si todos los productos tienen el mismo payment link
-      function getPaymentLinkForCart(cart){
-        if (!Array.isArray(cart) || cart.length === 0) return null;
-        
-        // Si solo hay un producto, devolver su link
-        if (cart.length === 1) return matchItem(cart[0]);
-        
-        // Para múltiples productos, verificar si todos tienen el mismo link
-        const urls = cart.map(item => matchItem(item)).filter(Boolean);
-        
-        // Si no todos los productos tienen un link válido, retornar null
-        if (urls.length !== cart.length) return null;
-        
-        // Si todos tienen el mismo link, devolverlo
-        const uniqueUrls = Array.from(new Set(urls));
-        if (uniqueUrls.length === 1) return uniqueUrls[0];
-        
-        // Si tienen links diferentes, retornar null (requiere checkout múltiple)
-        return null;
-      }
-
-      // Función para detectar si el carrito puede usar pago directo
-      function canUseDirectPayment(cart){
-        if (!Array.isArray(cart) || cart.length === 0) return false;
-        
-        // Un solo producto siempre puede usar pago directo si tiene link
-        if (cart.length === 1) return matchItem(cart[0]) !== null;
-        
-        // Múltiples productos solo si todos tienen el mismo link
-        return getPaymentLinkForCart(cart) !== null;
-      }
-
-      global.getPaymentLinkForItem = matchItem;
-      global.getPaymentLinkForCart = getPaymentLinkForCart;
-      global.canUseDirectPayment = canUseDirectPayment;
-      global._LIXBY_PAYMENT_MAP = PAYMENT_MAP;
-    })(window);
-  </script>
 
   <script>
     (function(){
@@ -202,11 +92,9 @@
       const summaryAside = document.getElementById('summaryAside');
       const emptyMsg = document.getElementById('emptyMsg');
       const topText = document.getElementById('topText');
-      const checkoutStripe = document.getElementById('checkoutStripe');
-      const checkoutDirect = document.getElementById('checkoutDirect');
+      const checkoutBtn = document.getElementById('checkoutBtn');
       const clearCartBtn = document.getElementById('clearCart');
       const checkoutOptions = document.getElementById('checkoutOptions');
-      const multiProductWarning = document.getElementById('multiProductWarning');
 
       const nf = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
 
@@ -229,48 +117,17 @@
 
       function persist(){ try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e){} }
 
-      function updateCheckoutOptions(){
-        if (!cart || cart.length === 0) {
-          checkoutOptions.style.display = 'none';
-          multiProductWarning.style.display = 'none';
-          return;
-        }
-
-        checkoutOptions.style.display = 'flex';
-        
-        const canDirect = window.canUseDirectPayment(cart);
-        const hasMultipleProducts = cart.length > 1;
-        
-        // Mostrar/ocultar botón de pago directo
-        if (canDirect) {
-          checkoutDirect.style.display = 'inline-flex';
-          checkoutDirect.disabled = false;
-        } else {
-          checkoutDirect.style.display = 'none';
-        }
-        
-        // Mostrar advertencia para múltiples productos
-        if (hasMultipleProducts && !canDirect) {
-          multiProductWarning.style.display = 'block';
-        } else {
-          multiProductWarning.style.display = 'none';
-        }
-        
-        // Stripe siempre disponible
-        checkoutStripe.disabled = false;
-      }
-
       function render(){
         bag.innerHTML = '';
         if (!cart || cart.length === 0) {
           summaryAside.style.display = 'none';
           emptyMsg.style.display = 'block';
           topText.textContent = 'Tu bolsa está vacía.';
-          updateCheckoutOptions();
           return;
         }
         emptyMsg.style.display = 'none';
         summaryAside.style.display = 'block';
+        checkoutOptions.style.display = 'block';
         let subtotal = 0;
         cart.forEach((it, idx) => {
           const price = (it.priceNum !== undefined && it.priceNum !== null) ? Number(it.priceNum) : parseValue(it.price);
@@ -326,67 +183,73 @@
             render();
           });
         });
-
-        updateCheckoutOptions();
       }
 
-      // Checkout con Stripe (múltiples productos)
-      checkoutStripe.addEventListener('click', () => {
+      // Checkout - crear sesión de Stripe con todos los productos
+      checkoutBtn.addEventListener('click', async () => {
         if (!cart || cart.length === 0) { 
           alert('Tu carrito está vacío'); 
           return; 
         }
 
-        // Guardar orden para el checkout
-        try { 
-          localStorage.setItem('lixby_order', JSON.stringify({ 
-            items: cart, 
-            shipping: JSON.parse(localStorage.getItem('lixby_order') || '{}').shipping || {} 
-          })); 
-        } catch(e){}
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = 'Procesando...';
 
-        // Redirigir a página de checkout con Stripe
-        window.location.href = 'checkout.html';
-      });
+        try {
+          // Preparar los items para Stripe
+          const lineItems = cart.map(item => {
+            const price = (item.priceNum !== undefined && item.priceNum !== null) ? Number(item.priceNum) : parseValue(item.price);
+            const qty = Number(item.qty || 1);
+            
+            return {
+              price_data: {
+                currency: 'eur',
+                product_data: {
+                  name: item.name || 'Producto LIXBY',
+                  description: item.description || '',
+                  images: item.image ? [item.image] : []
+                },
+                unit_amount: Math.round(price * 100) // Stripe usa centavos
+              },
+              quantity: qty
+            };
+          });
 
-      // Checkout directo (un solo producto o múltiples del mismo tipo)
-      checkoutDirect.addEventListener('click', () => {
-        if (!cart || cart.length === 0) { 
-          alert('Tu carrito está vacío'); 
-          return; 
-        }
+          // Crear sesión de checkout
+          const response = await fetch('/create-checkout-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              items: lineItems,
+              success_url: window.location.origin + '/success.html?session_id={CHECKOUT_SESSION_ID}',
+              cancel_url: window.location.origin + '/carrito.html'
+            })
+          });
 
-        const canDirect = window.canUseDirectPayment(cart);
-        if (!canDirect) {
-          alert('El pago directo no está disponible para esta combinación de productos. Usa "Pagar con Stripe" para múltiples productos diferentes.');
-          return;
-        }
-
-        let savedOrder = null;
-        try { savedOrder = JSON.parse(localStorage.getItem('lixby_order') || 'null'); } catch(e){ savedOrder = null; }
-
-        // Para un solo producto, usar su link directo
-        if (cart.length === 1) {
-          const url = window.getPaymentLinkForItem(cart[0]);
-          if (url) {
-            const email = savedOrder?.shipping?.email || '';
-            const final = url + (email ? `?prefilled_email=${encodeURIComponent(email)}` : '');
-            try { localStorage.setItem('lixby_order', JSON.stringify({ items: cart, shipping: savedOrder?.shipping || {} })); } catch(e){}
-            window.location.href = final;
-          } else {
-            alert('No existe un enlace automático para este producto. Contacta con soporte.');
+          if (!response.ok) {
+            throw new Error('Error al crear la sesión de pago');
           }
-        } else {
-          // Para múltiples productos del mismo tipo, usar el link común
-          const url = window.getPaymentLinkForCart(cart);
-          if (url) {
-            const email = savedOrder?.shipping?.email || '';
-            const final = url + (email ? `?prefilled_email=${encodeURIComponent(email)}` : '');
-            try { localStorage.setItem('lixby_order', JSON.stringify({ items: cart, shipping: savedOrder?.shipping || {} })); } catch(e){}
-            window.location.href = final;
-          } else {
-            alert('No se puede procesar esta combinación de productos. Usa "Pagar con Stripe".');
-          }
+
+          const { url } = await response.json();
+          
+          // Guardar orden localmente
+          try { 
+            localStorage.setItem('lixby_order', JSON.stringify({ 
+              items: cart, 
+              timestamp: new Date().toISOString()
+            })); 
+          } catch(e){}
+
+          // Redirigir a Stripe
+          window.location.href = url;
+
+        } catch (error) {
+          console.error('Error en checkout:', error);
+          alert('Error al procesar el pago. Por favor, inténtalo de nuevo.');
+          checkoutBtn.disabled = false;
+          checkoutBtn.textContent = 'Continuar con el pago';
         }
       });
 
