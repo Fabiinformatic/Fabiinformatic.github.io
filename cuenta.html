@@ -67,13 +67,38 @@
     .btn { padding:9px 16px; border-radius:var(--radius-md); font-weight:700; font-size:1em; }
     .btn[disabled] { opacity:.5; pointer-events:none; }
     .account-form label { display:block; margin-top:18px; font-weight:600; color:var(--muted);}
-    .account-form input, .account-form textarea {
+    .account-form input, .account-form textarea, .account-form select {
       width:100%; padding:10px; border-radius:9px; border:1px solid var(--stroke);
       background: rgba(255,255,255,0.03); color:var(--text); font-size:1em; margin-top:4px;
       transition: border-color .18s var(--ease-bouncy), box-shadow .18s var(--ease-bouncy);
     }
-    .account-form input:focus, .account-form textarea:focus {
+    .account-form input:focus, .account-form textarea:focus, .account-form select:focus {
       border-color: var(--accent); outline: none; box-shadow: var(--focus-ring);
+    }
+    .account-form select {
+      cursor: pointer;
+    }
+    .account-form input[readonly] {
+      background: rgba(255,255,255,0.02); color: var(--muted);
+      cursor: not-allowed;
+    }
+    .form-section {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .form-section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    .form-section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .save-actions { margin-top:22px; display:flex; gap:10px; }
     /* Secciones personales */
@@ -122,336 +147,6 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-
-    /* NEW STYLES FOR ADDED SECTIONS */
-    .settings-group {
-      margin-bottom: 24px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--stroke);
-    }
-    .settings-group:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-    }
-    .settings-group-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: var(--accent);
-    }
-    .settings-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .settings-item:last-child {
-      border-bottom: none;
-    }
-    .settings-item-content {
-      flex: 1;
-    }
-    .settings-item-label {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-    .settings-item-value {
-      color: var(--muted);
-      font-size: 0.9em;
-    }
-    .btn.small {
-      padding: 6px 12px;
-      font-size: 0.85em;
-    }
-    .btn.danger {
-      background: #ff3b30;
-      color: white;
-      border: 1px solid #ff3b30;
-    }
-    .btn.danger:hover {
-      background: #ff2d55;
-      border-color: #ff2d55;
-    }
-
-    /* Orders filters */
-    .orders-filters {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .filter-btn {
-      padding: 6px 12px;
-      border-radius: 16px;
-      background: transparent;
-      border: 1px solid var(--stroke);
-      color: var(--text);
-      font-size: 0.85em;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .filter-btn.active,
-    .filter-btn:hover {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
-    }
-
-    /* Subscription styles */
-    .subscription-info {
-      margin-bottom: 24px;
-    }
-    .subscription-plan {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      background: var(--glass);
-      border-radius: 12px;
-      border: 1px solid var(--stroke);
-    }
-    .plan-details h3 {
-      margin: 0 0 4px 0;
-      font-size: 1.1rem;
-    }
-    .plan-price {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 4px;
-    }
-    .plan-renewal {
-      color: var(--muted);
-      font-size: 0.9em;
-    }
-    .plan-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .billing-history h3 {
-      margin-bottom: 16px;
-      font-size: 1rem;
-    }
-    .invoice-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .invoice-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: var(--glass);
-      border-radius: 8px;
-      border: 1px solid var(--stroke);
-    }
-    .invoice-details {
-      display: flex;
-      flex-direction: column;
-    }
-    .invoice-date {
-      font-weight: 500;
-    }
-    .invoice-amount {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    /* Notification switches */
-    .notification-settings {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .notification-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-    }
-    .notification-content {
-      flex: 1;
-    }
-    .notification-label {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-    .notification-description {
-      color: var(--muted);
-      font-size: 0.9em;
-    }
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--stroke);
-      transition: .3s;
-      border-radius: 24px;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .3s;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: var(--accent);
-    }
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
-
-    /* Devices list */
-    .devices-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .device-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: var(--glass);
-      border-radius: 8px;
-      border: 1px solid var(--stroke);
-    }
-    .device-icon {
-      font-size: 1.5rem;
-    }
-    .device-info {
-      flex: 1;
-    }
-    .device-name {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-    .device-details {
-      color: var(--muted);
-      font-size: 0.9em;
-    }
-
-    /* Activity list */
-    .activity-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .activity-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 12px;
-      background: var(--glass);
-      border-radius: 8px;
-      border: 1px solid var(--stroke);
-    }
-    .activity-icon {
-      font-size: 1.2rem;
-      margin-top: 2px;
-    }
-    .activity-content {
-      flex: 1;
-    }
-    .activity-title {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-    .activity-details {
-      color: var(--muted);
-      font-size: 0.9em;
-      margin-bottom: 2px;
-    }
-    .activity-time {
-      color: var(--muted);
-      font-size: 0.8em;
-    }
-
-    /* Support options */
-    .support-options {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .support-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
-      background: var(--glass);
-      border-radius: 12px;
-      border: 1px solid var(--stroke);
-      transition: all 0.2s ease;
-    }
-    .support-item:hover {
-      border-color: var(--accent-soft);
-      box-shadow: 0 4px 18px rgba(10,132,255,0.08);
-    }
-    .support-icon {
-      font-size: 1.5rem;
-    }
-    .support-content {
-      flex: 1;
-    }
-    .support-title {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-    .support-description {
-      color: var(--muted);
-      font-size: 0.9em;
-    }
-
-    /* Danger section */
-    .danger-section {
-      border-color: rgba(255, 59, 48, 0.3);
-    }
-    .danger-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .danger-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      background: rgba(255, 59, 48, 0.05);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 59, 48, 0.2);
-    }
-    .danger-content {
-      flex: 1;
-    }
-    .danger-title {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-    .danger-description {
-      color: var(--muted);
-      font-size: 0.9em;
-    }
   </style>
 </head>
 <body>
@@ -479,12 +174,126 @@
       <!-- Columna información de la cuenta -->
       <form class="glass-card account-form" autocomplete="off" onsubmit="return false;">
         <h2>Información de la cuenta</h2>
-        <label for="displayNameInput">Nombre visible</label>
-        <input id="displayNameInput" type="text" placeholder="Tu nombre" autocomplete="name">
-        <label for="phoneInput">Teléfono</label>
-        <input id="phoneInput" type="text" placeholder="+34 600 000 000" autocomplete="tel">
-        <label for="addressInput">Dirección de envío</label>
-        <textarea id="addressInput" rows="2" autocomplete="street-address"></textarea>
+        
+        <!-- 🪪 Identidad básica -->
+        <div class="form-section">
+          <h3 class="form-section-title">🪪 Identidad básica</h3>
+          <label for="firstNameInput">Nombre</label>
+          <input id="firstNameInput" type="text" placeholder="Tu nombre" autocomplete="given-name">
+          <label for="lastNameInput">Apellidos</label>
+          <input id="lastNameInput" type="text" placeholder="Tus apellidos" autocomplete="family-name">
+          <label for="genderInput">Género</label>
+          <select id="genderInput">
+            <option value="">Seleccionar género</option>
+            <option value="masculino">Masculino</option>
+            <option value="femenino">Femenino</option>
+            <option value="otro">Otro</option>
+            <option value="prefiero-no-decir">Prefiero no decir</option>
+          </select>
+        </div>
+
+        <!-- 🎂 Datos de nacimiento -->
+        <div class="form-section">
+          <h3 class="form-section-title">🎂 Datos de nacimiento</h3>
+          <label for="birthDateInput">Fecha de nacimiento</label>
+          <input id="birthDateInput" type="date" autocomplete="bday">
+          <label for="ageInput">Edad</label>
+          <input id="ageInput" type="number" placeholder="Se calcula automáticamente" readonly>
+        </div>
+
+        <!-- 🌍 Ubicación -->
+        <div class="form-section">
+          <h3 class="form-section-title">🌍 Ubicación</h3>
+          <label for="countryInput">País o región</label>
+          <select id="countryInput">
+            <option value="es">España</option>
+            <option value="mx">México</option>
+            <option value="ar">Argentina</option>
+            <option value="co">Colombia</option>
+            <option value="pe">Perú</option>
+            <option value="cl">Chile</option>
+            <option value="ve">Venezuela</option>
+            <option value="us">Estados Unidos</option>
+            <option value="fr">Francia</option>
+            <option value="de">Alemania</option>
+            <option value="it">Italia</option>
+            <option value="pt">Portugal</option>
+            <option value="gb">Reino Unido</option>
+            <option value="other">Otro</option>
+          </select>
+          <label for="cityInput">Ciudad o provincia</label>
+          <input id="cityInput" type="text" placeholder="Tu ciudad" autocomplete="address-level2">
+          <label for="postalCodeInput">Código postal</label>
+          <input id="postalCodeInput" type="text" placeholder="28001" autocomplete="postal-code">
+        </div>
+
+        <!-- 💬 Preferencias lingüísticas -->
+        <div class="form-section">
+          <h3 class="form-section-title">💬 Preferencias lingüísticas</h3>
+          <label for="primaryLanguageInput">Idioma preferido</label>
+          <select id="primaryLanguageInput">
+            <option value="es">Español</option>
+            <option value="en">Inglés</option>
+            <option value="fr">Francés</option>
+            <option value="de">Alemán</option>
+            <option value="it">Italiano</option>
+            <option value="pt">Portugués</option>
+            <option value="ca">Catalán</option>
+            <option value="eu">Euskera</option>
+            <option value="gl">Gallego</option>
+          </select>
+          <label for="secondaryLanguageInput">Segundo idioma (opcional)</label>
+          <select id="secondaryLanguageInput">
+            <option value="">Ninguno</option>
+            <option value="es">Español</option>
+            <option value="en">Inglés</option>
+            <option value="fr">Francés</option>
+            <option value="de">Alemán</option>
+            <option value="it">Italiano</option>
+            <option value="pt">Portugués</option>
+            <option value="ca">Catalán</option>
+            <option value="eu">Euskera</option>
+            <option value="gl">Gallego</option>
+          </select>
+          <label for="dateFormatInput">Formato de fecha/hora</label>
+          <select id="dateFormatInput">
+            <option value="DD/MM/YYYY">DD/MM/AAAA</option>
+            <option value="MM/DD/YYYY">MM/DD/AAAA</option>
+            <option value="YYYY-MM-DD">AAAA-MM-DD</option>
+          </select>
+          <label for="currencyInput">Moneda preferida</label>
+          <select id="currencyInput">
+            <option value="EUR">€ Euro</option>
+            <option value="USD">$ Dólar estadounidense</option>
+            <option value="GBP">£ Libra esterlina</option>
+            <option value="MXN">$ Peso mexicano</option>
+            <option value="ARS">$ Peso argentino</option>
+            <option value="COP">$ Peso colombiano</option>
+            <option value="PEN">S/ Sol peruano</option>
+            <option value="CLP">$ Peso chileno</option>
+          </select>
+        </div>
+
+        <!-- 📞 Contacto -->
+        <div class="form-section">
+          <h3 class="form-section-title">📞 Contacto</h3>
+          <label for="emailPrimaryInput">Correo electrónico principal</label>
+          <input id="emailPrimaryInput" type="email" placeholder="tu@email.com" autocomplete="email">
+          <label for="emailSecondaryInput">Correo alternativo de recuperación</label>
+          <input id="emailSecondaryInput" type="email" placeholder="recuperacion@email.com" autocomplete="email">
+          <label for="phonePrimaryInput">Número de teléfono</label>
+          <input id="phonePrimaryInput" type="tel" placeholder="+34 600 000 000" autocomplete="tel">
+          <label for="phoneSecondaryInput">Teléfono de respaldo (opcional)</label>
+          <input id="phoneSecondaryInput" type="tel" placeholder="+34 600 000 001" autocomplete="tel">
+        </div>
+
+        <!-- Dirección de envío (original) -->
+        <div class="form-section">
+          <h3 class="form-section-title">📍 Dirección de envío</h3>
+          <label for="addressInput">Dirección completa</label>
+          <textarea id="addressInput" rows="3" placeholder="Calle, número, piso, puerta..." autocomplete="street-address"></textarea>
+        </div>
+
         <div class="save-actions">
           <button id="saveProfileBtn" class="btn primary">Guardar cambios</button>
         </div>
@@ -492,430 +301,7 @@
     </div>
 
     <div class="sections-list">
-      <!-- ⚙️ SECCIÓN 1: Ajustes de la Cuenta -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>⚙️ Ajustes de la Cuenta</span>
-          <span class="section-badge" id="accountSettingsBadge" style="display:none;">Configuración</span>
-        </div>
-        
-        <!-- Información personal -->
-        <div class="settings-group">
-          <h3 class="settings-group-title">👤 Información personal</h3>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Nombre completo</div>
-              <div class="settings-item-value" id="fullNameDisplay">No configurado</div>
-            </div>
-            <button class="btn ghost small" id="editPersonalBtn">Editar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Fecha de nacimiento</div>
-              <div class="settings-item-value" id="birthDateDisplay">No configurado</div>
-            </div>
-            <button class="btn ghost small" id="editBirthDateBtn">Editar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">País o región</div>
-              <div class="settings-item-value" id="countryDisplay">España</div>
-            </div>
-            <button class="btn ghost small" id="editCountryBtn">Cambiar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Idioma preferido</div>
-              <div class="settings-item-value" id="languageDisplay">Español</div>
-            </div>
-            <button class="btn ghost small" id="editLanguageBtn">Cambiar</button>
-          </div>
-        </div>
-
-        <!-- Seguridad -->
-        <div class="settings-group">
-          <h3 class="settings-group-title">🔒 Seguridad</h3>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Contraseña</div>
-              <div class="settings-item-value">••••••••</div>
-            </div>
-            <button class="btn ghost small" id="changePasswordBtn">Cambiar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Verificación en dos pasos</div>
-              <div class="settings-item-value" id="twoFactorStatus">Desactivado</div>
-            </div>
-            <button class="btn ghost small" id="toggleTwoFactorBtn">Activar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Dispositivos conectados</div>
-              <div class="settings-item-value" id="devicesCount">3 dispositivos</div>
-            </div>
-            <button class="btn ghost small" id="viewDevicesBtn">Ver lista</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Sesiones activas</div>
-              <div class="settings-item-value">2 sesiones</div>
-            </div>
-            <button class="btn ghost small" id="closeAllSessionsBtn">Cerrar todas</button>
-          </div>
-        </div>
-
-        <!-- Privacidad -->
-        <div class="settings-group">
-          <h3 class="settings-group-title">🛡️ Privacidad</h3>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Preferencias de anuncios</div>
-              <div class="settings-item-value">Personalizados</div>
-            </div>
-            <button class="btn ghost small" id="editAdsBtn">Configurar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Datos compartidos</div>
-              <div class="settings-item-value">Limitado</div>
-            </div>
-            <button class="btn ghost small" id="editDataBtn">Gestionar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Descarga de datos</div>
-              <div class="settings-item-value">Disponible</div>
-            </div>
-            <button class="btn ghost small" id="downloadDataBtn">Descargar</button>
-          </div>
-        </div>
-
-        <!-- Métodos de pago -->
-        <div class="settings-group">
-          <h3 class="settings-group-title">💳 Métodos de pago</h3>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Tarjetas guardadas</div>
-              <div class="settings-item-value" id="cardsCount">2 tarjetas</div>
-            </div>
-            <button class="btn ghost small" id="manageCardsBtn">Gestionar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Métodos alternativos</div>
-              <div class="settings-item-value">PayPal, Apple Pay</div>
-            </div>
-            <button class="btn ghost small" id="manageMethodsBtn">Gestionar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Añadir método</div>
-              <div class="settings-item-value">Nuevo método de pago</div>
-            </div>
-            <button class="btn primary small" id="addPaymentBtn">Añadir método</button>
-          </div>
-        </div>
-
-        <!-- Direcciones -->
-        <div class="settings-group">
-          <h3 class="settings-group-title">📍 Direcciones</h3>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Dirección de envío</div>
-              <div class="settings-item-value" id="shippingAddress">No configurada</div>
-            </div>
-            <button class="btn ghost small" id="editShippingBtn">Editar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Dirección de facturación</div>
-              <div class="settings-item-value" id="billingAddress">No configurada</div>
-            </div>
-            <button class="btn ghost small" id="editBillingBtn">Editar</button>
-          </div>
-          <div class="settings-item">
-            <div class="settings-item-content">
-              <div class="settings-item-label">Añadir nueva dirección</div>
-              <div class="settings-item-value">Crear nueva dirección</div>
-            </div>
-            <button class="btn primary small" id="addAddressBtn">Añadir nueva</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 🛍️ SECCIÓN 3: Pedidos o Compras -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>🛍️ Pedidos y Compras</span>
-          <span class="section-badge" id="ordersBadge" style="display:none;">Historial</span>
-        </div>
-        
-        <!-- Filtros -->
-        <div class="orders-filters">
-          <button class="filter-btn active" data-filter="all">Todos</button>
-          <button class="filter-btn" data-filter="pending">Pendientes</button>
-          <button class="filter-btn" data-filter="shipped">Enviados</button>
-          <button class="filter-btn" data-filter="delivered">Entregados</button>
-          <button class="filter-btn" data-filter="cancelled">Cancelados</button>
-        </div>
-
-        <div id="ordersList" class="orders-list">
-          <div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>
-        </div>
-      </div>
-
-      <!-- 💳 SECCIÓN 4: Suscripciones y Facturación -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>💳 Suscripciones y Facturación</span>
-          <span class="section-badge" id="subscriptionBadge" style="display:none;">Activo</span>
-        </div>
-        
-        <div class="subscription-info">
-          <div class="subscription-plan">
-            <div class="plan-details">
-              <h3 id="currentPlanName">Plan Básico</h3>
-              <div class="plan-price" id="currentPlanPrice">€9.99/mes</div>
-              <div class="plan-renewal" id="nextRenewal">Próxima renovación: 15 de enero, 2024</div>
-            </div>
-            <div class="plan-actions">
-              <button class="btn ghost" id="changePlanBtn">Cambiar plan</button>
-              <button class="btn ghost" id="cancelSubscriptionBtn">Cancelar</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="billing-history">
-          <h3>Historial de facturas</h3>
-          <div class="invoice-list">
-            <div class="invoice-item">
-              <div class="invoice-details">
-                <div class="invoice-date">15 de diciembre, 2023</div>
-                <div class="invoice-amount">€9.99</div>
-              </div>
-              <button class="btn ghost small">Descargar PDF</button>
-            </div>
-            <div class="invoice-item">
-              <div class="invoice-details">
-                <div class="invoice-date">15 de noviembre, 2023</div>
-                <div class="invoice-amount">€9.99</div>
-              </div>
-              <button class="btn ghost small">Descargar PDF</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 🔔 SECCIÓN 5: Notificaciones y Preferencias -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>🔔 Notificaciones y Preferencias</span>
-          <span class="section-badge" id="notificationsBadge" style="display:none;">Configurado</span>
-        </div>
-        
-        <div class="notification-settings">
-          <div class="notification-item">
-            <div class="notification-content">
-              <div class="notification-label">Notificaciones por correo</div>
-              <div class="notification-description">Recibe actualizaciones importantes por email</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="emailNotifications" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          
-          <div class="notification-item">
-            <div class="notification-content">
-              <div class="notification-label">Notificaciones push</div>
-              <div class="notification-description">Recibe notificaciones en tu dispositivo</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="pushNotifications" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-          
-          <div class="notification-item">
-            <div class="notification-content">
-              <div class="notification-label">Boletines y promociones</div>
-              <div class="notification-description">Ofertas especiales y novedades</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="newsletterNotifications">
-              <span class="slider"></span>
-            </label>
-          </div>
-          
-          <div class="notification-item">
-            <div class="notification-content">
-              <div class="notification-label">Avisos de seguridad</div>
-              <div class="notification-description">Alertas importantes de seguridad</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="securityNotifications" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- 💾 SECCIÓN 6: Dispositivos Vinculados -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>💾 Dispositivos Vinculados</span>
-          <span class="section-badge" id="devicesBadge" style="display:none;">3 dispositivos</span>
-        </div>
-        
-        <div class="devices-list">
-          <div class="device-item">
-            <div class="device-icon">📱</div>
-            <div class="device-info">
-              <div class="device-name">iPhone 15 Pro</div>
-              <div class="device-details">Última conexión: Hace 2 horas</div>
-            </div>
-            <button class="btn ghost small" id="removeDevice1">Eliminar</button>
-          </div>
-          
-          <div class="device-item">
-            <div class="device-icon">💻</div>
-            <div class="device-info">
-              <div class="device-name">MacBook Pro</div>
-              <div class="device-details">Última conexión: Ayer</div>
-            </div>
-            <button class="btn ghost small" id="removeDevice2">Eliminar</button>
-          </div>
-          
-          <div class="device-item">
-            <div class="device-icon">🖥️</div>
-            <div class="device-info">
-              <div class="device-name">Chrome - Windows</div>
-              <div class="device-details">Última conexión: Hace 3 días</div>
-            </div>
-            <button class="btn ghost small" id="removeDevice3">Eliminar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 🧾 SECCIÓN 7: Actividad de la cuenta -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>🧾 Actividad de la cuenta</span>
-          <span class="section-badge" id="activityBadge" style="display:none;">Reciente</span>
-        </div>
-        
-        <div class="activity-list">
-          <div class="activity-item">
-            <div class="activity-icon">🔐</div>
-            <div class="activity-content">
-              <div class="activity-title">Inicio de sesión exitoso</div>
-              <div class="activity-details">iPhone 15 Pro • Madrid, España</div>
-              <div class="activity-time">Hace 2 horas</div>
-            </div>
-          </div>
-          
-          <div class="activity-item">
-            <div class="activity-icon">🔑</div>
-            <div class="activity-content">
-              <div class="activity-title">Contraseña actualizada</div>
-              <div class="activity-details">Cambio de contraseña completado</div>
-              <div class="activity-time">Hace 1 día</div>
-            </div>
-          </div>
-          
-          <div class="activity-item">
-            <div class="activity-icon">📧</div>
-            <div class="activity-content">
-              <div class="activity-title">Email verificado</div>
-              <div class="activity-details">Nueva dirección de email confirmada</div>
-              <div class="activity-time">Hace 3 días</div>
-            </div>
-          </div>
-          
-          <div class="activity-item">
-            <div class="activity-icon">⚠️</div>
-            <div class="activity-content">
-              <div class="activity-title">Intento de inicio de sesión fallido</div>
-              <div class="activity-details">Ubicación desconocida • IP: 192.168.1.1</div>
-              <div class="activity-time">Hace 1 semana</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ❓ SECCIÓN 8: Soporte y Ayuda -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>❓ Soporte y Ayuda</span>
-          <span class="section-badge" id="supportBadge" style="display:none;">Disponible</span>
-        </div>
-        
-        <div class="support-options">
-          <div class="support-item">
-            <div class="support-icon">📚</div>
-            <div class="support-content">
-              <div class="support-title">Centro de ayuda</div>
-              <div class="support-description">Encuentra respuestas a tus preguntas</div>
-            </div>
-            <button class="btn ghost" id="helpCenterBtn">Abrir</button>
-          </div>
-          
-          <div class="support-item">
-            <div class="support-icon">💬</div>
-            <div class="support-content">
-              <div class="support-title">Contactar con soporte</div>
-              <div class="support-description">Habla con nuestro equipo de soporte</div>
-            </div>
-            <button class="btn ghost" id="contactSupportBtn">Contactar</button>
-          </div>
-          
-          <div class="support-item">
-            <div class="support-icon">❓</div>
-            <div class="support-content">
-              <div class="support-title">Preguntas frecuentes</div>
-              <div class="support-description">Respuestas a las preguntas más comunes</div>
-            </div>
-            <button class="btn ghost" id="faqBtn">Ver FAQ</button>
-          </div>
-          
-          <div class="support-item">
-            <div class="support-icon">💭</div>
-            <div class="support-content">
-              <div class="support-title">Chat en vivo</div>
-              <div class="support-description">Soporte instantáneo por chat</div>
-            </div>
-            <button class="btn ghost" id="liveChatBtn">Iniciar chat</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 🚪 SECCIÓN 9: Cierre de sesión y eliminación -->
-      <div class="glass-card section danger-section">
-        <div class="section-title">
-          <span>🚪 Cierre de sesión y eliminación</span>
-        </div>
-        
-        <div class="danger-actions">
-          <div class="danger-item">
-            <div class="danger-content">
-              <div class="danger-title">Cerrar sesión</div>
-              <div class="danger-description">Cierra tu sesión en todos los dispositivos</div>
-            </div>
-            <button class="btn ghost" id="logoutAllBtn">Cerrar sesión</button>
-          </div>
-          
-          <div class="danger-item">
-            <div class="danger-content">
-              <div class="danger-title">Eliminar cuenta</div>
-              <div class="danger-description">Elimina permanentemente tu cuenta y todos los datos</div>
-            </div>
-            <button class="btn danger" id="deleteAccountBtn">Eliminar cuenta</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sección información personal (original) -->
+      <!-- Sección información personal -->
       <div class="glass-card section">
         <div class="section-title">
           <span>Información personal</span>
@@ -924,7 +310,7 @@
         <div id="personalInfo" class="muted">Inicia sesión para ver y editar tu información personal.</div>
       </div>
 
-      <!-- Sección productos favoritos (original) -->
+      <!-- Sección productos favoritos -->
       <div class="glass-card section">
         <div class="section-title">
           <span>Favoritos</span>
@@ -935,7 +321,7 @@
         </div>
       </div>
 
-      <!-- Sección productos comprados (original) -->
+      <!-- Sección productos comprados -->
       <div class="glass-card section">
         <div class="section-title">
           <span>Productos comprados</span>
@@ -943,6 +329,17 @@
         </div>
         <div id="purchasedList" class="purchased-list">
           <div class="empty-state">Inicia sesión para ver tus productos comprados.</div>
+        </div>
+      </div>
+
+      <!-- Sección pedidos y envíos -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>Pedidos y envíos</span>
+          <span class="section-badge" id="ordersBadge" style="display:none;">Seguimiento</span>
+        </div>
+        <div id="ordersList" class="orders-list">
+          <div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>
         </div>
       </div>
     </div>
@@ -964,9 +361,28 @@
     const loginBtn = document.getElementById('loginNowBtn');
     const signOutBtn = document.getElementById('signOutBtn');
     const saveBtn = document.getElementById('saveProfileBtn');
-    const displayNameInput = document.getElementById('displayNameInput');
-    const phoneInput = document.getElementById('phoneInput');
+    
+    // Form inputs - original
     const addressInput = document.getElementById('addressInput');
+    
+    // New form inputs
+    const firstNameInput = document.getElementById('firstNameInput');
+    const lastNameInput = document.getElementById('lastNameInput');
+    const genderInput = document.getElementById('genderInput');
+    const birthDateInput = document.getElementById('birthDateInput');
+    const ageInput = document.getElementById('ageInput');
+    const countryInput = document.getElementById('countryInput');
+    const cityInput = document.getElementById('cityInput');
+    const postalCodeInput = document.getElementById('postalCodeInput');
+    const primaryLanguageInput = document.getElementById('primaryLanguageInput');
+    const secondaryLanguageInput = document.getElementById('secondaryLanguageInput');
+    const dateFormatInput = document.getElementById('dateFormatInput');
+    const currencyInput = document.getElementById('currencyInput');
+    const emailPrimaryInput = document.getElementById('emailPrimaryInput');
+    const emailSecondaryInput = document.getElementById('emailSecondaryInput');
+    const phonePrimaryInput = document.getElementById('phonePrimaryInput');
+    const phoneSecondaryInput = document.getElementById('phoneSecondaryInput');
+    
     const personalInfo = document.getElementById('personalInfo');
     const favoritesList = document.getElementById('favoritesList');
     const purchasedList = document.getElementById('purchasedList');
@@ -1012,6 +428,66 @@
       }
     }
 
+    // Helper function to calculate age
+    function calculateAge(birthDate) {
+      if (!birthDate) return '';
+      const today = new Date();
+      const birth = new Date(birthDate);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age;
+    }
+
+    // Helper function to load user data into form
+    function loadUserDataToForm(userData) {
+      if (!userData) return;
+      
+      // Basic info
+      firstNameInput.value = userData.firstName || '';
+      lastNameInput.value = userData.lastName || '';
+      genderInput.value = userData.gender || '';
+      
+      // Birth date and age
+      birthDateInput.value = userData.birthDate || '';
+      if (userData.birthDate) {
+        ageInput.value = calculateAge(userData.birthDate);
+      }
+      
+      // Location
+      countryInput.value = userData.country || 'es';
+      cityInput.value = userData.city || '';
+      postalCodeInput.value = userData.postalCode || '';
+      
+      // Language preferences
+      primaryLanguageInput.value = userData.primaryLanguage || 'es';
+      secondaryLanguageInput.value = userData.secondaryLanguage || '';
+      dateFormatInput.value = userData.dateFormat || 'DD/MM/YYYY';
+      currencyInput.value = userData.currency || 'EUR';
+      
+      // Contact
+      emailPrimaryInput.value = userData.emailPrimary || userData.email || '';
+      emailSecondaryInput.value = userData.emailSecondary || '';
+      phonePrimaryInput.value = userData.phonePrimary || userData.phone || '';
+      phoneSecondaryInput.value = userData.phoneSecondary || '';
+      addressInput.value = userData.address || userData.shippingAddress || '';
+    }
+
+    // Helper function to clear form
+    function clearForm() {
+      const inputs = [
+        firstNameInput, lastNameInput, genderInput, birthDateInput, ageInput,
+        countryInput, cityInput, postalCodeInput, primaryLanguageInput, secondaryLanguageInput,
+        dateFormatInput, currencyInput, emailPrimaryInput, emailSecondaryInput,
+        phonePrimaryInput, phoneSecondaryInput, addressInput
+      ];
+      inputs.forEach(input => {
+        if (input) input.value = '';
+      });
+    }
+
     function renderAccountUI(u){
       const isUser = !!u && !!u.uid;
       const displayName = (u && (u.name || u.displayName)) || 'Invitado';
@@ -1026,4 +502,106 @@
       avatarImgEl.src = photo; avatarImgEl.alt = displayName + ' avatar';
 
       loginBtn.style.display = isUser ? 'none' : '';
-      sign
+      signOutBtn.style.display = isUser ? '' : 'none';
+      saveBtn.disabled = !isUser;
+
+      // Mostrar badges solo si autenticado
+      [personalBadge, favBadge, purchasedBadge, ordersBadge].forEach(b=>b && (b.style.display = isUser ? '' : 'none'));
+
+      // Rellenar inputs si hay datos cacheados
+      if (isUser) {
+        const snap = readLocalSnapshot();
+        loadUserDataToForm(snap);
+        personalInfo.textContent = 'Puedes editar tu información personal desde aquí.';
+        // Cargar favoritos/compras/pedidos
+        showSkeleton(favoritesList, 2); setTimeout(()=>favoritesList.innerHTML='<div class="empty-state">No hay favoritos aún.</div>',700);
+        showSkeleton(purchasedList, 2); setTimeout(()=>purchasedList.innerHTML='<div class="empty-state">No hay compras recientes.</div>',800);
+        showSkeleton(ordersList, 2); setTimeout(()=>ordersList.innerHTML='<div class="empty-state">No hay pedidos en curso.</div>',900);
+      } else {
+        clearForm();
+        personalInfo.textContent = 'Inicia sesión para ver y editar tu información personal.';
+        favoritesList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos favoritos.</div>';
+        purchasedList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos comprados.</div>';
+        ordersList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>';
+      }
+    }
+
+    // Primer pintado: usa snapshot si existe
+    renderAccountUI(readLocalSnapshot());
+
+    // Rehidratación robusta: detecta sesión real aunque el módulo no exponga onAuthState
+    let lastUid = null, tries = 0;
+    async function tickAuth(){
+      const fb = currentFirebaseUser();
+      const ls = readLocalSnapshot();
+      const candidate = fb || ls || null;
+      const nowUid = candidate && candidate.uid || null;
+      if (nowUid !== lastUid) {
+        renderAccountUI(candidate);
+        lastUid = nowUid;
+      }
+      // reintenta unas cuantas veces al cargar por si Firebase tarda
+      if (!fb && tries < 40) { tries++; setTimeout(tickAuth, 500); }
+    }
+    tickAuth();
+
+    // Event listeners for new functionality
+    birthDateInput.addEventListener('change', function() {
+      if (this.value) {
+        ageInput.value = calculateAge(this.value);
+      }
+    });
+
+    // Acciones
+    loginBtn.addEventListener('click', ()=>{
+      const overlay = document.getElementById('lixbyAuthOverlay') || document.getElementById('authOverlay');
+      if (overlay) { overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); }
+      else location.href='login.html';
+    });
+
+    signOutBtn.addEventListener('click', async ()=>{
+      try {
+        if (window.appAuth && typeof window.appAuth.signOut === 'function') {
+          await window.appAuth.signOut();
+        }
+      } catch(e){ console.warn(e); }
+      localStorage.removeItem(LS_USER);
+      renderAccountUI(null);
+    });
+
+    saveBtn.addEventListener('click', async ()=>{
+      const payload = {
+        // New fields
+        firstName: firstNameInput.value.trim(),
+        lastName: lastNameInput.value.trim(),
+        gender: genderInput.value,
+        birthDate: birthDateInput.value,
+        age: ageInput.value,
+        country: countryInput.value,
+        city: cityInput.value.trim(),
+        postalCode: postalCodeInput.value.trim(),
+        primaryLanguage: primaryLanguageInput.value,
+        secondaryLanguage: secondaryLanguageInput.value,
+        dateFormat: dateFormatInput.value,
+        currency: currencyInput.value,
+        emailPrimary: emailPrimaryInput.value.trim(),
+        emailSecondary: emailSecondaryInput.value.trim(),
+        phonePrimary: phonePrimaryInput.value.trim(),
+        phoneSecondary: phoneSecondaryInput.value.trim(),
+        address: addressInput.value.trim()
+      };
+      
+      try {
+        if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') {
+          alert('Función no disponible ahora mismo'); return;
+        }
+        await window.appAuth.updateProfileExtra(payload);
+        alert('Perfil actualizado');
+      } catch(e){
+        console.error(e); alert('No se pudo guardar el perfil');
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
