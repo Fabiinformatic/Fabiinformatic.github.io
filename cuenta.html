@@ -122,6 +122,336 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    /* NEW STYLES FOR ADDED SECTIONS */
+    .settings-group {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--stroke);
+    }
+    .settings-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    .settings-group-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+    .settings-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+    .settings-item-content {
+      flex: 1;
+    }
+    .settings-item-label {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .settings-item-value {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+    .btn.small {
+      padding: 6px 12px;
+      font-size: 0.85em;
+    }
+    .btn.danger {
+      background: #ff3b30;
+      color: white;
+      border: 1px solid #ff3b30;
+    }
+    .btn.danger:hover {
+      background: #ff2d55;
+      border-color: #ff2d55;
+    }
+
+    /* Orders filters */
+    .orders-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 6px 12px;
+      border-radius: 16px;
+      background: transparent;
+      border: 1px solid var(--stroke);
+      color: var(--text);
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* Subscription styles */
+    .subscription-info {
+      margin-bottom: 24px;
+    }
+    .subscription-plan {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--glass);
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+    }
+    .plan-details h3 {
+      margin: 0 0 4px 0;
+      font-size: 1.1rem;
+    }
+    .plan-price {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .plan-renewal {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+    .plan-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .billing-history h3 {
+      margin-bottom: 16px;
+      font-size: 1rem;
+    }
+    .invoice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .invoice-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: var(--glass);
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+    }
+    .invoice-details {
+      display: flex;
+      flex-direction: column;
+    }
+    .invoice-date {
+      font-weight: 500;
+    }
+    .invoice-amount {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Notification switches */
+    .notification-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .notification-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+    }
+    .notification-content {
+      flex: 1;
+    }
+    .notification-label {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .notification-description {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--stroke);
+      transition: .3s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Devices list */
+    .devices-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .device-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--glass);
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+    }
+    .device-icon {
+      font-size: 1.5rem;
+    }
+    .device-info {
+      flex: 1;
+    }
+    .device-name {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .device-details {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+
+    /* Activity list */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: var(--glass);
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+    }
+    .activity-icon {
+      font-size: 1.2rem;
+      margin-top: 2px;
+    }
+    .activity-content {
+      flex: 1;
+    }
+    .activity-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .activity-details {
+      color: var(--muted);
+      font-size: 0.9em;
+      margin-bottom: 2px;
+    }
+    .activity-time {
+      color: var(--muted);
+      font-size: 0.8em;
+    }
+
+    /* Support options */
+    .support-options {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .support-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--glass);
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      transition: all 0.2s ease;
+    }
+    .support-item:hover {
+      border-color: var(--accent-soft);
+      box-shadow: 0 4px 18px rgba(10,132,255,0.08);
+    }
+    .support-icon {
+      font-size: 1.5rem;
+    }
+    .support-content {
+      flex: 1;
+    }
+    .support-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .support-description {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+
+    /* Danger section */
+    .danger-section {
+      border-color: rgba(255, 59, 48, 0.3);
+    }
+    .danger-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .danger-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: rgba(255, 59, 48, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 59, 48, 0.2);
+    }
+    .danger-content {
+      flex: 1;
+    }
+    .danger-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .danger-description {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -162,7 +492,430 @@
     </div>
 
     <div class="sections-list">
-      <!-- Sección información personal -->
+      <!-- ⚙️ SECCIÓN 1: Ajustes de la Cuenta -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>⚙️ Ajustes de la Cuenta</span>
+          <span class="section-badge" id="accountSettingsBadge" style="display:none;">Configuración</span>
+        </div>
+        
+        <!-- Información personal -->
+        <div class="settings-group">
+          <h3 class="settings-group-title">👤 Información personal</h3>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Nombre completo</div>
+              <div class="settings-item-value" id="fullNameDisplay">No configurado</div>
+            </div>
+            <button class="btn ghost small" id="editPersonalBtn">Editar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Fecha de nacimiento</div>
+              <div class="settings-item-value" id="birthDateDisplay">No configurado</div>
+            </div>
+            <button class="btn ghost small" id="editBirthDateBtn">Editar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">País o región</div>
+              <div class="settings-item-value" id="countryDisplay">España</div>
+            </div>
+            <button class="btn ghost small" id="editCountryBtn">Cambiar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Idioma preferido</div>
+              <div class="settings-item-value" id="languageDisplay">Español</div>
+            </div>
+            <button class="btn ghost small" id="editLanguageBtn">Cambiar</button>
+          </div>
+        </div>
+
+        <!-- Seguridad -->
+        <div class="settings-group">
+          <h3 class="settings-group-title">🔒 Seguridad</h3>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Contraseña</div>
+              <div class="settings-item-value">••••••••</div>
+            </div>
+            <button class="btn ghost small" id="changePasswordBtn">Cambiar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Verificación en dos pasos</div>
+              <div class="settings-item-value" id="twoFactorStatus">Desactivado</div>
+            </div>
+            <button class="btn ghost small" id="toggleTwoFactorBtn">Activar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Dispositivos conectados</div>
+              <div class="settings-item-value" id="devicesCount">3 dispositivos</div>
+            </div>
+            <button class="btn ghost small" id="viewDevicesBtn">Ver lista</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Sesiones activas</div>
+              <div class="settings-item-value">2 sesiones</div>
+            </div>
+            <button class="btn ghost small" id="closeAllSessionsBtn">Cerrar todas</button>
+          </div>
+        </div>
+
+        <!-- Privacidad -->
+        <div class="settings-group">
+          <h3 class="settings-group-title">🛡️ Privacidad</h3>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Preferencias de anuncios</div>
+              <div class="settings-item-value">Personalizados</div>
+            </div>
+            <button class="btn ghost small" id="editAdsBtn">Configurar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Datos compartidos</div>
+              <div class="settings-item-value">Limitado</div>
+            </div>
+            <button class="btn ghost small" id="editDataBtn">Gestionar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Descarga de datos</div>
+              <div class="settings-item-value">Disponible</div>
+            </div>
+            <button class="btn ghost small" id="downloadDataBtn">Descargar</button>
+          </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <div class="settings-group">
+          <h3 class="settings-group-title">💳 Métodos de pago</h3>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Tarjetas guardadas</div>
+              <div class="settings-item-value" id="cardsCount">2 tarjetas</div>
+            </div>
+            <button class="btn ghost small" id="manageCardsBtn">Gestionar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Métodos alternativos</div>
+              <div class="settings-item-value">PayPal, Apple Pay</div>
+            </div>
+            <button class="btn ghost small" id="manageMethodsBtn">Gestionar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Añadir método</div>
+              <div class="settings-item-value">Nuevo método de pago</div>
+            </div>
+            <button class="btn primary small" id="addPaymentBtn">Añadir método</button>
+          </div>
+        </div>
+
+        <!-- Direcciones -->
+        <div class="settings-group">
+          <h3 class="settings-group-title">📍 Direcciones</h3>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Dirección de envío</div>
+              <div class="settings-item-value" id="shippingAddress">No configurada</div>
+            </div>
+            <button class="btn ghost small" id="editShippingBtn">Editar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Dirección de facturación</div>
+              <div class="settings-item-value" id="billingAddress">No configurada</div>
+            </div>
+            <button class="btn ghost small" id="editBillingBtn">Editar</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-content">
+              <div class="settings-item-label">Añadir nueva dirección</div>
+              <div class="settings-item-value">Crear nueva dirección</div>
+            </div>
+            <button class="btn primary small" id="addAddressBtn">Añadir nueva</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🛍️ SECCIÓN 3: Pedidos o Compras -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>🛍️ Pedidos y Compras</span>
+          <span class="section-badge" id="ordersBadge" style="display:none;">Historial</span>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="orders-filters">
+          <button class="filter-btn active" data-filter="all">Todos</button>
+          <button class="filter-btn" data-filter="pending">Pendientes</button>
+          <button class="filter-btn" data-filter="shipped">Enviados</button>
+          <button class="filter-btn" data-filter="delivered">Entregados</button>
+          <button class="filter-btn" data-filter="cancelled">Cancelados</button>
+        </div>
+
+        <div id="ordersList" class="orders-list">
+          <div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>
+        </div>
+      </div>
+
+      <!-- 💳 SECCIÓN 4: Suscripciones y Facturación -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>💳 Suscripciones y Facturación</span>
+          <span class="section-badge" id="subscriptionBadge" style="display:none;">Activo</span>
+        </div>
+        
+        <div class="subscription-info">
+          <div class="subscription-plan">
+            <div class="plan-details">
+              <h3 id="currentPlanName">Plan Básico</h3>
+              <div class="plan-price" id="currentPlanPrice">€9.99/mes</div>
+              <div class="plan-renewal" id="nextRenewal">Próxima renovación: 15 de enero, 2024</div>
+            </div>
+            <div class="plan-actions">
+              <button class="btn ghost" id="changePlanBtn">Cambiar plan</button>
+              <button class="btn ghost" id="cancelSubscriptionBtn">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="billing-history">
+          <h3>Historial de facturas</h3>
+          <div class="invoice-list">
+            <div class="invoice-item">
+              <div class="invoice-details">
+                <div class="invoice-date">15 de diciembre, 2023</div>
+                <div class="invoice-amount">€9.99</div>
+              </div>
+              <button class="btn ghost small">Descargar PDF</button>
+            </div>
+            <div class="invoice-item">
+              <div class="invoice-details">
+                <div class="invoice-date">15 de noviembre, 2023</div>
+                <div class="invoice-amount">€9.99</div>
+              </div>
+              <button class="btn ghost small">Descargar PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔔 SECCIÓN 5: Notificaciones y Preferencias -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>🔔 Notificaciones y Preferencias</span>
+          <span class="section-badge" id="notificationsBadge" style="display:none;">Configurado</span>
+        </div>
+        
+        <div class="notification-settings">
+          <div class="notification-item">
+            <div class="notification-content">
+              <div class="notification-label">Notificaciones por correo</div>
+              <div class="notification-description">Recibe actualizaciones importantes por email</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="emailNotifications" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="notification-item">
+            <div class="notification-content">
+              <div class="notification-label">Notificaciones push</div>
+              <div class="notification-description">Recibe notificaciones en tu dispositivo</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="pushNotifications" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="notification-item">
+            <div class="notification-content">
+              <div class="notification-label">Boletines y promociones</div>
+              <div class="notification-description">Ofertas especiales y novedades</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="newsletterNotifications">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="notification-item">
+            <div class="notification-content">
+              <div class="notification-label">Avisos de seguridad</div>
+              <div class="notification-description">Alertas importantes de seguridad</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="securityNotifications" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 💾 SECCIÓN 6: Dispositivos Vinculados -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>💾 Dispositivos Vinculados</span>
+          <span class="section-badge" id="devicesBadge" style="display:none;">3 dispositivos</span>
+        </div>
+        
+        <div class="devices-list">
+          <div class="device-item">
+            <div class="device-icon">📱</div>
+            <div class="device-info">
+              <div class="device-name">iPhone 15 Pro</div>
+              <div class="device-details">Última conexión: Hace 2 horas</div>
+            </div>
+            <button class="btn ghost small" id="removeDevice1">Eliminar</button>
+          </div>
+          
+          <div class="device-item">
+            <div class="device-icon">💻</div>
+            <div class="device-info">
+              <div class="device-name">MacBook Pro</div>
+              <div class="device-details">Última conexión: Ayer</div>
+            </div>
+            <button class="btn ghost small" id="removeDevice2">Eliminar</button>
+          </div>
+          
+          <div class="device-item">
+            <div class="device-icon">🖥️</div>
+            <div class="device-info">
+              <div class="device-name">Chrome - Windows</div>
+              <div class="device-details">Última conexión: Hace 3 días</div>
+            </div>
+            <button class="btn ghost small" id="removeDevice3">Eliminar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🧾 SECCIÓN 7: Actividad de la cuenta -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>🧾 Actividad de la cuenta</span>
+          <span class="section-badge" id="activityBadge" style="display:none;">Reciente</span>
+        </div>
+        
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-icon">🔐</div>
+            <div class="activity-content">
+              <div class="activity-title">Inicio de sesión exitoso</div>
+              <div class="activity-details">iPhone 15 Pro • Madrid, España</div>
+              <div class="activity-time">Hace 2 horas</div>
+            </div>
+          </div>
+          
+          <div class="activity-item">
+            <div class="activity-icon">🔑</div>
+            <div class="activity-content">
+              <div class="activity-title">Contraseña actualizada</div>
+              <div class="activity-details">Cambio de contraseña completado</div>
+              <div class="activity-time">Hace 1 día</div>
+            </div>
+          </div>
+          
+          <div class="activity-item">
+            <div class="activity-icon">📧</div>
+            <div class="activity-content">
+              <div class="activity-title">Email verificado</div>
+              <div class="activity-details">Nueva dirección de email confirmada</div>
+              <div class="activity-time">Hace 3 días</div>
+            </div>
+          </div>
+          
+          <div class="activity-item">
+            <div class="activity-icon">⚠️</div>
+            <div class="activity-content">
+              <div class="activity-title">Intento de inicio de sesión fallido</div>
+              <div class="activity-details">Ubicación desconocida • IP: 192.168.1.1</div>
+              <div class="activity-time">Hace 1 semana</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ❓ SECCIÓN 8: Soporte y Ayuda -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>❓ Soporte y Ayuda</span>
+          <span class="section-badge" id="supportBadge" style="display:none;">Disponible</span>
+        </div>
+        
+        <div class="support-options">
+          <div class="support-item">
+            <div class="support-icon">📚</div>
+            <div class="support-content">
+              <div class="support-title">Centro de ayuda</div>
+              <div class="support-description">Encuentra respuestas a tus preguntas</div>
+            </div>
+            <button class="btn ghost" id="helpCenterBtn">Abrir</button>
+          </div>
+          
+          <div class="support-item">
+            <div class="support-icon">💬</div>
+            <div class="support-content">
+              <div class="support-title">Contactar con soporte</div>
+              <div class="support-description">Habla con nuestro equipo de soporte</div>
+            </div>
+            <button class="btn ghost" id="contactSupportBtn">Contactar</button>
+          </div>
+          
+          <div class="support-item">
+            <div class="support-icon">❓</div>
+            <div class="support-content">
+              <div class="support-title">Preguntas frecuentes</div>
+              <div class="support-description">Respuestas a las preguntas más comunes</div>
+            </div>
+            <button class="btn ghost" id="faqBtn">Ver FAQ</button>
+          </div>
+          
+          <div class="support-item">
+            <div class="support-icon">💭</div>
+            <div class="support-content">
+              <div class="support-title">Chat en vivo</div>
+              <div class="support-description">Soporte instantáneo por chat</div>
+            </div>
+            <button class="btn ghost" id="liveChatBtn">Iniciar chat</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🚪 SECCIÓN 9: Cierre de sesión y eliminación -->
+      <div class="glass-card section danger-section">
+        <div class="section-title">
+          <span>🚪 Cierre de sesión y eliminación</span>
+        </div>
+        
+        <div class="danger-actions">
+          <div class="danger-item">
+            <div class="danger-content">
+              <div class="danger-title">Cerrar sesión</div>
+              <div class="danger-description">Cierra tu sesión en todos los dispositivos</div>
+            </div>
+            <button class="btn ghost" id="logoutAllBtn">Cerrar sesión</button>
+          </div>
+          
+          <div class="danger-item">
+            <div class="danger-content">
+              <div class="danger-title">Eliminar cuenta</div>
+              <div class="danger-description">Elimina permanentemente tu cuenta y todos los datos</div>
+            </div>
+            <button class="btn danger" id="deleteAccountBtn">Eliminar cuenta</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección información personal (original) -->
       <div class="glass-card section">
         <div class="section-title">
           <span>Información personal</span>
@@ -171,7 +924,7 @@
         <div id="personalInfo" class="muted">Inicia sesión para ver y editar tu información personal.</div>
       </div>
 
-      <!-- Sección productos favoritos -->
+      <!-- Sección productos favoritos (original) -->
       <div class="glass-card section">
         <div class="section-title">
           <span>Favoritos</span>
@@ -182,7 +935,7 @@
         </div>
       </div>
 
-      <!-- Sección productos comprados -->
+      <!-- Sección productos comprados (original) -->
       <div class="glass-card section">
         <div class="section-title">
           <span>Productos comprados</span>
@@ -190,17 +943,6 @@
         </div>
         <div id="purchasedList" class="purchased-list">
           <div class="empty-state">Inicia sesión para ver tus productos comprados.</div>
-        </div>
-      </div>
-
-      <!-- Sección pedidos y envíos -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>Pedidos y envíos</span>
-          <span class="section-badge" id="ordersBadge" style="display:none;">Seguimiento</span>
-        </div>
-        <div id="ordersList" class="orders-list">
-          <div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>
         </div>
       </div>
     </div>
@@ -284,85 +1026,4 @@
       avatarImgEl.src = photo; avatarImgEl.alt = displayName + ' avatar';
 
       loginBtn.style.display = isUser ? 'none' : '';
-      signOutBtn.style.display = isUser ? '' : 'none';
-      saveBtn.disabled = !isUser;
-
-      // Mostrar badges solo si autenticado
-      [personalBadge, favBadge, purchasedBadge, ordersBadge].forEach(b=>b && (b.style.display = isUser ? '' : 'none'));
-
-      // Rellenar inputs básicos si hay datos cacheados
-      if (isUser) {
-        const snap = readLocalSnapshot();
-        displayNameInput.value = (snap && (snap.firstName || snap.name || snap.displayName)) || displayName || '';
-        phoneInput.value = (snap && (snap.phone || '')) || '';
-        addressInput.value = (snap && snap.address) || (snap && snap.shipping && snap.shipping.address) || '';
-        personalInfo.textContent = 'Puedes editar tu información personal desde aquí.';
-        // Cargar favoritos/compras/pedidos
-        showSkeleton(favoritesList, 2); setTimeout(()=>favoritesList.innerHTML='<div class="empty-state">No hay favoritos aún.</div>',700);
-        showSkeleton(purchasedList, 2); setTimeout(()=>purchasedList.innerHTML='<div class="empty-state">No hay compras recientes.</div>',800);
-        showSkeleton(ordersList, 2); setTimeout(()=>ordersList.innerHTML='<div class="empty-state">No hay pedidos en curso.</div>',900);
-      } else {
-        displayNameInput.value = ''; phoneInput.value=''; addressInput.value='';
-        personalInfo.textContent = 'Inicia sesión para ver y editar tu información personal.';
-        favoritesList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos favoritos.</div>';
-        purchasedList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos comprados.</div>';
-        ordersList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>';
-      }
-    }
-
-    // Primer pintado: usa snapshot si existe
-    renderAccountUI(readLocalSnapshot());
-
-    // Rehidratación robusta: detecta sesión real aunque el módulo no exponga onAuthState
-    let lastUid = null, tries = 0;
-    async function tickAuth(){
-      const fb = currentFirebaseUser();
-      const ls = readLocalSnapshot();
-      const candidate = fb || ls || null;
-      const nowUid = candidate && candidate.uid || null;
-      if (nowUid !== lastUid) {
-        renderAccountUI(candidate);
-        lastUid = nowUid;
-      }
-      // reintenta unas cuantas veces al cargar por si Firebase tarda
-      if (!fb && tries < 40) { tries++; setTimeout(tickAuth, 500); }
-    }
-    tickAuth();
-
-    // Acciones
-    loginBtn.addEventListener('click', ()=>{
-      const overlay = document.getElementById('lixbyAuthOverlay') || document.getElementById('authOverlay');
-      if (overlay) { overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); }
-      else location.href='login.html';
-    });
-
-    signOutBtn.addEventListener('click', async ()=>{
-      try {
-        if (window.appAuth && typeof window.appAuth.signOut === 'function') {
-          await window.appAuth.signOut();
-        }
-      } catch(e){ console.warn(e); }
-      localStorage.removeItem(LS_USER);
-      renderAccountUI(null);
-    });
-
-    saveBtn.addEventListener('click', async ()=>{
-      const payload = {
-        displayName: displayNameInput.value.trim(),
-        phone: phoneInput.value.trim(),
-        address: addressInput.value.trim()
-      };
-      try {
-        if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') {
-          alert('Función no disponible ahora mismo'); return;
-        }
-        await window.appAuth.updateProfileExtra(payload);
-        alert('Perfil actualizado');
-      } catch(e){
-        console.error(e); alert('No se pudo guardar el perfil');
-      }
-    });
-  })();
-  </script>
-</body>
-</html>
+      sign
