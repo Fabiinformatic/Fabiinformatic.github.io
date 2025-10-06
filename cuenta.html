@@ -101,6 +101,65 @@
       gap: 8px;
     }
     .save-actions { margin-top:22px; display:flex; gap:10px; }
+    
+    /* Save animation */
+    .save-success {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-elev);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px 30px;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1.1rem;
+      box-shadow: 0 8px 32px rgba(10,132,255,0.2);
+      backdrop-filter: blur(14px);
+      z-index: 10000;
+      animation: saveSuccess 2s ease-in-out forwards;
+      display: none;
+    }
+    
+    @keyframes saveSuccess {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+      80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    }
+    
+    /* Custom dropdown styles */
+    .custom-select {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .custom-select select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%23666" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px 20px;
+      padding-right: 40px;
+    }
+    
+    .custom-select::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--muted);
+      pointer-events: none;
+    }
     /* Secciones personales */
     .sections-list { display:grid; gap:22px; }
     .section-title {
@@ -147,6 +206,123 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    /* Activity list styles */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: var(--glass);
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+    }
+    .activity-icon {
+      font-size: 1.2rem;
+      margin-top: 2px;
+    }
+    .activity-content {
+      flex: 1;
+    }
+    .activity-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .activity-details {
+      color: var(--muted);
+      font-size: 0.9em;
+      margin-bottom: 2px;
+    }
+    .activity-time {
+      color: var(--muted);
+      font-size: 0.8em;
+    }
+
+    /* Support options styles */
+    .support-options {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .support-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--glass);
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .support-item:hover {
+      border-color: var(--accent-soft);
+      box-shadow: 0 4px 18px rgba(10,132,255,0.08);
+      transform: translateY(-1px);
+    }
+    .support-icon {
+      font-size: 1.5rem;
+    }
+    .support-content {
+      flex: 1;
+    }
+    .support-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .support-description {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+    .support-arrow {
+      color: var(--accent);
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* Danger section styles */
+    .danger-section {
+      border-color: rgba(255, 59, 48, 0.3);
+    }
+    .danger-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .danger-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: rgba(255, 59, 48, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 59, 48, 0.2);
+    }
+    .danger-content {
+      flex: 1;
+    }
+    .danger-title {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .danger-description {
+      color: var(--muted);
+      font-size: 0.9em;
+    }
+    .btn.danger {
+      background: #ff3b30;
+      color: white;
+      border: 1px solid #ff3b30;
+    }
+    .btn.danger:hover {
+      background: #ff2d55;
+      border-color: #ff2d55;
+    }
   </style>
 </head>
 <body>
@@ -183,13 +359,15 @@
           <label for="lastNameInput">Apellidos</label>
           <input id="lastNameInput" type="text" placeholder="Tus apellidos" autocomplete="family-name">
           <label for="genderInput">Género</label>
-          <select id="genderInput">
-            <option value="">Seleccionar género</option>
-            <option value="masculino">Masculino</option>
-            <option value="femenino">Femenino</option>
-            <option value="otro">Otro</option>
-            <option value="prefiero-no-decir">Prefiero no decir</option>
-          </select>
+          <div class="custom-select">
+            <select id="genderInput">
+              <option value="">Seleccionar género</option>
+              <option value="masculino">Masculino</option>
+              <option value="femenino">Femenino</option>
+              <option value="otro">Otro</option>
+              <option value="prefiero-no-decir">Prefiero no decir</option>
+            </select>
+          </div>
         </div>
 
         <!-- 🎂 Datos de nacimiento -->
@@ -205,22 +383,24 @@
         <div class="form-section">
           <h3 class="form-section-title">🌍 Ubicación</h3>
           <label for="countryInput">País o región</label>
-          <select id="countryInput">
-            <option value="es">España</option>
-            <option value="mx">México</option>
-            <option value="ar">Argentina</option>
-            <option value="co">Colombia</option>
-            <option value="pe">Perú</option>
-            <option value="cl">Chile</option>
-            <option value="ve">Venezuela</option>
-            <option value="us">Estados Unidos</option>
-            <option value="fr">Francia</option>
-            <option value="de">Alemania</option>
-            <option value="it">Italia</option>
-            <option value="pt">Portugal</option>
-            <option value="gb">Reino Unido</option>
-            <option value="other">Otro</option>
-          </select>
+          <div class="custom-select">
+            <select id="countryInput">
+              <option value="es">España</option>
+              <option value="mx">México</option>
+              <option value="ar">Argentina</option>
+              <option value="co">Colombia</option>
+              <option value="pe">Perú</option>
+              <option value="cl">Chile</option>
+              <option value="ve">Venezuela</option>
+              <option value="us">Estados Unidos</option>
+              <option value="fr">Francia</option>
+              <option value="de">Alemania</option>
+              <option value="it">Italia</option>
+              <option value="pt">Portugal</option>
+              <option value="gb">Reino Unido</option>
+              <option value="other">Otro</option>
+            </select>
+          </div>
           <label for="cityInput">Ciudad o provincia</label>
           <input id="cityInput" type="text" placeholder="Tu ciudad" autocomplete="address-level2">
           <label for="postalCodeInput">Código postal</label>
@@ -231,47 +411,55 @@
         <div class="form-section">
           <h3 class="form-section-title">💬 Preferencias lingüísticas</h3>
           <label for="primaryLanguageInput">Idioma preferido</label>
-          <select id="primaryLanguageInput">
-            <option value="es">Español</option>
-            <option value="en">Inglés</option>
-            <option value="fr">Francés</option>
-            <option value="de">Alemán</option>
-            <option value="it">Italiano</option>
-            <option value="pt">Portugués</option>
-            <option value="ca">Catalán</option>
-            <option value="eu">Euskera</option>
-            <option value="gl">Gallego</option>
-          </select>
+          <div class="custom-select">
+            <select id="primaryLanguageInput">
+              <option value="es">Español</option>
+              <option value="en">Inglés</option>
+              <option value="fr">Francés</option>
+              <option value="de">Alemán</option>
+              <option value="it">Italiano</option>
+              <option value="pt">Portugués</option>
+              <option value="ca">Catalán</option>
+              <option value="eu">Euskera</option>
+              <option value="gl">Gallego</option>
+            </select>
+          </div>
           <label for="secondaryLanguageInput">Segundo idioma (opcional)</label>
-          <select id="secondaryLanguageInput">
-            <option value="">Ninguno</option>
-            <option value="es">Español</option>
-            <option value="en">Inglés</option>
-            <option value="fr">Francés</option>
-            <option value="de">Alemán</option>
-            <option value="it">Italiano</option>
-            <option value="pt">Portugués</option>
-            <option value="ca">Catalán</option>
-            <option value="eu">Euskera</option>
-            <option value="gl">Gallego</option>
-          </select>
+          <div class="custom-select">
+            <select id="secondaryLanguageInput">
+              <option value="">Ninguno</option>
+              <option value="es">Español</option>
+              <option value="en">Inglés</option>
+              <option value="fr">Francés</option>
+              <option value="de">Alemán</option>
+              <option value="it">Italiano</option>
+              <option value="pt">Portugués</option>
+              <option value="ca">Catalán</option>
+              <option value="eu">Euskera</option>
+              <option value="gl">Gallego</option>
+            </select>
+          </div>
           <label for="dateFormatInput">Formato de fecha/hora</label>
-          <select id="dateFormatInput">
-            <option value="DD/MM/YYYY">DD/MM/AAAA</option>
-            <option value="MM/DD/YYYY">MM/DD/AAAA</option>
-            <option value="YYYY-MM-DD">AAAA-MM-DD</option>
-          </select>
+          <div class="custom-select">
+            <select id="dateFormatInput">
+              <option value="DD/MM/YYYY">DD/MM/AAAA</option>
+              <option value="MM/DD/YYYY">MM/DD/AAAA</option>
+              <option value="YYYY-MM-DD">AAAA-MM-DD</option>
+            </select>
+          </div>
           <label for="currencyInput">Moneda preferida</label>
-          <select id="currencyInput">
-            <option value="EUR">€ Euro</option>
-            <option value="USD">$ Dólar estadounidense</option>
-            <option value="GBP">£ Libra esterlina</option>
-            <option value="MXN">$ Peso mexicano</option>
-            <option value="ARS">$ Peso argentino</option>
-            <option value="COP">$ Peso colombiano</option>
-            <option value="PEN">S/ Sol peruano</option>
-            <option value="CLP">$ Peso chileno</option>
-          </select>
+          <div class="custom-select">
+            <select id="currencyInput">
+              <option value="EUR">€ Euro</option>
+              <option value="USD">$ Dólar estadounidense</option>
+              <option value="GBP">£ Libra esterlina</option>
+              <option value="MXN">$ Peso mexicano</option>
+              <option value="ARS">$ Peso argentino</option>
+              <option value="COP">$ Peso colombiano</option>
+              <option value="PEN">S/ Sol peruano</option>
+              <option value="CLP">$ Peso chileno</option>
+            </select>
+          </div>
         </div>
 
         <!-- 📞 Contacto -->
@@ -301,14 +489,6 @@
     </div>
 
     <div class="sections-list">
-      <!-- Sección información personal -->
-      <div class="glass-card section">
-        <div class="section-title">
-          <span>Información personal</span>
-          <span class="section-badge" id="personalBadge" style="display:none;">Privado</span>
-        </div>
-        <div id="personalInfo" class="muted">Inicia sesión para ver y editar tu información personal.</div>
-      </div>
 
       <!-- Sección productos favoritos -->
       <div class="glass-card section">
@@ -342,8 +522,94 @@
           <div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>
         </div>
       </div>
+
+      <!-- 🧾 SECCIÓN 7: Actividad de la cuenta -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>🧾 Actividad de la cuenta</span>
+          <span class="section-badge" id="activityBadge" style="display:none;">Reciente</span>
+        </div>
+        
+        <div id="activityList" class="activity-list">
+          <div class="empty-state">Inicia sesión para ver tu actividad reciente.</div>
+        </div>
+      </div>
+
+      <!-- ❓ SECCIÓN 8: Soporte y Ayuda -->
+      <div class="glass-card section">
+        <div class="section-title">
+          <span>❓ Soporte y Ayuda</span>
+          <span class="section-badge" id="supportBadge" style="display:none;">Disponible</span>
+        </div>
+        
+        <div class="support-options">
+          <div class="support-item" onclick="window.open('https://help.lixby.com', '_blank')">
+            <div class="support-icon">📚</div>
+            <div class="support-content">
+              <div class="support-title">Centro de ayuda</div>
+              <div class="support-description">Encuentra respuestas a tus preguntas</div>
+            </div>
+            <div class="support-arrow">→</div>
+          </div>
+          
+          <div class="support-item" onclick="window.open('mailto:soporte@lixby.com', '_blank')">
+            <div class="support-icon">💬</div>
+            <div class="support-content">
+              <div class="support-title">Contactar con soporte</div>
+              <div class="support-description">Habla con nuestro equipo de soporte</div>
+            </div>
+            <div class="support-arrow">→</div>
+          </div>
+          
+          <div class="support-item" onclick="window.open('faq.html', '_blank')">
+            <div class="support-icon">❓</div>
+            <div class="support-content">
+              <div class="support-title">Preguntas frecuentes</div>
+              <div class="support-description">Respuestas a las preguntas más comunes</div>
+            </div>
+            <div class="support-arrow">→</div>
+          </div>
+          
+          <div class="support-item" onclick="window.open('contacto.html', '_blank')">
+            <div class="support-icon">💭</div>
+            <div class="support-content">
+              <div class="support-title">Chat o formulario de contacto</div>
+              <div class="support-description">Soporte instantáneo por chat</div>
+            </div>
+            <div class="support-arrow">→</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🚪 SECCIÓN 9: Cierre de sesión y eliminación -->
+      <div class="glass-card section danger-section">
+        <div class="section-title">
+          <span>🚪 Cierre de sesión y eliminación</span>
+        </div>
+        
+        <div class="danger-actions">
+          <div class="danger-item">
+            <div class="danger-content">
+              <div class="danger-title">🔒 Cerrar sesión</div>
+              <div class="danger-description">Cierra tu sesión en todos los dispositivos</div>
+            </div>
+            <button class="btn ghost" id="logoutAllBtn">Cerrar sesión</button>
+          </div>
+          
+          <div class="danger-item">
+            <div class="danger-content">
+              <div class="danger-title">❌ Eliminar cuenta</div>
+              <div class="danger-description">Elimina permanentemente tu cuenta y todos los datos</div>
+            </div>
+            <button class="btn danger" id="deleteAccountBtn">Eliminar cuenta</button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
+
+  <!-- Save success animation -->
+  <div id="saveSuccess" class="save-success">✅ Guardado correctamente</div>
 
   <script type="module" src="auth-firebase-minimal.js"></script>
   <script>
@@ -383,16 +649,17 @@
     const phonePrimaryInput = document.getElementById('phonePrimaryInput');
     const phoneSecondaryInput = document.getElementById('phoneSecondaryInput');
     
-    const personalInfo = document.getElementById('personalInfo');
     const favoritesList = document.getElementById('favoritesList');
     const purchasedList = document.getElementById('purchasedList');
     const ordersList = document.getElementById('ordersList');
+    const activityList = document.getElementById('activityList');
 
     // Badges
-    const personalBadge = document.getElementById('personalBadge');
     const favBadge = document.getElementById('favBadge');
     const purchasedBadge = document.getElementById('purchasedBadge');
     const ordersBadge = document.getElementById('ordersBadge');
+    const activityBadge = document.getElementById('activityBadge');
+    const supportBadge = document.getElementById('supportBadge');
 
     const LS_USER = 'lixby_user';
 
@@ -426,6 +693,46 @@
         div.className = 'skeleton';
         listEl.appendChild(div);
       }
+    }
+
+    function generateActivityData() {
+      const activities = [
+        {
+          icon: '🔐',
+          title: 'Inicio de sesión exitoso',
+          details: 'iPhone 15 Pro • Madrid, España',
+          time: 'Hace 2 horas'
+        },
+        {
+          icon: '🔑',
+          title: 'Contraseña actualizada',
+          details: 'Cambio de contraseña completado',
+          time: 'Hace 1 día'
+        },
+        {
+          icon: '📧',
+          title: 'Email verificado',
+          details: 'Nueva dirección de email confirmada',
+          time: 'Hace 3 días'
+        },
+        {
+          icon: '⚠️',
+          title: 'Intento de inicio de sesión fallido',
+          details: 'Ubicación desconocida • IP: 192.168.1.1',
+          time: 'Hace 1 semana'
+        }
+      ];
+
+      return activities.map(activity => `
+        <div class="activity-item">
+          <div class="activity-icon">${activity.icon}</div>
+          <div class="activity-content">
+            <div class="activity-title">${activity.title}</div>
+            <div class="activity-details">${activity.details}</div>
+            <div class="activity-time">${activity.time}</div>
+          </div>
+        </div>
+      `).join('');
     }
 
     // Helper function to calculate age
@@ -506,23 +813,23 @@
       saveBtn.disabled = !isUser;
 
       // Mostrar badges solo si autenticado
-      [personalBadge, favBadge, purchasedBadge, ordersBadge].forEach(b=>b && (b.style.display = isUser ? '' : 'none'));
+      [favBadge, purchasedBadge, ordersBadge, activityBadge, supportBadge].forEach(b=>b && (b.style.display = isUser ? '' : 'none'));
 
       // Rellenar inputs si hay datos cacheados
       if (isUser) {
         const snap = readLocalSnapshot();
         loadUserDataToForm(snap);
-        personalInfo.textContent = 'Puedes editar tu información personal desde aquí.';
-        // Cargar favoritos/compras/pedidos
+        // Cargar favoritos/compras/pedidos/actividad
         showSkeleton(favoritesList, 2); setTimeout(()=>favoritesList.innerHTML='<div class="empty-state">No hay favoritos aún.</div>',700);
         showSkeleton(purchasedList, 2); setTimeout(()=>purchasedList.innerHTML='<div class="empty-state">No hay compras recientes.</div>',800);
         showSkeleton(ordersList, 2); setTimeout(()=>ordersList.innerHTML='<div class="empty-state">No hay pedidos en curso.</div>',900);
+        showSkeleton(activityList, 2); setTimeout(()=>activityList.innerHTML=generateActivityData(),1000);
       } else {
         clearForm();
-        personalInfo.textContent = 'Inicia sesión para ver y editar tu información personal.';
         favoritesList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos favoritos.</div>';
         purchasedList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus productos comprados.</div>';
         ordersList.innerHTML = '<div class="empty-state">Inicia sesión para ver tus pedidos y envíos.</div>';
+        activityList.innerHTML = '<div class="empty-state">Inicia sesión para ver tu actividad reciente.</div>';
       }
     }
 
@@ -592,15 +899,65 @@
       };
       
       try {
-        if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') {
-          alert('Función no disponible ahora mismo'); return;
+        // Simular guardado (puedes conectar con tu backend aquí)
+        // Guardar en localStorage como respaldo
+        const currentUser = readLocalSnapshot();
+        if (currentUser) {
+          const updatedUser = { ...currentUser, ...payload };
+          localStorage.setItem(LS_USER, JSON.stringify(updatedUser));
         }
-        await window.appAuth.updateProfileExtra(payload);
-        alert('Perfil actualizado');
+        
+        // Mostrar animación de éxito
+        const saveSuccessEl = document.getElementById('saveSuccess');
+        saveSuccessEl.style.display = 'block';
+        setTimeout(() => {
+          saveSuccessEl.style.display = 'none';
+        }, 2000);
+        
+        // Si tienes backend, descomenta esto:
+        // if (!window.appAuth || typeof window.appAuth.updateProfileExtra !== 'function') {
+        //   alert('Función no disponible ahora mismo'); return;
+        // }
+        // await window.appAuth.updateProfileExtra(payload);
+        
       } catch(e){
-        console.error(e); alert('No se pudo guardar el perfil');
+        console.error(e); 
+        alert('No se pudo guardar el perfil');
       }
     });
+
+    // Event listeners for new buttons
+    const logoutAllBtn = document.getElementById('logoutAllBtn');
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+    if (logoutAllBtn) {
+      logoutAllBtn.addEventListener('click', async () => {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión en todos los dispositivos?')) {
+          try {
+            if (window.appAuth && typeof window.appAuth.signOut === 'function') {
+              await window.appAuth.signOut();
+            }
+            localStorage.removeItem(LS_USER);
+            renderAccountUI(null);
+            alert('Sesión cerrada en todos los dispositivos');
+          } catch(e) {
+            console.warn(e);
+            alert('Error al cerrar sesión');
+          }
+        }
+      });
+    }
+
+    if (deleteAccountBtn) {
+      deleteAccountBtn.addEventListener('click', () => {
+        if (confirm('⚠️ ADVERTENCIA: Esta acción eliminará permanentemente tu cuenta y todos los datos asociados. Esta acción NO se puede deshacer.\n\n¿Estás completamente seguro de que quieres eliminar tu cuenta?')) {
+          if (confirm('Última confirmación: ¿Realmente quieres eliminar tu cuenta de forma permanente?')) {
+            // Aquí iría la lógica para eliminar la cuenta
+            alert('Función de eliminación de cuenta no implementada aún. Contacta con soporte para eliminar tu cuenta.');
+          }
+        }
+      });
+    }
   })();
   </script>
 </body>
