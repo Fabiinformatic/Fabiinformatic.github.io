@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config();
 
 const express = require('express');
@@ -29,8 +28,19 @@ let openai = null;
 const APPLECARE = 169.00;
 
 // Seguridad y CORS básicos (para rutas no raw)
+// CORREGIDO: CSP permite fonts, images, estilos y scripts embebidos y remotos
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'", "data:", "blob:"],
+      fontSrc: ["'self'", "data:"],
+      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
+      connectSrc: ["'self'", "http://localhost:4242", "ws://localhost:4242"],
+    }
+  }
 }));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*'
