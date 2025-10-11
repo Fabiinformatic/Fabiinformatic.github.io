@@ -7,7 +7,39 @@
   <meta name="description" content="Crear tu cuenta de Lixby. Registro seguro y minimalista." />
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Ajustes locales para esta página */
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      background: var(--bg, #f9f9fb);
+      color: var(--text, #222);
+      transition: background 0.16s, color 0.16s;
+    }
+    @media (prefers-color-scheme: dark) {
+      body {
+        --bg: #101317;
+        --text: #f3f7fa;
+        --stroke: #242d38;
+        --accent: #0a84ff;
+        --accent-soft: #1e90ff77;
+        --glass: #222c3d44;
+        --glass-strong: #222c3d88;
+        --muted: #afb9c7;
+      }
+    }
+    @media (prefers-color-scheme: light) {
+      body {
+        --bg: #f9f9fb;
+        --text: #1a1c1f;
+        --stroke: #dde2e8;
+        --accent: #0a84ff;
+        --accent-soft: #0a84ff18;
+        --glass: #fffefc44;
+        --glass-strong: #fffefc88;
+        --muted: #656f7c;
+      }
+    }
+
     .form-card { max-width:740px; margin:48px auto 36px auto; text-align:left; box-shadow: 0 8px 40px rgba(10,132,255,0.06); }
     .form-card h1 { text-align:center; margin-bottom:6px; }
     .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:18px; }
@@ -25,8 +57,6 @@
       min-width:72px; text-align:center; font-size:1.12em;
       box-shadow: 0 2px 6px rgba(10,132,255,0.08);
     }
-
-    /* Minimal bocadillos (botones sociales y micro acciones) */
     .auth-btn {
       display:flex; align-items:center; gap:10px; padding:12px 14px;
       border-radius:12px; border:1px solid rgba(255,255,255,0.06);
@@ -38,33 +68,50 @@
     .auth-btn img.icon { width:20px; height:20px; display:block; opacity:0.96; filter:grayscale(7%); }
     .auth-btn:active{ transform:scale(0.97); }
     .auth-btn:hover{ box-shadow: 0 12px 28px rgba(10,132,255,0.10); border-color: var(--accent-soft); background: linear-gradient(180deg, var(--accent-soft), var(--glass)); }
-
-    /* botones más planos para acciones secundarias */
     .btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.08); padding:9px 13px; border-radius:12px; color:var(--text); font-weight:700;}
     .btn.primary { padding:12px 20px; border-radius:12px; font-weight:900; font-size:1.07em; background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 78%, #fff 22%)); color: #00121a; box-shadow: 0 4px 24px rgba(10,132,255,0.07);}
     .btn.primary:active { transform:scale(0.99);}
     .btn[disabled], button[disabled] { opacity:0.55; pointer-events:none; }
-
     #formMessage { padding:8px 0; color:var(--muted); min-height:1.5em; text-align:center; }
-
-    select.input-wide { appearance:none; -webkit-appearance:none; background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat:no-repeat; background-position: right 12px center; background-size:18px 18px; }
-
+    select.input-wide {
+      appearance:none; -webkit-appearance:none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat:no-repeat; background-position: right 12px center; background-size:18px 18px;
+      color:inherit;
+      border:1.5px solid var(--stroke);
+      padding-right:34px;
+      font-size:1.08em;
+      background:var(--glass);
+    }
+    select.input-wide:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    option {
+      background: var(--bg);
+      color: var(--text);
+      font-size:1em;
+    }
     @media (max-width:720px){
       .grid-2 { flex-direction:column; gap:10px; }
       .captcha { flex-direction:column; align-items:flex-start; }
       .auth-row { gap:13px; }
       .form-card { padding: 0 2vw; }
     }
+    /* Mini tweaks for minimalismo */
+    .form-card { background: var(--glass); border-radius: 18px; }
+    .form-card h1 { font-size:2.12em; font-weight:800; letter-spacing:0.02em; }
+    .form-card, .form-card input, .form-card select { box-shadow:none; }
+    .form-card input, .form-card select { background: var(--glass); }
+    .form-card input:focus, .form-card select:focus { border-color: var(--accent); }
   </style>
 </head>
 <body>
+  <!-- HEADER MINIMALISTA -->
   <header class="nav" role="banner" aria-label="Cabecera">
     <div class="nav-inner">
       <div class="brand" id="brand" role="link" tabindex="0" aria-label="Ir a inicio">LIXBY</div>
-      <div id="navLinks" aria-hidden="true"></div>
-      <div class="nav-right">
-        <button id="openAuthBtn" class="btn ghost">Cuenta</button>
-      </div>
+      <!-- Eliminado navLinks y botones de cuenta para minimalismo -->
     </div>
   </header>
 
@@ -118,7 +165,6 @@
           <option value="JP">Japón</option>
           <option value="KR">Corea del Sur</option>
           <option value="CN">China</option>
-          <!-- ... resto igual ... -->
         </select>
 
         <div style="margin-top:14px;">
@@ -169,7 +215,6 @@
               <option value="+44">+44 Reino Unido</option>
               <option value="+33">+33 Francia</option>
               <option value="+49">+49 Alemania</option>
-              <!-- ... añade los más relevantes ... -->
             </select>
             <input id="phone" class="input-wide" placeholder="Número de teléfono" inputmode="tel" style="flex:1;" required />
           </div>
@@ -187,8 +232,7 @@
 
         <div style="margin-top:12px">
           <label><input type="checkbox" id="marketing1"> Recibe correos y comunicaciones de Lixby (anuncios y novedades)</label>
-          <br/>
-          <label><input type="checkbox" id="marketing2"> Apps, música, TV y mucho más (ofertas y recomendaciones)</label>
+          <!-- QUITADO: <label><input type="checkbox" id="marketing2"> Apps, música, TV y mucho más (ofertas y recomendaciones)</label> -->
         </div>
 
         <div class="captcha" aria-hidden="false">
@@ -205,7 +249,7 @@
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-          <a href="login.html" class="btn ghost">Iniciar sesión</a>
+          <!-- QUITADO: <a href="login.html" class="btn ghost">Iniciar sesión</a> -->
           <button id="submitBtn" class="btn primary" type="submit">Crear cuenta</button>
         </div>
 
@@ -216,6 +260,17 @@
 
   <script type="module" src="auth-firebase-minimal.js"></script>
   <script>
+    // Detecta color scheme y cambia fondo si es necesario (ya controlado por CSS pero aquí puedes forzar si quieres)
+    /* Puedes dejar que el CSS maneje color-scheme automáticamente.
+    Si quieres forzar con JS: */
+    /*
+    if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+      document.body.style.background = '#101317'; document.body.style.color = '#e7edf6';
+    } else {
+      document.body.style.background = '#f9f9fb'; document.body.style.color = '#222';
+    }
+    */
+
     // llenado de selects día/mes/año
     (function(){
       const day = document.getElementById('day');
@@ -244,16 +299,9 @@
     document.getElementById('btnGoogle').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGoogle().catch(e=>console.warn(e)); });
     document.getElementById('btnGithub').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGitHub().catch(e=>console.warn(e)); });
 
-    // header brand / cuenta
+    // header brand minimalista
     document.getElementById('brand').addEventListener('click', ()=> location.href='index.html');
     document.getElementById('brand').addEventListener('keypress', (e)=> { if(e.key==='Enter') location.href='index.html'; });
-    document.getElementById('openAuthBtn').addEventListener('click', ()=> {
-      const overlay = document.getElementById('lixbyAuthOverlay');
-      if (overlay) { overlay.style.display='flex'; overlay.setAttribute('aria-hidden','false'); }
-      else if(window.appAuth && typeof window.appAuth.signInWithGoogle === 'function') {
-        try{ window.dispatchEvent(new Event('showAuth')); }catch(e){}
-      }
-    });
 
     // Helper local storage fallback key
     const LS_CREATED = 'lixby_created_accounts';
@@ -330,7 +378,7 @@
           firstName, lastName, dob,
           country: document.getElementById('country').value,
           phone: phonePref + ' ' + phone,
-          marketing: { m1: !!document.getElementById('marketing1').checked, m2: !!document.getElementById('marketing2').checked },
+          marketing: { m1: !!document.getElementById('marketing1').checked },
           email
         };
 
