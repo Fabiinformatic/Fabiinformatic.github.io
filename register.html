@@ -15,6 +15,14 @@
       min-height: 100vh;
       background: var(--bg, #f9f9fb);
       color: var(--text, #222);
+      box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      padding: 0;
+      background: var(--bg, #f9f9fb);
+      color: var(--text, #222);
+      font-family: inherit;
     }
     @media (prefers-color-scheme: dark) {
       body { --bg: #101317; --text: #f3f7fa; --stroke: #242d38; --accent: #0a84ff; --accent-soft: #1e90ff77; --glass: #222c3d44; --glass-strong: #222c3d88; --muted: #afb9c7; }
@@ -32,7 +40,7 @@
       box-shadow: none;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       align-items: center;
     }
     .form-card > form,
@@ -43,6 +51,16 @@
       max-width: 420px;
       margin: 0 auto 16px auto;
     }
+    .form-card > form {
+      margin-bottom: 40px;
+      margin-top: 6px;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+    .form-card > h1, .form-card > p {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
     @media (max-width: 600px) {
       .form-card > form,
       .form-card > .auth-row,
@@ -52,18 +70,64 @@
         padding-left: 6vw;
         padding-right: 6vw;
       }
+      .form-card > form {
+        padding-left: 2vw;
+        padding-right: 2vw;
+      }
     }
     .form-card h1 { text-align:center; margin-bottom:6px; font-size:2.12em; font-weight:800; letter-spacing:0.02em; }
     .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:18px; }
-    .input-wide { width:100%; box-sizing:border-box; padding:12px 10px; border-radius:10px; border:1px solid var(--stroke); background:rgba(255,255,255,0.03); color:inherit; font-size:1.02em; transition: border-color 0.2s; }
+    /* Minimal floating label input */
+    .field-group {
+      position: relative;
+      margin-bottom: 26px;
+      width: 100%;
+    }
+    .input-wide {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 16px 10px 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background:rgba(255,255,255,0.03);
+      color:inherit;
+      font-size:1.13em;
+      transition: border-color 0.2s, background 0.2s;
+      outline: none;
+    }
+    .input-wide:focus {
+      border-color: var(--accent);
+      background:rgba(10,132,255,0.03);
+    }
     .input-error { border-color: #dc2626 !important; background:rgba(220,38,38,0.08) !important; }
+    /* Floating label */
+    .floating-label {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      color: var(--muted);
+      pointer-events: none;
+      font-size: 1.08em;
+      transition: all 0.18s cubic-bezier(.64,.09,.08,.99);
+      padding: 0 3px;
+    }
+    .input-wide:focus + .floating-label,
+    .input-wide:not(:placeholder-shown) + .floating-label {
+      top: 4px;
+      left: 10px;
+      font-size: 0.93em;
+      color: var(--accent);
+      background: var(--bg);
+      transform: none;
+    }
     .grid-2 { display:flex; gap:16px; }
     .grid-2 .col { flex:1; min-width:0; }
     .sep { display:flex; align-items:center; gap:12px; margin:22px 0 16px 0; color:var(--muted); font-weight:600; }
     .sep hr { flex:1; height:1px; border:0; background:var(--stroke); opacity:0.7; }
     .error { color:#dc2626; font-size:0.97rem; margin-top:3px; min-height:1.4em; }
     .small { color:var(--muted); font-size:0.95rem; }
-    .captcha { display:none; }
     .auth-btn { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, var(--glass), var(--glass-strong)); color:var(--text); font-weight:800; cursor:pointer; font-size:1.02em; transition: transform .16s var(--ease-bouncy), box-shadow .18s var(--ease-bouncy), border-color .16s var(--ease-bouncy); }
     .auth-btn img.icon { width:20px; height:20px; display:block; opacity:0.96; filter:grayscale(7%); }
     .auth-btn:active{ transform:scale(0.97); }
@@ -73,7 +137,16 @@
     .btn.primary:active { transform:scale(0.99);}
     .btn[disabled], button[disabled] { opacity:0.55; pointer-events:none; }
     #formMessage { padding:8px 0; color:var(--muted); min-height:1.5em; text-align:center; }
-    select.input-wide { appearance:none; -webkit-appearance:none; background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); background-repeat:no-repeat; background-position: right 12px center; background-size:18px 18px; color:inherit; border:1.5px solid var(--stroke); padding-right:34px; font-size:1.08em; background:var(--glass);}
+    select.input-wide {
+      appearance:none; -webkit-appearance:none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat:no-repeat; background-position: right 12px center; background-size:18px 18px;
+      color:inherit;
+      border:1.5px solid var(--stroke);
+      padding-right:34px;
+      font-size:1.08em;
+      background:var(--glass);
+    }
     select.input-wide:focus { outline: none; border-color: var(--accent);}
     option { background: var(--bg); color: var(--text); font-size:1em;}
     @media (max-width:720px){
@@ -123,63 +196,70 @@
       <form id="registerForm" novalidate autocomplete="off">
         <div class="grid-2">
           <div class="col">
-            <label for="firstName"><strong>Nombre</strong></label>
-            <input id="firstName" name="firstName" class="input-wide" autocomplete="given-name" required />
-            <div id="err-firstName" class="error" aria-live="polite"></div>
+            <div class="field-group">
+              <input id="firstName" name="firstName" class="input-wide" autocomplete="given-name" required placeholder=" " />
+              <label for="firstName" class="floating-label">Nombre</label>
+              <div id="err-firstName" class="error" aria-live="polite"></div>
+            </div>
           </div>
           <div class="col">
-            <label for="lastName"><strong>Apellidos</strong></label>
-            <input id="lastName" name="lastName" class="input-wide" autocomplete="family-name" required />
-            <div id="err-lastName" class="error" aria-live="polite"></div>
+            <div class="field-group">
+              <input id="lastName" name="lastName" class="input-wide" autocomplete="family-name" required placeholder=" " />
+              <label for="lastName" class="floating-label">Apellidos</label>
+              <div id="err-lastName" class="error" aria-live="polite"></div>
+            </div>
           </div>
         </div>
-        <label for="country" style="margin-top:10px"><strong>País / región</strong></label>
-        <select id="country" class="input-wide" aria-label="País o región" required>
-          <option value="ES" selected>España</option>
-          <option value="US">Estados Unidos</option>
-          <option value="MX">México</option>
-          <option value="AR">Argentina</option>
-          <option value="CO">Colombia</option>
-          <option value="PE">Perú</option>
-          <option value="CL">Chile</option>
-          <option value="BR">Brasil</option>
-          <option value="DE">Alemania</option>
-          <option value="FR">Francia</option>
-          <option value="IT">Italia</option>
-          <option value="PT">Portugal</option>
-          <option value="GB">Reino Unido</option>
-          <option value="CA">Canadá</option>
-          <option value="JP">Japón</option>
-          <option value="KR">Corea del Sur</option>
-          <option value="CN">China</option>
-          <option value="RU">Rusia</option>
-          <option value="IN">India</option>
-          <option value="TR">Turquía</option>
-          <option value="NL">Países Bajos</option>
-          <option value="PL">Polonia</option>
-          <option value="SE">Suecia</option>
-          <option value="FI">Finlandia</option>
-          <option value="NO">Noruega</option>
-          <option value="DK">Dinamarca</option>
-          <option value="GR">Grecia</option>
-          <option value="IE">Irlanda</option>
-          <option value="BE">Bélgica</option>
-          <option value="CH">Suiza</option>
-          <option value="AT">Austria</option>
-          <option value="AU">Australia</option>
-          <option value="NZ">Nueva Zelanda</option>
-          <option value="ZA">Sudáfrica</option>
-          <option value="EG">Egipto</option>
-          <option value="SA">Arabia Saudí</option>
-          <option value="IL">Israel</option>
-          <option value="SG">Singapur</option>
-          <option value="TH">Tailandia</option>
-          <option value="ID">Indonesia</option>
-          <option value="MY">Malasia</option>
-          <option value="PH">Filipinas</option>
-          <option value="VN">Vietnam</option>
-          <option value="UA">Ucrania</option>
-        </select>
+        <div class="field-group">
+          <select id="country" class="input-wide" aria-label="País o región" required>
+            <option value="" disabled selected hidden></option>
+            <option value="ES">España</option>
+            <option value="US">Estados Unidos</option>
+            <option value="MX">México</option>
+            <option value="AR">Argentina</option>
+            <option value="CO">Colombia</option>
+            <option value="PE">Perú</option>
+            <option value="CL">Chile</option>
+            <option value="BR">Brasil</option>
+            <option value="DE">Alemania</option>
+            <option value="FR">Francia</option>
+            <option value="IT">Italia</option>
+            <option value="PT">Portugal</option>
+            <option value="GB">Reino Unido</option>
+            <option value="CA">Canadá</option>
+            <option value="JP">Japón</option>
+            <option value="KR">Corea del Sur</option>
+            <option value="CN">China</option>
+            <option value="RU">Rusia</option>
+            <option value="IN">India</option>
+            <option value="TR">Turquía</option>
+            <option value="NL">Países Bajos</option>
+            <option value="PL">Polonia</option>
+            <option value="SE">Suecia</option>
+            <option value="FI">Finlandia</option>
+            <option value="NO">Noruega</option>
+            <option value="DK">Dinamarca</option>
+            <option value="GR">Grecia</option>
+            <option value="IE">Irlanda</option>
+            <option value="BE">Bélgica</option>
+            <option value="CH">Suiza</option>
+            <option value="AT">Austria</option>
+            <option value="AU">Australia</option>
+            <option value="NZ">Nueva Zelanda</option>
+            <option value="ZA">Sudáfrica</option>
+            <option value="EG">Egipto</option>
+            <option value="SA">Arabia Saudí</option>
+            <option value="IL">Israel</option>
+            <option value="SG">Singapur</option>
+            <option value="TH">Tailandia</option>
+            <option value="ID">Indonesia</option>
+            <option value="MY">Malasia</option>
+            <option value="PH">Filipinas</option>
+            <option value="VN">Vietnam</option>
+            <option value="UA">Ucrania</option>
+          </select>
+          <label for="country" class="floating-label">País / región</label>
+        </div>
         <div style="margin-top:14px;">
           <strong>Fecha de nacimiento</strong>
           <div class="small">Ayuda (cumpleaños)</div>
@@ -196,22 +276,26 @@
           </div>
           <div id="err-dob" class="error" aria-live="polite"></div>
         </div>
-        <div style="margin-top:14px;">
-          <label for="email"><strong>Correo electrónico</strong></label>
-          <input id="email" type="email" class="input-wide" placeholder="nombre@example.com" autocomplete="email" required />
+        <div class="field-group">
+          <input id="email" type="email" class="input-wide" placeholder=" " autocomplete="email" required />
+          <label for="email" class="floating-label">Correo electrónico</label>
           <div id="err-email" class="error" aria-live="polite"></div>
           <div class="small" style="margin-top:6px">Esta será tu cuenta de Lixby.</div>
         </div>
         <div class="grid-2" style="margin-top:14px">
           <div class="col">
-            <label for="password"><strong>Contraseña</strong></label>
-            <input id="password" type="password" class="input-wide" autocomplete="new-password" required />
-            <div id="err-password" class="error" aria-live="polite"></div>
+            <div class="field-group">
+              <input id="password" type="password" class="input-wide" autocomplete="new-password" required placeholder=" " />
+              <label for="password" class="floating-label">Contraseña</label>
+              <div id="err-password" class="error" aria-live="polite"></div>
+            </div>
           </div>
           <div class="col">
-            <label for="confirm"><strong>Confirmar contraseña</strong></label>
-            <input id="confirm" type="password" class="input-wide" autocomplete="new-password" required />
-            <div id="err-confirm" class="error" aria-live="polite"></div>
+            <div class="field-group">
+              <input id="confirm" type="password" class="input-wide" autocomplete="new-password" required placeholder=" " />
+              <label for="confirm" class="floating-label">Confirmar contraseña</label>
+              <div id="err-confirm" class="error" aria-live="polite"></div>
+            </div>
           </div>
         </div>
         <div style="margin-top:14px">
@@ -253,7 +337,7 @@
         <div>
           <div class="captcha-code" id="captchaModalCode"></div>
           <label for="captchaModalInput"><strong>Introduce el código</strong></label>
-          <input id="captchaModalInput" placeholder="Ej: 75 ZQ" required autocomplete="off" />
+          <input id="captchaModalInput" placeholder="Ej: 123 AB" required autocomplete="off" />
           <div id="captchaModalError" class="error"></div>
         </div>
         <div class="modal-actions">
