@@ -3,95 +3,70 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Crea tu cuenta de Lixby</title>
+  <title>Crea cuenta tu cuenta de Lixby</title>
   <meta name="description" content="Crear tu cuenta de Lixby. Registro seguro y minimalista." />
   <link rel="stylesheet" href="style.css">
   <style>
-    :root { color-scheme: light dark; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      min-height: 100vh;
-      background: var(--bg, #f9f9fb);
-      color: var(--text, #222);
-      box-sizing: border-box;
+    :root {
+      color-scheme: light dark;
     }
     body {
-      min-height: 100vh;
-      padding: 0;
       background: var(--bg, #f9f9fb);
       color: var(--text, #222);
-      font-family: inherit;
+      transition: background 0.16s, color 0.16s;
+      font-family: inherit; /* Respeta la tipografía */
     }
     @media (prefers-color-scheme: dark) {
-      body { --bg: #101317; --text: #f3f7fa; --stroke: #242d38; --accent: #0a84ff; --accent-soft: #1e90ff77; --glass: #222c3d44; --glass-strong: #222c3d88; --muted: #afb9c7; }
+      body {
+        --bg: #101317;
+        --text: #f3f7fa;
+        --stroke: #242d38;
+        --accent: #0a84ff;
+        --accent-soft: #1e90ff77;
+        --glass: #222c3d44;
+        --glass-strong: #222c3d88;
+        --muted: #afb9c7;
+      }
     }
     @media (prefers-color-scheme: light) {
-      body { --bg: #f9f9fb; --text: #1a1c1f; --stroke: #dde2e8; --accent: #0a84ff; --accent-soft: #0a84ff18; --glass: #fffefc44; --glass-strong: #fffefc88; --muted: #656f7c; }
-    }
-    .form-card {
-      width: 100vw;
-      min-height: 100vh;
-      margin: 0;
-      padding: 0;
-      border-radius: 0;
-      background: var(--bg);
-      box-shadow: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-    }
-    .form-card > form,
-    .form-card > .auth-row,
-    .form-card > h1,
-    .form-card > p {
-      width: 100%;
-      max-width: 420px;
-      margin: 0 auto 16px auto;
-    }
-    .form-card > form {
-      margin-bottom: 40px;
-      margin-top: 6px;
-      padding-left: 24px;
-      padding-right: 24px;
-    }
-    .form-card > h1, .form-card > p {
-      padding-left: 24px;
-      padding-right: 24px;
-    }
-    @media (max-width: 600px) {
-      .form-card > form,
-      .form-card > .auth-row,
-      .form-card > h1,
-      .form-card > p {
-        max-width: 98vw;
-        padding-left: 6vw;
-        padding-right: 6vw;
-      }
-      .form-card > form {
-        padding-left: 2vw;
-        padding-right: 2vw;
+      body {
+        --bg: #f9f9fb;
+        --text: #1a1c1f;
+        --stroke: #dde2e8;
+        --accent: #0a84ff;
+        --accent-soft: #0a84ff18;
+        --glass: #fffefc44;
+        --glass-strong: #fffefc88;
+        --muted: #656f7c;
       }
     }
+
+    .form-card { max-width:740px; margin:48px auto 36px auto; text-align:left; box-shadow: 0 8px 40px rgba(10,132,255,0.06); background: var(--glass); border-radius:18px; }
     .form-card h1 { text-align:center; margin-bottom:6px; font-size:2.12em; font-weight:800; letter-spacing:0.02em; }
     .auth-row { display:flex; flex-direction:column; gap:10px; margin-top:18px; }
-    /* Minimal floating label input */
+    .grid-2 { display:flex; gap:16px; }
+    .grid-2 .col { flex:1; min-width:0; }
+    .sep { display:flex; align-items:center; gap:12px; margin:22px 0 16px 0; color:var(--muted); font-weight:600; }
+    .sep hr { flex:1; height:1px; border:0; background:var(--stroke); opacity:0.7; }
+    .error { color:#dc2626; font-size:0.97rem; margin-top:3px; min-height:1.4em; }
+    .small { color:var(--muted); font-size:0.95rem; }
+
+    /* Floating label minimalista */
     .field-group {
       position: relative;
       margin-bottom: 26px;
       width: 100%;
     }
     .input-wide {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 16px 10px 8px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--stroke);
+      width:100%;
+      box-sizing:border-box;
+      padding:24px 10px 8px 10px;
+      border-radius:10px;
+      border:1px solid var(--stroke);
       background:rgba(255,255,255,0.03);
       color:inherit;
-      font-size:1.13em;
+      font-size:1.14em;
+      text-align:center; /* centra el texto */
       transition: border-color 0.2s, background 0.2s;
       outline: none;
     }
@@ -100,43 +75,60 @@
       background:rgba(10,132,255,0.03);
     }
     .input-error { border-color: #dc2626 !important; background:rgba(220,38,38,0.08) !important; }
-    /* Floating label */
     .floating-label {
       position: absolute;
-      left: 12px;
+      left: 0;
+      width: 100%;
       top: 50%;
       transform: translateY(-50%);
-      background: transparent;
       color: var(--muted);
       pointer-events: none;
       font-size: 1.08em;
-      transition: all 0.18s cubic-bezier(.64,.09,.08,.99);
-      padding: 0 3px;
+      transition: all 0.19s cubic-bezier(.64,.09,.08,.99);
+      text-align:center;
+      font-weight:700;
+      letter-spacing:0.04em;
+      opacity:0.85;
     }
     .input-wide:focus + .floating-label,
     .input-wide:not(:placeholder-shown) + .floating-label {
       top: 4px;
-      left: 10px;
-      font-size: 0.93em;
+      font-size:1em;
       color: var(--accent);
-      background: var(--bg);
-      transform: none;
+      text-align:left;
+      left:0;
+      width:100%;
+      font-weight:900;
+      letter-spacing:0.08em;
+      opacity:1;
+      border-top:1px solid var(--accent);
+      padding-top:0.5em;
+      /* Estilo de línea con ---Texto--- */
+      background: linear-gradient(to right, transparent 0 10%, var(--accent-soft) 15% 85%, transparent 90% 100%);
+      content: '';
     }
-    .grid-2 { display:flex; gap:16px; }
-    .grid-2 .col { flex:1; min-width:0; }
-    .sep { display:flex; align-items:center; gap:12px; margin:22px 0 16px 0; color:var(--muted); font-weight:600; }
-    .sep hr { flex:1; height:1px; border:0; background:var(--stroke); opacity:0.7; }
-    .error { color:#dc2626; font-size:0.97rem; margin-top:3px; min-height:1.4em; }
-    .small { color:var(--muted); font-size:0.95rem; }
-    .auth-btn { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.06); background: linear-gradient(180deg, var(--glass), var(--glass-strong)); color:var(--text); font-weight:800; cursor:pointer; font-size:1.02em; transition: transform .16s var(--ease-bouncy), box-shadow .18s var(--ease-bouncy), border-color .16s var(--ease-bouncy); }
-    .auth-btn img.icon { width:20px; height:20px; display:block; opacity:0.96; filter:grayscale(7%); }
-    .auth-btn:active{ transform:scale(0.97); }
-    .auth-btn:hover{ box-shadow: 0 12px 28px rgba(10,132,255,0.10); border-color: var(--accent-soft); background: linear-gradient(180deg, var(--accent-soft), var(--glass)); }
-    .btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.08); padding:9px 13px; border-radius:12px; color:var(--text); font-weight:700;}
-    .btn.primary { padding:12px 20px; border-radius:12px; font-weight:900; font-size:1.07em; background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 78%, #fff 22%)); color: #00121a; box-shadow: 0 4px 24px rgba(10,132,255,0.07);}
-    .btn.primary:active { transform:scale(0.99);}
-    .btn[disabled], button[disabled] { opacity:0.55; pointer-events:none; }
-    #formMessage { padding:8px 0; color:var(--muted); min-height:1.5em; text-align:center; }
+    .input-wide:focus + .floating-label::before,
+    .input-wide:not(:placeholder-shown) + .floating-label::before,
+    .input-wide:focus + .floating-label::after,
+    .input-wide:not(:placeholder-shown) + .floating-label::after {
+      content:'';
+      display:inline-block;
+      width:14px;
+      height:1px;
+      background:var(--accent);
+      vertical-align:middle;
+      margin:0 8px;
+    }
+    /* custom lines for label ---Texto--- */
+    .floating-label.active:before,
+    .floating-label.active:after {
+      content:'---';
+      color:var(--accent);
+      font-weight:900;
+      margin: 0 8px;
+      font-size:1em;
+    }
+    /* select centering */
     select.input-wide {
       appearance:none; -webkit-appearance:none;
       background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
@@ -146,44 +138,44 @@
       padding-right:34px;
       font-size:1.08em;
       background:var(--glass);
+      text-align:center;
     }
     select.input-wide:focus { outline: none; border-color: var(--accent);}
     option { background: var(--bg); color: var(--text); font-size:1em;}
     @media (max-width:720px){
       .grid-2 { flex-direction:column; gap:10px; }
+      .captcha { flex-direction:column; align-items:flex-start; }
       .auth-row { gap:13px; }
+      .form-card { padding: 0 2vw; }
     }
-    #captchaModal {
-      position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10,12,20,0.9);
-      display:none; align-items:center; justify-content:center; z-index:9999;
+    /* Mini tweaks for minimalismo */
+    .form-card, .form-card input, .form-card select { box-shadow:none; }
+    .form-card input, .form-card select { background: var(--glass); }
+    .form-card input:focus, .form-card select:focus { border-color: var(--accent); }
+
+    /* captcha */
+    .captcha { display:flex; gap:14px; align-items:center; margin-top:14px; }
+    .captcha .box {
+      padding:9px 15px;border-radius:10px;border:1.5px solid var(--stroke);
+      background: linear-gradient(90deg, var(--glass), var(--glass-strong)); color:var(--muted); font-weight:700; letter-spacing:1.5px;
+      min-width:72px; text-align:center; font-size:1.12em;
+      box-shadow: 0 2px 6px rgba(10,132,255,0.08);
     }
-    #captchaModal .modal-content {
-      background:var(--bg); color:var(--text); border-radius:18px; padding:32px 24px; max-width:370px; width:96vw; text-align:center; box-shadow:0 6px 40px rgba(10,132,255,0.16);
-      display:flex; flex-direction:column; gap:20px;
-    }
-    #captchaModal .captcha-code {
-      font-size:2.2em; font-weight:900; letter-spacing:0.1em; padding:10px 0; margin-bottom:10px; user-select:all;
-      background:linear-gradient(90deg,#0a84ff22,#fff0 60%);
-      border-radius:12px;
-    }
-    #captchaModal input {
-      font-size:1.13em; padding:12px 10px; border-radius:10px; border:1.5px solid var(--stroke); background:var(--glass); color:inherit; margin-bottom:10px; width:calc(100% - 22px);
-    }
-    #captchaModal input:focus { border-color: var(--accent); }
-    #captchaModal .error { color:#dc2626; font-size:1em; margin-top:3px; min-height:1.5em; }
-    #captchaModal .modal-actions { display:flex; gap:16px; justify-content:center; }
   </style>
 </head>
 <body>
+  <!-- HEADER MINIMALISTA -->
   <header class="nav" role="banner" aria-label="Cabecera">
     <div class="nav-inner">
       <div class="brand" id="brand" role="link" tabindex="0" aria-label="Ir a inicio">LIXBY</div>
     </div>
   </header>
+
   <main>
     <div class="form-card glass" role="main" aria-labelledby="title">
       <h1 id="title" style="margin-top:10px;">Crea tu cuenta Lixby</h1>
       <p class="small" style="text-align:center">Una sola cuenta para todos tus servicios y compras Lixby.<br>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+
       <div class="auth-row" aria-hidden="false">
         <button id="btnGoogle" class="auth-btn" type="button" title="Iniciar con Google">
           <img class="icon" src="https://www.svgrepo.com/show/355037/google.svg" alt="" aria-hidden="true"><span>Google</span>
@@ -192,7 +184,9 @@
           <img class="icon" src="https://www.svgrepo.com/show/341847/github.svg" alt="" aria-hidden="true"><span>GitHub</span>
         </button>
       </div>
+
       <div class="sep"><hr/><div>o</div><hr/></div>
+
       <form id="registerForm" novalidate autocomplete="off">
         <div class="grid-2">
           <div class="col">
@@ -210,6 +204,7 @@
             </div>
           </div>
         </div>
+
         <div class="field-group">
           <select id="country" class="input-wide" aria-label="País o región" required>
             <option value="" disabled selected hidden></option>
@@ -230,36 +225,10 @@
             <option value="JP">Japón</option>
             <option value="KR">Corea del Sur</option>
             <option value="CN">China</option>
-            <option value="RU">Rusia</option>
-            <option value="IN">India</option>
-            <option value="TR">Turquía</option>
-            <option value="NL">Países Bajos</option>
-            <option value="PL">Polonia</option>
-            <option value="SE">Suecia</option>
-            <option value="FI">Finlandia</option>
-            <option value="NO">Noruega</option>
-            <option value="DK">Dinamarca</option>
-            <option value="GR">Grecia</option>
-            <option value="IE">Irlanda</option>
-            <option value="BE">Bélgica</option>
-            <option value="CH">Suiza</option>
-            <option value="AT">Austria</option>
-            <option value="AU">Australia</option>
-            <option value="NZ">Nueva Zelanda</option>
-            <option value="ZA">Sudáfrica</option>
-            <option value="EG">Egipto</option>
-            <option value="SA">Arabia Saudí</option>
-            <option value="IL">Israel</option>
-            <option value="SG">Singapur</option>
-            <option value="TH">Tailandia</option>
-            <option value="ID">Indonesia</option>
-            <option value="MY">Malasia</option>
-            <option value="PH">Filipinas</option>
-            <option value="VN">Vietnam</option>
-            <option value="UA">Ucrania</option>
           </select>
           <label for="country" class="floating-label">País / región</label>
         </div>
+
         <div style="margin-top:14px;">
           <strong>Fecha de nacimiento</strong>
           <div class="small">Ayuda (cumpleaños)</div>
@@ -276,12 +245,14 @@
           </div>
           <div id="err-dob" class="error" aria-live="polite"></div>
         </div>
+
         <div class="field-group">
           <input id="email" type="email" class="input-wide" placeholder=" " autocomplete="email" required />
           <label for="email" class="floating-label">Correo electrónico</label>
           <div id="err-email" class="error" aria-live="polite"></div>
           <div class="small" style="margin-top:6px">Esta será tu cuenta de Lixby.</div>
         </div>
+
         <div class="grid-2" style="margin-top:14px">
           <div class="col">
             <div class="field-group">
@@ -298,7 +269,8 @@
             </div>
           </div>
         </div>
-        <div style="margin-top:14px">
+
+        <div style="margin-top:14px;">
           <label><strong>Teléfono</strong></label>
           <div style="display:flex;gap:8px;align-items:center">
             <select id="phonePrefix" style="width:140px;padding:10px;border-radius:8px;border:1px solid var(--stroke);background:transparent;color:inherit;" required>
@@ -315,6 +287,7 @@
           <div id="err-phone" class="error" aria-live="polite"></div>
           <div class="small" style="margin-top:6px">Introduce un número válido. Se usará para verificaciones.</div>
         </div>
+
         <div style="margin-top:14px">
           <strong>Verificar con:</strong>
           <div style="display:flex;gap:10px;margin-top:6px">
@@ -322,34 +295,36 @@
             <label style="display:inline-flex;gap:6px;align-items:center"><input type="radio" name="verify" value="call"> <span class="small">Llamada</span></label>
           </div>
         </div>
+
         <div style="margin-top:12px">
           <label><input type="checkbox" id="marketing1"> Recibe correos y comunicaciones de Lixby (anuncios y novedades)</label>
         </div>
-        <div id="formMessage" class="small" style="margin-top:16px" role="status" aria-live="polite"></div>
+
+        <div class="captcha" aria-hidden="false">
+          <div class="box" id="captchaBox" aria-hidden="true">45 AB</div>
+          <div style="flex:1">
+            <label for="captchaInput"><strong>Introduce el código de la imagen</strong></label>
+            <input id="captchaInput" class="input-wide" placeholder="Código" required />
+            <div style="margin-top:6px;display:flex;gap:8px;">
+              <button id="refreshCaptcha" class="btn ghost" type="button">Código nuevo</button>
+              <button id="visually" class="btn ghost" type="button">Visión limitada</button>
+            </div>
+            <div id="err-captcha" class="error" aria-live="polite"></div>
+          </div>
+        </div>
+
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
           <button id="submitBtn" class="btn primary" type="submit">Crear cuenta</button>
         </div>
-      </form>
-    </div>
-    <!-- Captcha Modal -->
-    <div id="captchaModal">
-      <form id="captchaForm" class="modal-content" autocomplete="off">
-        <div>
-          <div class="captcha-code" id="captchaModalCode"></div>
-          <label for="captchaModalInput"><strong>Introduce el código</strong></label>
-          <input id="captchaModalInput" placeholder="Ej: 123 AB" required autocomplete="off" />
-          <div id="captchaModalError" class="error"></div>
-        </div>
-        <div class="modal-actions">
-          <button type="button" id="captchaModalRefresh" class="btn ghost">Nuevo código</button>
-          <button type="button" id="captchaModalVision" class="btn ghost">Accesibilidad</button>
-          <button type="submit" class="btn primary">Verificar</button>
-        </div>
+
+        <div id="formMessage" class="small" style="margin-top:16px" role="status" aria-live="polite"></div>
       </form>
     </div>
   </main>
+
   <script type="module" src="auth-firebase-minimal.js"></script>
   <script>
+    // llenado de selects día/mes/año
     (function(){
       const day = document.getElementById('day');
       const month = document.getElementById('month');
@@ -361,52 +336,58 @@
       for(let y=now; y>=1900; y--){ const o = document.createElement('option'); o.value=y; o.textContent=y; year.appendChild(o); }
     })();
 
+    // simple captcha random
+    function generateCaptcha(){
+      const a = Math.floor(Math.random()*90)+10;
+      const b = Math.random().toString(36).slice(2,4).toUpperCase();
+      const code = `${a} ${b}`;
+      document.getElementById('captchaBox').textContent = code;
+      return code;
+    }
+    let currentCaptcha = generateCaptcha();
+    document.getElementById('refreshCaptcha').addEventListener('click', ()=> currentCaptcha = generateCaptcha());
+    document.getElementById('visually').addEventListener('click', ()=> alert('Si tienes problemas visuales contacta a accesibilidad@lixby.example'));
+
+    // social buttons
     document.getElementById('btnGoogle').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGoogle().catch(e=>console.warn(e)); });
     document.getElementById('btnGithub').addEventListener('click', ()=> { if(window.appAuth) window.appAuth.signInWithGitHub().catch(e=>console.warn(e)); });
 
+    // header brand minimalista
     document.getElementById('brand').addEventListener('click', ()=> location.href='index.html');
     document.getElementById('brand').addEventListener('keypress', (e)=> { if(e.key==='Enter') location.href='index.html'; });
-
-    // Error input helpers
-    function setFieldError(id, msg) {
-      const input = document.getElementById(id);
-      const err = document.getElementById('err-' + id);
-      if (input) input.classList.add('input-error');
-      if (err) err.textContent = msg;
-    }
-    function clearFieldError(id) {
-      const input = document.getElementById(id);
-      const err = document.getElementById('err-' + id);
-      if (input) input.classList.remove('input-error');
-      if (err) err.textContent = '';
-    }
-
-    // Modal mini-captcha pantalla completa
-    let currentCaptcha = '';
-    function generateModalCaptcha(){
-      // Mejor captcha: 3 dígitos + 2 letras, letras no ambiguas
-      const a = Math.floor(Math.random()*900)+100;
-      const letters = 'ABCDEFGHJKMNPQRTUVWXYZ';
-      const b = letters[Math.floor(Math.random()*letters.length)] + letters[Math.floor(Math.random()*letters.length)];
-      const code = `${a} ${b}`;
-      document.getElementById('captchaModalCode').textContent = code;
-      currentCaptcha = code;
-      document.getElementById('captchaModalInput').value = '';
-      document.getElementById('captchaModalError').textContent = '';
-    }
-    document.getElementById('captchaModalRefresh').onclick = generateModalCaptcha;
-    document.getElementById('captchaModalVision').onclick = function(){ alert('Si tienes problemas visuales contacta a accesibilidad@lixby.example'); };
-    document.getElementById('captchaModalInput').addEventListener('input', function(){ document.getElementById('captchaModalError').textContent = ''; });
 
     // Helper local storage fallback key
     const LS_CREATED = 'lixby_created_accounts';
 
-    // Form submit
+    // floating label efecto -- ---Texto---
+    function updateFloatingLabels() {
+      document.querySelectorAll('.input-wide').forEach(function(input){
+        const label = input.parentElement.querySelector('.floating-label');
+        if(label) {
+          if(document.activeElement === input || input.value || (input.tagName === 'SELECT' && input.selectedIndex > 0)){
+            label.classList.add('active');
+          } else {
+            label.classList.remove('active');
+          }
+        }
+      });
+    }
+    document.addEventListener('input', updateFloatingLabels, true);
+    document.addEventListener('focus', updateFloatingLabels, true);
+    document.addEventListener('blur', updateFloatingLabels, true);
+    window.addEventListener('DOMContentLoaded', updateFloatingLabels);
+
+    // form submit + validations
     const form = document.getElementById('registerForm');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      // Limpia errores
-      ['firstName','lastName','dob','email','password','confirm','phone'].forEach(clearFieldError);
+      // clear errors
+      ['firstName','lastName','dob','email','password','confirm','phone','captcha'].forEach(k=>{
+        const el = document.getElementById('err-'+k);
+        if (el) el.textContent = '';
+        const inp = document.getElementById(k);
+        if(inp) inp.classList.remove('input-error');
+      });
       document.getElementById('formMessage').textContent = '';
 
       const firstName = (document.getElementById('firstName')||{}).value.trim();
@@ -419,25 +400,44 @@
       const confirm = (document.getElementById('confirm')||{}).value;
       const phonePref = (document.getElementById('phonePrefix')||{}).value;
       const phone = (document.getElementById('phone')||{}).value.trim();
+      const captchaInput = (document.getElementById('captchaInput')||{}).value.trim();
 
       let firstError = null;
-      function mark(id,msg){ setFieldError(id,msg); if(!firstError) firstError = document.getElementById(id); }
+      function mark(id,msg){
+        const el = document.getElementById('err-'+id);
+        if(el) el.textContent = msg;
+        const inp = document.getElementById(id);
+        if(inp) inp.classList.add('input-error');
+        if(!firstError) firstError = inp;
+      }
 
       if (!firstName) mark('firstName','Introduce tu nombre.');
       if (!lastName) mark('lastName','Introduce tus apellidos.');
+
+      // validate date (simple)
       if (!d || !m || !y) mark('dob','Introduce una fecha de nacimiento válida.');
       else {
         const date = new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-        const minYear = new Date().getFullYear() - 13;
+        const minYear = new Date().getFullYear() - 13; // 13 años min
         if (isNaN(date.getTime()) || Number(y) > new Date().getFullYear() || Number(y) < 1900 || Number(y) > minYear) {
           mark('dob','Introduce una fecha de nacimiento válida (debes tener al menos 13 años).');
         }
       }
+
+      // email
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email || !emailRe.test(email)) mark('email','Introduce una dirección de correo electrónico válida.');
+
+      // password
       if (!password || password.length < 8) mark('password','8 o más caracteres');
       if (confirm !== password) mark('confirm','Las contraseñas no coinciden.');
+
+      // phone (basic digits)
       if (!/^\d{6,}$/.test(phone)) mark('phone','Introduce un número de teléfono válido.');
+
+      // captcha: compare removing spaces and uppercase both sides
+      const normalizedCaptcha = (currentCaptcha || '').replace(/\s+/g,'').toUpperCase();
+      if (!captchaInput || captchaInput.replace(/\s+/g,'').toUpperCase() !== normalizedCaptcha) mark('captcha','Código incorrecto. Pide uno nuevo.');
 
       if (firstError) {
         if (firstError.focus) firstError.focus();
@@ -446,28 +446,12 @@
         return;
       }
 
-      // Muestra modal captcha
-      generateModalCaptcha();
-      document.getElementById('captchaModal').style.display = 'flex';
+      // all ok -> create user
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      document.getElementById('formMessage').textContent = 'Creando cuenta...';
 
-      // Captcha submit
-      document.getElementById('captchaForm').onsubmit = async function(ev){
-        ev.preventDefault();
-        const input = document.getElementById('captchaModalInput').value.trim();
-        const normalizedCaptcha = (currentCaptcha || '').replace(/\s+/g,'').toUpperCase();
-        if (!input || input.replace(/\s+/g,'').toUpperCase() !== normalizedCaptcha) {
-          document.getElementById('captchaModalError').textContent = 'Código incorrecto. Pide uno nuevo.';
-          return;
-        }
-        document.getElementById('captchaModalError').textContent = '';
-        document.getElementById('captchaModal').style.display = 'none';
-
-        // All ok -> crear usuario
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        document.getElementById('formMessage').textContent = 'Creando cuenta...';
-
-        // Datos que se guardan en cuenta.html (en localStorage)
+      try {
         const dob = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const payload = {
           firstName, lastName, dob,
@@ -476,29 +460,29 @@
           marketing: { m1: !!document.getElementById('marketing1').checked },
           email
         };
-        try {
-          if (window.appAuth && typeof window.appAuth.createUserWithEmail === 'function') {
-            await window.appAuth.createUserWithEmail(email, password, payload);
-          } else {
-            try {
-              const arr = JSON.parse(localStorage.getItem(LS_CREATED) || '[]');
-              arr.push({ id: 'local-'+Date.now(), email, name: firstName + ' ' + lastName, created_at: new Date().toISOString(), meta: payload });
-              localStorage.setItem(LS_CREATED, JSON.stringify(arr));
-            } catch(errLocal) { }
-          }
-          // Guarda los datos rellenados para cuenta.html
-          localStorage.setItem('lixby_account_data', JSON.stringify(payload));
 
-          document.getElementById('formMessage').textContent = '🎉 Felicidades — has creado una cuenta en LIXBY.';
-          try { localStorage.setItem('lixby_auth_dismissed','true'); } catch(e){}
-          setTimeout(() => { window.location.href = 'login.html'; }, 700); // reducido
-        } catch (err) {
-          const msg = err && err.message ? err.message : 'Error creando cuenta.';
-          document.getElementById('formMessage').textContent = msg;
-        } finally {
-          submitBtn.disabled = false;
+        if (window.appAuth && typeof window.appAuth.createUserWithEmail === 'function') {
+          await window.appAuth.createUserWithEmail(email, password, payload);
+        } else {
+          try {
+            const arr = JSON.parse(localStorage.getItem(LS_CREATED) || '[]');
+            arr.push({ id: 'local-'+Date.now(), email, name: firstName + ' ' + lastName, created_at: new Date().toISOString(), meta: payload });
+            localStorage.setItem(LS_CREATED, JSON.stringify(arr));
+          } catch(errLocal) { }
         }
-      };
+
+        document.getElementById('formMessage').textContent = '🎉 Felicidades — has creado una cuenta en LIXBY.';
+        try { localStorage.setItem('lixby_auth_dismissed','true'); } catch(e){}
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+
+      } catch (err) {
+        const msg = err && err.message ? err.message : 'Error creando cuenta.';
+        document.getElementById('formMessage').textContent = msg;
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
   </script>
 </body>
